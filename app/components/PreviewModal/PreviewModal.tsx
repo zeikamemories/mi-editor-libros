@@ -9,6 +9,7 @@ import {
 import { exportPageAsJpg } from '../Canvas/fabricHelpers'
 import type { PageData } from '../Canvas/fabricHelpers'
 import { BOOK_SIZE } from '../../config/bookSize'
+import { useLang } from '../../context/LanguageContext'
 import './PreviewModal.css'
 
 type SpreadData = { left: PageData; right: PageData }
@@ -35,7 +36,7 @@ const TITLEBAR_H = 50
 const CONTROLS_H = 64
 
 // ── Gray "No editable" placeholder — matches the Canvas overlay style ─────────
-function renderNoEditPage(): string {
+function renderNoEditPage(label: string): string {
   const canvas = document.createElement('canvas')
   canvas.width  = PAGE_W
   canvas.height = PAGE_H
@@ -46,7 +47,7 @@ function renderNoEditPage(): string {
   ctx.font = `600 ${Math.round(PAGE_H * 0.055)}px Arial, sans-serif`
   ctx.textAlign = 'center'
   ctx.textBaseline = 'middle'
-  ctx.fillText('No editable', PAGE_W / 2, PAGE_H / 2)
+  ctx.fillText(label, PAGE_W / 2, PAGE_H / 2)
   return canvas.toDataURL('image/jpeg', 1)
 }
 
@@ -79,6 +80,7 @@ export default function PreviewModal({
   initialSpread,
   onClose,
 }: Props) {
+  const { t } = useLang()
   const [scale,       setScale]       = useState(0.5)
   const [loading,     setLoading]     = useState(true)
   const [pageImages,  setPageImages]  = useState<string[]>([])
@@ -134,10 +136,10 @@ export default function PreviewModal({
       const isInside  = s === 1
       const isOutside = s === totalSpreads - 1
       tasks.push(isInside
-        ? Promise.resolve(renderNoEditPage())
+        ? Promise.resolve(renderNoEditPage(t.noEditable))
         : exportPageAsJpg(data?.left ?? EMPTY_PAGE, PAGE_W, PAGE_H, 1))
       tasks.push(isOutside
-        ? Promise.resolve(renderNoEditPage())
+        ? Promise.resolve(renderNoEditPage(t.noEditable))
         : exportPageAsJpg(data?.right ?? EMPTY_PAGE, PAGE_W, PAGE_H, 1))
     }
     tasks.push(exportPageAsJpg(spreadsData[0]?.left ?? EMPTY_PAGE, PAGE_W, PAGE_H, 1))  // Contra
@@ -165,7 +167,7 @@ export default function PreviewModal({
       page.className = 'preview-flip-page'
       const img = document.createElement('img')
       img.src = src
-      img.alt = `Página ${i + 1}`
+      img.alt = `${t.page} ${i + 1}`
       img.draggable = false
       page.appendChild(img)
       el.appendChild(page)
@@ -246,10 +248,10 @@ export default function PreviewModal({
   const isLast  = currentPage >= totalSpreads * 2
 
   const pageLabel = (() => {
-    if (currentPage <= 1)                  return 'Tapa'
-    if (currentPage >= totalSpreads * 2)   return 'Contra'
+    if (currentPage <= 1)                  return t.cover
+    if (currentPage >= totalSpreads * 2)   return t.back
     const spreadNum = Math.floor((currentPage - 1) / 2)
-    return `Página ${spreadNum * 2 + 1} — ${spreadNum * 2 + 2}`
+    return `${t.page} ${spreadNum * 2 + 1} — ${spreadNum * 2 + 2}`
   })()
 
   return (
@@ -257,15 +259,15 @@ export default function PreviewModal({
 
       {/* ── Title bar ── */}
       <div className="preview-titlebar">
-        <span className="preview-title">Previsualización 2D</span>
+        <span className="preview-title">{t.preview2D}</span>
         <div className="preview-titlebar-actions">
           <button className="preview-icon-btn" disabled>
             <MessageSquare size={18} strokeWidth={1.5} />
-            <span>Comentar</span>
+            <span>{t.comment}</span>
           </button>
           <button className="preview-icon-btn" disabled>
             <Pencil size={18} strokeWidth={1.5} />
-            <span>Dibujar</span>
+            <span>{t.draw}</span>
           </button>
         </div>
       </div>
@@ -273,7 +275,7 @@ export default function PreviewModal({
       {/* ── Stage ── */}
       <div className="preview-stage">
         {loading ? (
-          <div className="preview-render-loading">Preparando vista previa…</div>
+          <div className="preview-render-loading">{t.preparingPreview}</div>
         ) : (
           <div
             className="preview-book-shell"
@@ -291,7 +293,7 @@ export default function PreviewModal({
             className="preview-nav-btn"
             onClick={goFirst}
             disabled={isFirst}
-            title="Primera página"
+            title={t.firstPage}
           >
             <ChevronsLeft size={15} strokeWidth={1.5} />
           </button>
@@ -299,7 +301,7 @@ export default function PreviewModal({
             className="preview-nav-btn"
             onClick={() => go(-1)}
             disabled={isFirst}
-            title="Anterior"
+            title={t.prev}
           >
             <ChevronLeft size={15} strokeWidth={1.5} />
           </button>
@@ -308,7 +310,7 @@ export default function PreviewModal({
             className="preview-nav-btn"
             onClick={() => go(1)}
             disabled={isLast}
-            title="Siguiente"
+            title={t.next}
           >
             <ChevronRight size={15} strokeWidth={1.5} />
           </button>
@@ -316,12 +318,12 @@ export default function PreviewModal({
             className="preview-nav-btn"
             onClick={goLast}
             disabled={isLast}
-            title="Última página"
+            title={t.lastPage}
           >
             <ChevronsRight size={15} strokeWidth={1.5} />
           </button>
         </div>
-        <button className="preview-close-btn" onClick={onClose}>Cerrar</button>
+        <button className="preview-close-btn" onClick={onClose}>{t.close}</button>
       </div>
 
     </div>

@@ -24,7 +24,6 @@ const ZOOM_MIN = 0.1
 const ZOOM_MAX = 5.0
 const SCROLL_PAD = 400
 
-const MAX_HISTORY = 20
 
 interface CanvasProps {
   zoom: number
@@ -47,6 +46,8 @@ interface CanvasProps {
   onPhotoDrop: (photoId: string) => void
   onTextEdit?: (textbox: fabric.Textbox, side: 'left' | 'right') => void
   onFrameToolDeactivate: () => void
+  onUndo?: () => void
+  onRedo?: () => void
 }
 
 function spreadLabel(spread: number, totalSpreads: number, back: string, cover: string): { left: string; right: string } {
@@ -493,6 +494,8 @@ export default function Canvas({
   onPhotoDrop,
   onTextEdit,
   onFrameToolDeactivate,
+  onUndo,
+  onRedo,
 }: CanvasProps) {
   const leftElRef   = useRef<HTMLCanvasElement>(null)
   const rightElRef  = useRef<HTMLCanvasElement>(null)
@@ -555,12 +558,6 @@ export default function Canvas({
   } | null>(null)
   const onFrameToolDeactivateRef = useRef(onFrameToolDeactivate)
 
-  // ── Per-canvas undo history ───────────────────────────────────────────────
-  const lcHistoryRef = useRef<string[]>([])
-  const rcHistoryRef = useRef<string[]>([])
-  // Guard: suppress history saves during loadFromJSON restoration
-  const isLoadingHistory = useRef(false)
-
   // Mirror latest callbacks/values into refs so effects stay stable
   const onObjectSelectedRef   = useRef(onObjectSelected)
   const onCanvasReadyRef      = useRef(onCanvasReady)
@@ -569,6 +566,8 @@ export default function Canvas({
   const onLayoutDropOnPageRef = useRef(onLayoutDropOnPage)
   const onPhotoDropRef        = useRef(onPhotoDrop)
   const onTextEditRef         = useRef(onTextEdit)
+  const onUndoRef             = useRef(onUndo)
+  const onRedoRef             = useRef(onRedo)
   const zoomRef               = useRef(zoom)
 
   useEffect(() => { onObjectSelectedRef.current   = onObjectSelected   }, [onObjectSelected])
@@ -579,6 +578,8 @@ export default function Canvas({
   useEffect(() => { onPhotoDropRef.current         = onPhotoDrop         }, [onPhotoDrop])
   useEffect(() => { onTextEditRef.current               = onTextEdit               }, [onTextEdit])
   useEffect(() => { onFrameToolDeactivateRef.current    = onFrameToolDeactivate    }, [onFrameToolDeactivate])
+  useEffect(() => { onUndoRef.current               = onUndo               }, [onUndo])
+  useEffect(() => { onRedoRef.current               = onRedo               }, [onRedo])
   useEffect(() => { zoomRef.current = zoom }, [zoom])
   useEffect(() => { isTextEditingRef.current = textEditing }, [textEditing])
 
@@ -862,9 +863,7 @@ export default function Canvas({
       }
       // Remove the full-opacity clone that showed the in-frame content
       if (panCloneRef.current && panIndicatorCanvasRef.current) {
-        isLoadingHistory.current = true
         panIndicatorCanvasRef.current.remove(panCloneRef.current)
-        isLoadingHistory.current = false
         panCloneRef.current = null
       }
       isPanMode.current    = false
@@ -879,51 +878,6 @@ export default function Canvas({
       }
       panIndicatorRef.current       = null
       panIndicatorCanvasRef.current = null
-    }
-
-    // ── Per-canvas history helpers ─────────────────────────────────────────
-    const getHistRef = (fc: fabric.Canvas) => fc === lc ? lcHistoryRef : rcHistoryRef
-
-    const saveHistory = (fc: fabric.Canvas) => {
-      if (isLoadingHistory.current) return
-      const json = JSON.stringify(fc.toObject(['data']))
-      const ref  = getHistRef(fc)
-      ref.current = [...ref.current.slice(-(MAX_HISTORY - 1)), json]
-    }
-
-    // Re-applies clipPath absolutePositioned and control visibility after
-    // loadFromJSON, which restores objects but loses some runtime-only state.
-    const reapplyPhotoState = (fc: fabric.Canvas) => {
-      for (const obj of fc.getObjects()) {
-        const data = (obj as unknown as fabric.FabricObject & { data?: { type: string } }).data
-        if (data?.type === 'photo') {
-          if (obj.clipPath) obj.clipPath.absolutePositioned = true
-          obj.setControlsVisibility({ mt: true, mb: true, ml: true, mr: true, tl: true, tr: true, bl: true, br: true, mtr: true })
-          obj.set({ borderColor: '#528ED6', borderScaleFactor: 2 })
-        }
-        if (data?.type === 'text' && obj instanceof fabric.Textbox) {
-          obj.set({ lockUniScaling: false })
-          obj.setControlsVisibility({ mt: false, mb: false })
-        }
-        if (data?.type === 'freePhoto') {
-          obj.set({ lockUniScaling: true })
-          obj.setControlsVisibility({ mt: false, mb: false, ml: false, mr: false })
-        }
-      }
-    }
-
-    const undoCanvas = (fc: fabric.Canvas) => {
-      const ref = getHistRef(fc)
-      if (ref.current.length <= 1) return
-      const newHist = ref.current.slice(0, -1)
-      ref.current   = newHist
-      const prevJson = newHist[newHist.length - 1]
-      isLoadingHistory.current = true
-      fc.loadFromJSON(JSON.parse(prevJson)).then(() => {
-        reapplyPhotoState(fc)
-        fc.renderAll()
-        isLoadingHistory.current = false
-      })
     }
 
     const updateTextSel = (obj: fabric.FabricObject | null | undefined, side: 'left' | 'right') => {
@@ -1015,9 +969,7 @@ export default function Canvas({
         evented:        false,
       })
       clone.clipPath = makeClipRect(pd.frameX, pd.frameY, pd.frameW, pd.frameH)
-      isLoadingHistory.current = true
       fc.add(clone)
-      isLoadingHistory.current = false
       panCloneRef.current = clone
 
       if (panIndicatorRef.current) fc.remove(panIndicatorRef.current)
@@ -1152,7 +1104,6 @@ export default function Canvas({
           if (frameW > 10 && frameH > 10) {
             const frame = createFrameAtPx(canvas, frameX, frameY, frameW, frameH)
             canvas.setActiveObject(frame)
-            saveHistory(canvas)
             onFrameToolDeactivateRef.current()
           }
           canvas.renderAll()
@@ -1199,7 +1150,6 @@ export default function Canvas({
           const br = e.target.getBoundingRect()
           setTextSel({ side, top: br.top, left: br.left, width: br.width })
         }
-        saveHistory(fc)
         syncMultiSel(fc, side)
         const otherFc = side === 'left' ? rc : lc
         if (e.target) syncSpreadMirror(e.target as unknown as fabric.FabricImage, fc, otherFc)
@@ -1207,11 +1157,9 @@ export default function Canvas({
       fc.on('object:removed', (e) => {
         const removed = e.target as unknown as fabric.FabricImage
         const mirror  = spreadMirrors.get(removed)
-        if (mirror && !isLoadingHistory.current) {
+        if (mirror) {
           const otherFc = side === 'left' ? rc : lc
-          isLoadingHistory.current = true
           otherFc.remove(mirror)
-          isLoadingHistory.current = false
           spreadMirrors.delete(removed)
           otherFc.renderAll()
         }
@@ -1386,9 +1334,6 @@ export default function Canvas({
         fc.renderAll()
       }, { passive: false })
 
-      // Save history when objects are added (e.g. photo dropped)
-      fc.on('object:added', () => saveHistory(fc))
-      fc.on('object:removed', () => saveHistory(fc))
     }
     bind(lc, 'left')
     bind(rc, 'right')
@@ -1434,9 +1379,7 @@ export default function Canvas({
       // Remove any spread mirror the transferred object had on the destination canvas
       const xferMirror = spreadMirrors.get(obj as unknown as fabric.FabricImage)
       if (xferMirror) {
-        isLoadingHistory.current = true
         to.remove(xferMirror)
-        isLoadingHistory.current = false
         spreadMirrors.delete(obj as unknown as fabric.FabricImage)
       }
 
@@ -1467,9 +1410,7 @@ export default function Canvas({
 
       if (!overlaps) {
         if (mirror) {
-          isLoadingHistory.current = true
           otherCanvas.remove(mirror)
-          isLoadingHistory.current = false
           spreadMirrors.delete(master)
           otherCanvas.renderAll()
         }
@@ -1496,9 +1437,7 @@ export default function Canvas({
           })
           ;(img as unknown as { data: { type: string } }).data = { type: 'spreadMirror' }
           spreadMirrors.set(master, img)
-          isLoadingHistory.current = true
           otherCanvas.add(img)
-          isLoadingHistory.current = false
           otherCanvas.sendObjectToBack(img)
           otherCanvas.renderAll()
         })
@@ -1653,14 +1592,16 @@ export default function Canvas({
         }
 
         activeCanvas.renderAll()
-        saveHistory(activeCanvas)
         return
       }
 
-      // ── Ctrl/Cmd + Z: undo ───────────────────────────────────────────────
-      if ((e.ctrlKey || e.metaKey) && e.key === 'z' && !e.shiftKey) {
+      // ── Ctrl/Cmd + Z / Shift+Z: undo / redo ─────────────────────────────
+      if ((e.ctrlKey || e.metaKey) && e.key === 'z') {
+        const tag = (e.target as HTMLElement).tagName
+        if (tag === 'INPUT' || tag === 'TEXTAREA') return
         e.preventDefault()
-        undoCanvas(activeCanvas)
+        if (e.shiftKey) onRedoRef.current?.()
+        else            onUndoRef.current?.()
         return
       }
 
@@ -1842,7 +1783,7 @@ export default function Canvas({
                   )}
                   {isFirstInside && (
                     <div className="canvas-no-edit-overlay" aria-hidden="true">
-                      <span className="canvas-no-edit-label">No editable</span>
+                      <span className="canvas-no-edit-label">{t.noEditable}</span>
                     </div>
                   )}
                   {textSel?.side === 'left' && !textEditing && (
@@ -1855,23 +1796,23 @@ export default function Canvas({
                         const obj = fc.getActiveObject()
                         if (obj) { fc.remove(obj); fc.renderAll(); setTextSel(null) }
                       }}
-                      aria-label="Eliminar texto"
+                      aria-label={t.deleteText}
                     >
                       <X size={9} strokeWidth={2.5} />
                     </button>
                   )}
                   {multiSel?.side === 'left' && (
                     <div className="canvas-align-toolbar" style={{ top: multiSel.selBottom + 8, left: multiSel.selLeft + multiSel.selWidth / 2 }}>
-                      <button className="canvas-align-btn" onClick={() => applyAlignment('left')}      aria-label="Alinear izquierda"><AlignStartVertical size={18} strokeWidth={1.5} /></button>
-                      <button className="canvas-align-btn" onClick={() => applyAlignment('center-h')}  aria-label="Centrar vertical"><AlignCenterVertical size={18} strokeWidth={1.5} /></button>
-                      <button className="canvas-align-btn" onClick={() => applyAlignment('right')}     aria-label="Alinear derecha"><AlignEndVertical size={18} strokeWidth={1.5} /></button>
+                      <button className="canvas-align-btn" onClick={() => applyAlignment('left')}      aria-label={t.alignLeft}><AlignStartVertical size={18} strokeWidth={1.5} /></button>
+                      <button className="canvas-align-btn" onClick={() => applyAlignment('center-h')}  aria-label={t.alignCenterV}><AlignCenterVertical size={18} strokeWidth={1.5} /></button>
+                      <button className="canvas-align-btn" onClick={() => applyAlignment('right')}     aria-label={t.alignRight}><AlignEndVertical size={18} strokeWidth={1.5} /></button>
                       <div className="canvas-align-sep" />
-                      <button className="canvas-align-btn" onClick={() => applyAlignment('top')}       aria-label="Alinear arriba"><AlignVerticalJustifyStart size={18} strokeWidth={1.5} /></button>
-                      <button className="canvas-align-btn" onClick={() => applyAlignment('center-v')}  aria-label="Centrar horizontal"><AlignCenterHorizontal size={18} strokeWidth={1.5} /></button>
-                      <button className="canvas-align-btn" onClick={() => applyAlignment('bottom')}    aria-label="Alinear abajo"><AlignVerticalJustifyEnd size={18} strokeWidth={1.5} /></button>
+                      <button className="canvas-align-btn" onClick={() => applyAlignment('top')}       aria-label={t.alignTop}><AlignVerticalJustifyStart size={18} strokeWidth={1.5} /></button>
+                      <button className="canvas-align-btn" onClick={() => applyAlignment('center-v')}  aria-label={t.alignCenterH}><AlignCenterHorizontal size={18} strokeWidth={1.5} /></button>
+                      <button className="canvas-align-btn" onClick={() => applyAlignment('bottom')}    aria-label={t.alignBottom}><AlignVerticalJustifyEnd size={18} strokeWidth={1.5} /></button>
                       <div className="canvas-align-sep" />
-                      <button className="canvas-align-btn" onClick={() => applyAlignment('dist-v')}   aria-label="Distribuir vertical"><AlignVerticalSpaceAround size={18} strokeWidth={1.5} /></button>
-                      <button className="canvas-align-btn" onClick={() => applyAlignment('dist-h')}   aria-label="Distribuir horizontal"><AlignHorizontalSpaceAround size={18} strokeWidth={1.5} /></button>
+                      <button className="canvas-align-btn" onClick={() => applyAlignment('dist-v')}   aria-label={t.distributeV}><AlignVerticalSpaceAround size={18} strokeWidth={1.5} /></button>
+                      <button className="canvas-align-btn" onClick={() => applyAlignment('dist-h')}   aria-label={t.distributeH}><AlignHorizontalSpaceAround size={18} strokeWidth={1.5} /></button>
                     </div>
                   )}
                 </div>
@@ -1899,7 +1840,7 @@ export default function Canvas({
                   {rulerMode && <GuidesOverlay pageW={PAGE_W} pageH={PAGE_H} zoom={zoom} guides={guides} onGuidesChange={onGuidesChange} pageWrapRef={rightPageWrapRef} />}
                   {isLastSpread && (
                     <div className="canvas-no-edit-overlay" aria-hidden="true">
-                      <span className="canvas-no-edit-label">No editable</span>
+                      <span className="canvas-no-edit-label">{t.noEditable}</span>
                     </div>
                   )}
                   {textSel?.side === 'right' && !textEditing && (
@@ -1912,23 +1853,23 @@ export default function Canvas({
                         const obj = fc.getActiveObject()
                         if (obj) { fc.remove(obj); fc.renderAll(); setTextSel(null) }
                       }}
-                      aria-label="Eliminar texto"
+                      aria-label={t.deleteText}
                     >
                       <X size={9} strokeWidth={2.5} />
                     </button>
                   )}
                   {multiSel?.side === 'right' && (
                     <div className="canvas-align-toolbar" style={{ top: multiSel.selBottom + 8, left: multiSel.selLeft + multiSel.selWidth / 2 }}>
-                      <button className="canvas-align-btn" onClick={() => applyAlignment('left')}      aria-label="Alinear izquierda"><AlignStartVertical size={18} strokeWidth={1.5} /></button>
-                      <button className="canvas-align-btn" onClick={() => applyAlignment('center-h')}  aria-label="Centrar vertical"><AlignCenterVertical size={18} strokeWidth={1.5} /></button>
-                      <button className="canvas-align-btn" onClick={() => applyAlignment('right')}     aria-label="Alinear derecha"><AlignEndVertical size={18} strokeWidth={1.5} /></button>
+                      <button className="canvas-align-btn" onClick={() => applyAlignment('left')}      aria-label={t.alignLeft}><AlignStartVertical size={18} strokeWidth={1.5} /></button>
+                      <button className="canvas-align-btn" onClick={() => applyAlignment('center-h')}  aria-label={t.alignCenterV}><AlignCenterVertical size={18} strokeWidth={1.5} /></button>
+                      <button className="canvas-align-btn" onClick={() => applyAlignment('right')}     aria-label={t.alignRight}><AlignEndVertical size={18} strokeWidth={1.5} /></button>
                       <div className="canvas-align-sep" />
-                      <button className="canvas-align-btn" onClick={() => applyAlignment('top')}       aria-label="Alinear arriba"><AlignVerticalJustifyStart size={18} strokeWidth={1.5} /></button>
-                      <button className="canvas-align-btn" onClick={() => applyAlignment('center-v')}  aria-label="Centrar horizontal"><AlignCenterHorizontal size={18} strokeWidth={1.5} /></button>
-                      <button className="canvas-align-btn" onClick={() => applyAlignment('bottom')}    aria-label="Alinear abajo"><AlignVerticalJustifyEnd size={18} strokeWidth={1.5} /></button>
+                      <button className="canvas-align-btn" onClick={() => applyAlignment('top')}       aria-label={t.alignTop}><AlignVerticalJustifyStart size={18} strokeWidth={1.5} /></button>
+                      <button className="canvas-align-btn" onClick={() => applyAlignment('center-v')}  aria-label={t.alignCenterH}><AlignCenterHorizontal size={18} strokeWidth={1.5} /></button>
+                      <button className="canvas-align-btn" onClick={() => applyAlignment('bottom')}    aria-label={t.alignBottom}><AlignVerticalJustifyEnd size={18} strokeWidth={1.5} /></button>
                       <div className="canvas-align-sep" />
-                      <button className="canvas-align-btn" onClick={() => applyAlignment('dist-v')}   aria-label="Distribuir vertical"><AlignVerticalSpaceAround size={18} strokeWidth={1.5} /></button>
-                      <button className="canvas-align-btn" onClick={() => applyAlignment('dist-h')}   aria-label="Distribuir horizontal"><AlignHorizontalSpaceAround size={18} strokeWidth={1.5} /></button>
+                      <button className="canvas-align-btn" onClick={() => applyAlignment('dist-v')}   aria-label={t.distributeV}><AlignVerticalSpaceAround size={18} strokeWidth={1.5} /></button>
+                      <button className="canvas-align-btn" onClick={() => applyAlignment('dist-h')}   aria-label={t.distributeH}><AlignHorizontalSpaceAround size={18} strokeWidth={1.5} /></button>
                     </div>
                   )}
                 </div>
@@ -1942,15 +1883,15 @@ export default function Canvas({
 
             {/* Navigation */}
             <div className="canvas-nav">
-              <button className="canvas-nav-arrow" onClick={goLeft}  disabled={currentSpread === 0}               aria-label="Página anterior">{'<'}</button>
+              <button className="canvas-nav-arrow" onClick={goLeft}  disabled={currentSpread === 0}               aria-label={t.prevPage}>{'<'}</button>
               <span   className="canvas-nav-label">
                 {currentSpread === 0
-                  ? 'Portada'
+                  ? t.frontCover
                   : currentSpread === totalSpreads - 1
-                  ? 'Contratapa'
+                  ? t.backCover
                   : `${t.page} ${currentSpread}`}
               </span>
-              <button className="canvas-nav-arrow" onClick={goRight} disabled={currentSpread === totalSpreads - 1} aria-label="Página siguiente">{'>'}</button>
+              <button className="canvas-nav-arrow" onClick={goRight} disabled={currentSpread === totalSpreads - 1} aria-label={t.nextPage}>{'>'}</button>
             </div>
           </div>
         </div>
@@ -1991,7 +1932,7 @@ export default function Canvas({
               applyZoom(newZoom)
             }
           }}
-          aria-label="Zoom out"
+          aria-label={t.zoomOut}
         >−</button>
         <span ref={badgeTextRef}>{Math.round(zoom * 100)}%</span>
         <button
@@ -2009,7 +1950,7 @@ export default function Canvas({
               applyZoom(newZoom)
             }
           }}
-          aria-label="Zoom in"
+          aria-label={t.zoomIn}
         >+</button>
       </div>
     </div>

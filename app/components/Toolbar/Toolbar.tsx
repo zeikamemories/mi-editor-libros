@@ -31,12 +31,12 @@ interface ToolbarProps {
   onAddShape?: (kind: ShapeKind) => void
 }
 
-const SHAPE_OPTIONS: { kind: ShapeKind; label: string; Icon: React.ComponentType<{ size: number; strokeWidth: number }> }[] = [
-  { kind: 'rect',     label: 'Rectángulo', Icon: Square    },
-  { kind: 'circle',   label: 'Círculo',    Icon: Circle    },
-  { kind: 'triangle', label: 'Triángulo',  Icon: Triangle  },
-  { kind: 'line',     label: 'Línea',      Icon: Minus     },
-  { kind: 'arrow',    label: 'Flecha',     Icon: ArrowRight },
+const SHAPE_ICONS: { kind: ShapeKind; Icon: React.ComponentType<{ size: number; strokeWidth: number }> }[] = [
+  { kind: 'rect',     Icon: Square    },
+  { kind: 'circle',   Icon: Circle    },
+  { kind: 'triangle', Icon: Triangle  },
+  { kind: 'line',     Icon: Minus     },
+  { kind: 'arrow',    Icon: ArrowRight },
 ]
 
 export default function Toolbar({
@@ -63,6 +63,15 @@ export default function Toolbar({
   onAddShape,
 }: ToolbarProps) {
   const { t } = useLang()
+
+  const SHAPE_OPTIONS = [
+    { kind: 'rect'     as ShapeKind, label: t.shapeRect,     Icon: SHAPE_ICONS[0].Icon },
+    { kind: 'circle'   as ShapeKind, label: t.shapeCircle,   Icon: SHAPE_ICONS[1].Icon },
+    { kind: 'triangle' as ShapeKind, label: t.shapeTriangle, Icon: SHAPE_ICONS[2].Icon },
+    { kind: 'line'     as ShapeKind, label: t.shapeLine,     Icon: SHAPE_ICONS[3].Icon },
+    { kind: 'arrow'    as ShapeKind, label: t.shapeArrow,    Icon: SHAPE_ICONS[4].Icon },
+  ]
+
   const [paintOpen, setPaintOpen]   = useState(false)
   const paintWrapRef  = useRef<HTMLDivElement>(null)
   const colorInputRef = useRef<HTMLInputElement>(null)
@@ -127,20 +136,20 @@ export default function Toolbar({
           className="toolbar-btn"
           onClick={onRedo}
           disabled={!canRedo}
-          aria-label="Rehacer"
+          aria-label={t.redo}
         >
           <Redo2 size={22} strokeWidth={1.5} />
-          <span className="toolbar-tooltip">Rehacer</span>
+          <span className="toolbar-tooltip">{t.redo}</span>
         </button>
 
         <button
           className="toolbar-btn"
           onClick={onUndo}
           disabled={!canUndo}
-          aria-label="Deshacer"
+          aria-label={t.undo}
         >
           <Undo2 size={22} strokeWidth={1.5} />
-          <span className="toolbar-tooltip">Deshacer</span>
+          <span className="toolbar-tooltip">{t.undo}</span>
         </button>
 
         {/* Shapes popover */}
@@ -148,10 +157,10 @@ export default function Toolbar({
           <button
             className={`toolbar-btn${shapesOpen ? ' toolbar-btn--active' : ''}`}
             onClick={() => setShapesOpen((v) => !v)}
-            aria-label="Formas"
+            aria-label={t.shapes}
           >
             <Shapes size={22} strokeWidth={1.5} />
-            <span className="toolbar-tooltip">Formas</span>
+            <span className="toolbar-tooltip">{t.shapes}</span>
           </button>
 
           {shapesOpen && (
@@ -173,10 +182,10 @@ export default function Toolbar({
         <button
           className={`toolbar-btn${frameTool ? ' toolbar-btn--active' : ''}`}
           onClick={onFrameToolToggle}
-          aria-label="Marco foto"
+          aria-label={t.photoFrame}
         >
           <ImageUpscale size={22} strokeWidth={1.5} />
-          <span className="toolbar-tooltip">Marco foto</span>
+          <span className="toolbar-tooltip">{t.photoFrame}</span>
         </button>
 
         <button
@@ -191,19 +200,19 @@ export default function Toolbar({
         <button
           className={`toolbar-btn${rulerMode ? ' toolbar-btn--active' : ''}`}
           onClick={onToggleRuler}
-          aria-label="Regla"
+          aria-label={t.ruler}
         >
           <Ruler size={22} strokeWidth={1.5} />
-          <span className="toolbar-tooltip">Regla</span>
+          <span className="toolbar-tooltip">{t.ruler}</span>
         </button>
 
         <button
           className={`toolbar-btn${panMode ? ' toolbar-btn--active' : ''}`}
           onClick={onPanModeToggle}
-          aria-label="Mano"
+          aria-label={t.hand}
         >
           <Hand size={22} strokeWidth={1.5} />
-          <span className="toolbar-tooltip">Mano</span>
+          <span className="toolbar-tooltip">{t.hand}</span>
         </button>
 
         {/* Grid */}
@@ -215,16 +224,16 @@ export default function Toolbar({
               else if (gridOpen) { setGridOpen(false) }
               else { onToggleGrid() }
             }}
-            aria-label="Cuadrícula"
+            aria-label={t.grid}
           >
             <Grid size={22} strokeWidth={1.5} />
-            <span className="toolbar-tooltip">Cuadrícula</span>
+            <span className="toolbar-tooltip">{t.grid}</span>
           </button>
 
           {gridOpen && (
             <div className="toolbar-grid-popover">
               <div className="toolbar-grid-row">
-                <label className="toolbar-grid-label">Columnas</label>
+                <label className="toolbar-grid-label">{t.columns}</label>
                 <input
                   className="toolbar-grid-number"
                   type="number" min={1} max={50}
@@ -233,7 +242,7 @@ export default function Toolbar({
                 />
               </div>
               <div className="toolbar-grid-row">
-                <label className="toolbar-grid-label">Filas</label>
+                <label className="toolbar-grid-label">{t.rows}</label>
                 <input
                   className="toolbar-grid-number"
                   type="number" min={1} max={50}
@@ -242,12 +251,12 @@ export default function Toolbar({
                 />
               </div>
               <div className="toolbar-grid-row">
-                <label className="toolbar-grid-label">Color</label>
+                <label className="toolbar-grid-label">{t.color}</label>
                 <button
                   className="toolbar-paint-swatch toolbar-grid-swatch"
                   style={{ background: gridSettings.color }}
                   onClick={() => gridColorRef.current?.click()}
-                  aria-label="Elegir color"
+                  aria-label={t.pickColor}
                 />
                 <input
                   ref={gridColorRef}
@@ -260,7 +269,7 @@ export default function Toolbar({
                 />
               </div>
               <div className="toolbar-grid-row toolbar-grid-row--slider">
-                <label className="toolbar-grid-label">Opacidad</label>
+                <label className="toolbar-grid-label">{t.opacity}</label>
                 <input
                   className="toolbar-grid-slider"
                   type="range" min={0} max={100}
@@ -270,16 +279,16 @@ export default function Toolbar({
                 <span className="toolbar-grid-pct">{gridSettings.opacity}%</span>
               </div>
               <div className="toolbar-grid-row toolbar-grid-row--thickness">
-                <label className="toolbar-grid-label">Grosor</label>
+                <label className="toolbar-grid-label">{t.thickness}</label>
                 <div className="toolbar-grid-toggle">
                   <button
                     className={`toolbar-grid-toggle-btn${gridSettings.thickness === 'thin' ? ' toolbar-grid-toggle-btn--active' : ''}`}
                     onClick={() => onGridSettingsChange({ ...gridSettings, thickness: 'thin' })}
-                  >Fina</button>
+                  >{t.thin}</button>
                   <button
                     className={`toolbar-grid-toggle-btn${gridSettings.thickness === 'normal' ? ' toolbar-grid-toggle-btn--active' : ''}`}
                     onClick={() => onGridSettingsChange({ ...gridSettings, thickness: 'normal' })}
-                  >Normal</button>
+                  >{t.normal}</button>
                 </div>
               </div>
             </div>
@@ -291,10 +300,10 @@ export default function Toolbar({
           <button
             className={`toolbar-btn${paintOpen ? ' toolbar-btn--active' : ''}`}
             onClick={() => setPaintOpen((v) => !v)}
-            aria-label="Color de fondo"
+            aria-label={t.bgColor}
           >
             <PaintBucket size={22} strokeWidth={1.5} />
-            <span className="toolbar-tooltip">Color de fondo</span>
+            <span className="toolbar-tooltip">{t.bgColor}</span>
           </button>
 
           {paintOpen && (
@@ -304,7 +313,7 @@ export default function Toolbar({
                   className="toolbar-paint-swatch"
                   style={{ background: pageBackground }}
                   onClick={() => colorInputRef.current?.click()}
-                  aria-label="Abrir selector de color"
+                  aria-label={t.openColorPicker}
                 />
                 <input
                   ref={colorInputRef}
@@ -318,7 +327,7 @@ export default function Toolbar({
                 <button
                   className="toolbar-paint-eyedropper"
                   onClick={handleEyedropper}
-                  aria-label="Cuentagotas"
+                  aria-label={t.eyedropper}
                 >
                   <Pipette size={15} strokeWidth={1.5} />
                 </button>
@@ -327,7 +336,7 @@ export default function Toolbar({
                 className="toolbar-paint-apply-all"
                 onClick={() => { onApplyBgToAll(); setPaintOpen(false) }}
               >
-                Aplicar a todas
+                {t.applyToAll}
               </button>
             </div>
           )}
@@ -338,7 +347,7 @@ export default function Toolbar({
         <button
           className={`toolbar-view-btn${viewMode === 'editor' ? ' toolbar-view-btn--active' : ''}`}
           onClick={() => onViewModeChange('editor')}
-          aria-label="Vista de edición"
+          aria-label={t.editorView}
         >
           <svg width="17" height="12" viewBox="0 0 17 12" fill="none" aria-hidden="true">
             <rect x="0.5" y="0.5" width="16" height="11" rx="1.5" stroke="currentColor" strokeWidth="1"/>
@@ -347,7 +356,7 @@ export default function Toolbar({
         <button
           className={`toolbar-view-btn${viewMode === 'spreads' ? ' toolbar-view-btn--active' : ''}`}
           onClick={() => onViewModeChange('spreads')}
-          aria-label="Vista de spreads"
+          aria-label={t.spreadsView}
         >
           <svg width="17" height="13" viewBox="0 0 17 13" fill="none" aria-hidden="true">
             <rect x="0.5" y="0.5" width="7" height="5" rx="1" stroke="currentColor" strokeWidth="1"/>

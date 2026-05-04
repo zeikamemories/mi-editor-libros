@@ -203,7 +203,7 @@ export default function PhotoPanel({
           aria-pressed={showUnused}
         >
           <div className={`photo-toggle-pill${showUnused ? ' photo-toggle-pill--on' : ''}`} />
-          <span className="photo-toggle-label">No usadas</span>
+          <span className="photo-toggle-label">{t.noUsadas}</span>
         </button>
 
         {/* Filter button + dropdown */}
@@ -218,19 +218,19 @@ export default function PhotoPanel({
 
           {filterOpen && (
             <div className="photo-filter-panel">
-              <p className="photo-filter-heading">Ordenar por</p>
+              <p className="photo-filter-heading">{t.sortBy}</p>
               <div className="photo-filter-underline" />
               <button
                 className={`photo-filter-option${sortBy === 'fecha' ? ' photo-filter-option--active' : ''}`}
                 onClick={() => setSortBy('fecha')}
               >
-                Fecha Agregada
+                {t.dateAdded}
               </button>
               <button
                 className={`photo-filter-option${sortBy === 'nombre' ? ' photo-filter-option--active' : ''}`}
                 onClick={() => setSortBy('nombre')}
               >
-                Nombre
+                {t.name}
               </button>
 
             </div>
@@ -279,14 +279,14 @@ export default function PhotoPanel({
               <img src={photo.src} alt={photo.name} className="photo-thumb-img" />
 
               {isUsed && (
-                <div className="photo-thumb-used" aria-label="Foto usada">
+                <div className="photo-thumb-used" aria-label={t.usedPhoto}>
                   <Check size={10} strokeWidth={3} color="#fff" />
                 </div>
               )}
 
               <button
                 className="photo-thumb-delete"
-                aria-label="Eliminar foto"
+                aria-label={t.deletePhoto}
                 onClick={(e) => { e.stopPropagation(); onDelete(photo.id) }}
               >
                 <Trash2 size={11} strokeWidth={1.8} />
@@ -307,7 +307,7 @@ export default function PhotoPanel({
               try { await onAutoCreate() } finally { setAutoCreating(false) }
             }}
           >
-            {autoCreating ? 'Generando...' : 'Auto-crear'}
+            {autoCreating ? t.generating : t.autoCreate}
           </button>
         </div>
       )}

@@ -18,14 +18,14 @@ interface PageStripProps {
 type PageInfo  = { label: string; special: boolean; cover?: boolean }
 type SpreadDef = { index: number; left: PageInfo; right: PageInfo }
 
-function buildSpreads(total: number, back: string, cover: string): SpreadDef[] {
+function buildSpreads(total: number, back: string, cover: string, inside: string, outside: string): SpreadDef[] {
   const lastLeftNum = total * 2 + 2   // e.g. 13*2+2 = 28
 
   const items: SpreadDef[] = [
     { index: 0, left:  { label: back,  special: true, cover: true },
                 right: { label: cover, special: true, cover: true } },
-    { index: 1, left:  { label: 'Inside', special: true },
-                right: { label: '01',     special: false } },
+    { index: 1, left:  { label: inside, special: true },
+                right: { label: '01',   special: false } },
   ]
 
   for (let i = 0; i < total; i++) {
@@ -42,7 +42,7 @@ function buildSpreads(total: number, back: string, cover: string): SpreadDef[] {
   items.push({
     index: total + 2,
     left:  { label: String(lastLeftNum).padStart(2, '0'), special: false },
-    right: { label: 'Outside', special: true },
+    right: { label: outside, special: true },
   })
 
   return items
@@ -58,7 +58,7 @@ export default function PageStrip({
   thumbnails,
 }: PageStripProps) {
   const { t } = useLang()
-  const spreads    = buildSpreads(totalContentSpreads, t.back, t.cover)
+  const spreads    = buildSpreads(totalContentSpreads, t.back, t.cover, t.inside, t.outside)
   const activeRef  = useRef<HTMLDivElement>(null)
   const [dragOverIndex, setDragOverIndex] = useState<number | null>(null)
   const [hoverIndex, setHoverIndex]       = useState<number | null>(null)
@@ -103,8 +103,8 @@ export default function PageStrip({
         <button
           className="page-strip-add"
           onClick={onAddSpread}
-          title="Agregar 2 páginas"
-          aria-label="Agregar páginas"
+          title={t.addTwoPages}
+          aria-label={t.addPages}
         >
           <Plus size={14} strokeWidth={1.5} />
         </button>
@@ -143,8 +143,8 @@ export default function PageStrip({
                 <button
                   className="page-strip-delete"
                   onClick={(e) => { e.stopPropagation(); onDeleteSpread(spread.index) }}
-                  aria-label="Eliminar spread"
-                  title="Eliminar"
+                  aria-label={t.deleteSpread}
+                  title={t.delete}
                 >
                   <X size={8} strokeWidth={2.5} />
                 </button>

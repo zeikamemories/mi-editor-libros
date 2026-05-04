@@ -1000,6 +1000,8 @@ export default function EditorPage() {
                 onPhotoDrop={handlePhotoDrop}
                 onTextEdit={handleTextEdit}
                 onFrameToolDeactivate={handleFrameToolDeactivate}
+                onUndo={handleUndo}
+                onRedo={handleRedo}
               />
 
               <PageStrip

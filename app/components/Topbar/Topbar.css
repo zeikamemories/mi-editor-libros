@@ -1,5 +1,5 @@
 .topbar {
-  height: 50px;
+  height: 58px;
   background: #fefefe;
   border-bottom: 1px solid #CFCFCF;
   display: flex;
@@ -26,13 +26,24 @@
 .topbar-action-btn {
   position: relative;
   display: flex;
+  flex-direction: column;
   align-items: center;
   justify-content: center;
+  gap: 2px;
   background: none;
   border: none;
   cursor: pointer;
   color: var(--color-black);
   padding: 4px 8px;
+}
+
+.topbar-label {
+  font-family: var(--font-body);
+  font-size: 9px;
+  font-weight: 500;
+  letter-spacing: 0.3px;
+  color: inherit;
+  white-space: nowrap;
 }
 
 .topbar-action-btn:hover svg {

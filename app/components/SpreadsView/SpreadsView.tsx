@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useRef } from 'react'
+import { useLang } from '../../context/LanguageContext'
 import './SpreadsView.css'
 
 interface SpreadsViewProps {
@@ -11,12 +12,18 @@ interface SpreadsViewProps {
   onReorderSpreads: (fromIndex: number, toIndex: number) => void
 }
 
-function spreadLabel(spread: number, totalSpreads: number): { left: string; right: string } {
-  if (spread === 0) return { left: 'Contra', right: 'Tapa' }
-  if (spread === 1) return { left: 'Interna', right: '01' }
+function spreadLabel(
+  spread: number,
+  totalSpreads: number,
+  back: string,
+  cover: string,
+  interna: string,
+): { left: string; right: string } {
+  if (spread === 0) return { left: back, right: cover }
+  if (spread === 1) return { left: interna, right: '01' }
   if (spread === totalSpreads - 1) {
     const lastLeft = String((totalSpreads - 3) * 2 + 2).padStart(2, '0')
-    return { left: lastLeft, right: 'Interna' }
+    return { left: lastLeft, right: interna }
   }
   const leftNum  = 2 * (spread - 1)
   const rightNum = leftNum + 1
@@ -30,6 +37,7 @@ export default function SpreadsView({
   onSpreadSelect,
   onReorderSpreads,
 }: SpreadsViewProps) {
+  const { t } = useLang()
   const [draggingIdx, setDraggingIdx] = useState<number | null>(null)
   const [dragOverIdx, setDragOverIdx] = useState<number | null>(null)
   // Prevents click from firing after a drag completes
@@ -74,7 +82,7 @@ export default function SpreadsView({
         <div className="spreads-grid-wrapper">
           <div className="spreads-grid">
             {Array.from({ length: totalSpreads }, (_, i) => {
-              const { left: leftLbl, right: rightLbl } = spreadLabel(i, totalSpreads)
+              const { left: leftLbl, right: rightLbl } = spreadLabel(i, totalSpreads, t.back, t.cover, t.interna)
               const thumb = thumbnails[i]
               const isActive   = i === currentSpread
               const isDragging = i === draggingIdx

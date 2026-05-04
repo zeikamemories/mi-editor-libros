@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useRef } from 'react'
 import { Copy, Check, X } from 'lucide-react'
+import { useLang } from '../../context/LanguageContext'
 import './ShareModal.css'
 
 interface Props {
@@ -10,6 +11,7 @@ interface Props {
 }
 
 export default function ShareModal({ url, onClose }: Props) {
+  const { t } = useLang()
   const [copied, setCopied]   = useState(false)
   const overlayRef            = useRef<HTMLDivElement>(null)
 
@@ -42,14 +44,14 @@ export default function ShareModal({ url, onClose }: Props) {
     <div className="share-overlay" ref={overlayRef} onClick={handleOverlayClick}>
       <div className="share-modal">
         <div className="share-header">
-          <span className="share-title">Compartir previsualización</span>
-          <button className="share-close" onClick={onClose} aria-label="Cerrar">
+          <span className="share-title">{t.sharePreview}</span>
+          <button className="share-close" onClick={onClose} aria-label={t.close}>
             <X size={16} strokeWidth={1.5} />
           </button>
         </div>
 
         <div className="share-body">
-          <label className="share-label">Link de previsualización</label>
+          <label className="share-label">{t.previewLink}</label>
           <div className="share-input-row">
             <input
               className="share-url-input"
@@ -61,12 +63,12 @@ export default function ShareModal({ url, onClose }: Props) {
             <button
               className={`share-copy-btn${copied ? ' share-copy-btn--copied' : ''}`}
               onClick={handleCopy}
-              aria-label={copied ? '¡Copiado!' : 'Copiar'}
+              aria-label={copied ? t.copied : t.copy}
             >
               {copied ? (
                 <>
                   <Check size={14} strokeWidth={2} />
-                  <span>¡Copiado!</span>
+                  <span>{t.copied}</span>
                 </>
               ) : (
                 <Copy size={16} strokeWidth={1.5} />

@@ -83,8 +83,8 @@ export default function Topbar({ onPreview, onExportJpg, onExportPdf, isExportin
 
       <div className="topbar-actions">
         <button className="topbar-action-btn">
-          <Info size={22} strokeWidth={1.5} />
-          <span className="topbar-tooltip">{t.description}</span>
+          <Info size={20} strokeWidth={1.5} />
+          <span className="topbar-label">{t.description}</span>
         </button>
 
         {/* Share button + popover */}
@@ -93,13 +93,13 @@ export default function Topbar({ onPreview, onExportJpg, onExportPdf, isExportin
             className={`topbar-action-btn${shareOpen ? ' topbar-action-btn--active' : ''}`}
             onClick={handleShareClick}
           >
-            <Share2 size={22} strokeWidth={1.5} />
-            <span className="topbar-tooltip">{t.share}</span>
+            <Share2 size={20} strokeWidth={1.5} />
+            <span className="topbar-label">{t.share}</span>
           </button>
 
           {shareOpen && (
             <div className="topbar-share-popover">
-              <p className="topbar-share-label">Link de previsualización</p>
+              <p className="topbar-share-label">{t.previewLink}</p>
               <div className="topbar-share-row">
                 <input
                   className="topbar-share-input"
@@ -111,7 +111,7 @@ export default function Topbar({ onPreview, onExportJpg, onExportPdf, isExportin
                 <button
                   className={`topbar-share-copy${copied ? ' topbar-share-copy--copied' : ''}`}
                   onClick={handleCopy}
-                  aria-label={copied ? '¡Copiado!' : 'Copiar'}
+                  aria-label={copied ? t.copied : t.copy}
                 >
                   {copied
                     ? <Check size={15} strokeWidth={2.5} />
@@ -130,8 +130,8 @@ export default function Topbar({ onPreview, onExportJpg, onExportPdf, isExportin
             onClick={() => setExportOpen((v) => !v)}
             disabled={isExporting}
           >
-            <ArrowDownToLine size={22} strokeWidth={1.5} />
-            <span className="topbar-tooltip">{isExporting ? t.exporting : t.save}</span>
+            <ArrowDownToLine size={20} strokeWidth={1.5} />
+            <span className="topbar-label">{isExporting ? t.exporting : t.save}</span>
           </button>
 
           {exportOpen && (
@@ -153,13 +153,13 @@ export default function Topbar({ onPreview, onExportJpg, onExportPdf, isExportin
         </div>
 
         <button className="topbar-action-btn" onClick={onPreview}>
-          <Eye size={22} strokeWidth={1.5} />
-          <span className="topbar-tooltip">{t.preview}</span>
+          <Eye size={20} strokeWidth={1.5} />
+          <span className="topbar-label">{t.preview}</span>
         </button>
       </div>
 
-      <button className="topbar-lang-toggle" onClick={toggleLang} aria-label="Toggle language">
-        {lang.toUpperCase()}
+      <button className="topbar-lang-toggle" onClick={toggleLang} aria-label={t.toggleLang}>
+        {lang === 'es' ? 'EN' : 'ES'}
       </button>
 
       <button className="topbar-btn-primary">{t.reviewAndBuy}</button>

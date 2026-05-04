@@ -61,7 +61,7 @@ export default function LayoutPanel({
   const [activeTab, setActiveTab] = useState<MainTab>('layouts')
   const [fondosSubTab, setFondosSubTab] = useState<FondosSubTab>('texturas')
   const [decoSubTab, setDecoSubTab] = useState<DecoSubTab>('stickers')
-  const [displayFilter, setDisplayFilter] = useState<number | 'all'>(selectedPhotoCount)
+  const [displayFilter, setDisplayFilter] = useState<number | 'all'>('all')
 
   const layouts = displayFilter === 'all' ? LAYOUTS : getLayoutsByCantidad(displayFilter)
 
@@ -74,19 +74,19 @@ export default function LayoutPanel({
           className={`panel-tab${activeTab === 'layouts' ? ' panel-tab--active' : ''}`}
           onClick={() => setActiveTab('layouts')}
         >
-          Layouts
+          {t.tabLayouts}
         </button>
         <button
           className={`panel-tab${activeTab === 'fondos' ? ' panel-tab--active' : ''}`}
           onClick={() => setActiveTab('fondos')}
         >
-          Fondos
+          {t.tabFondos}
         </button>
         <button
           className={`panel-tab${activeTab === 'deco' ? ' panel-tab--active' : ''}`}
           onClick={() => setActiveTab('deco')}
         >
-          Deco
+          {t.tabDeco}
         </button>
       </div>
 
@@ -141,13 +141,13 @@ export default function LayoutPanel({
               className={`panel-subtab${fondosSubTab === 'texturas' ? ' panel-subtab--active' : ''}`}
               onClick={() => setFondosSubTab('texturas')}
             >
-              Texturas
+              {t.subTabTexturas}
             </button>
             <button
               className={`panel-subtab${fondosSubTab === 'fondos' ? ' panel-subtab--active' : ''}`}
               onClick={() => setFondosSubTab('fondos')}
             >
-              Fondos
+              {t.tabFondos}
             </button>
           </div>
           <div className="panel-content-grid">
@@ -204,13 +204,13 @@ export default function LayoutPanel({
               className={`panel-subtab${decoSubTab === 'stickers' ? ' panel-subtab--active' : ''}`}
               onClick={() => setDecoSubTab('stickers')}
             >
-              Stickers
+              {t.subTabStickers}
             </button>
             <button
               className={`panel-subtab${decoSubTab === 'graficos' ? ' panel-subtab--active' : ''}`}
               onClick={() => setDecoSubTab('graficos')}
             >
-              Gráficos
+              {t.subTabGraficos}
             </button>
           </div>
           <div className="panel-content-grid">

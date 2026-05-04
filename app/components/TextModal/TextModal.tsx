@@ -5,6 +5,7 @@ import {
   X, AlignLeft, AlignCenter, AlignRight, AlignJustify,
   CirclePlus, CircleMinus, ChevronDown,
 } from 'lucide-react'
+import { useLang } from '../../context/LanguageContext'
 import './TextModal.css'
 
 // ─── Font options ────────────────────────────────────────────────────────────
@@ -67,6 +68,7 @@ export default function TextModal({
   const [lineHeight,  setLineHeight]  = useState(initialLineHeight  ?? 1.16)
   const [charSpacing, setCharSpacing] = useState(initialCharSpacing ?? 0)
 
+  const { t } = useLang()
   const [fontPickerOpen, setFontPickerOpen] = useState(false)
   const colorInputRef  = useRef<HTMLInputElement>(null)
   const textareaRef    = useRef<HTMLTextAreaElement>(null)
@@ -88,11 +90,11 @@ export default function TextModal({
   }, [fontPickerOpen])
 
   const alignments = [
-    { value: 'left',    Icon: AlignLeft,    label: 'Izquierda' },
-    { value: 'center',  Icon: AlignCenter,  label: 'Centro' },
-    { value: 'right',   Icon: AlignRight,   label: 'Derecha' },
-    { value: 'justify', Icon: AlignJustify, label: 'Justificado' },
-  ] as const
+    { value: 'left',    Icon: AlignLeft,    label: t.left },
+    { value: 'center',  Icon: AlignCenter,  label: t.center },
+    { value: 'right',   Icon: AlignRight,   label: t.right },
+    { value: 'justify', Icon: AlignJustify, label: t.justified },
+  ]
 
   const lhDisplay = lineHeight.toFixed(2)
   const csDisplay = charSpacing
@@ -103,8 +105,8 @@ export default function TextModal({
 
         {/* Header */}
         <div className="tm-header">
-          <span className="tm-title">Ingresa tu texto acá:</span>
-          <button className="tm-close" onClick={onCancel} aria-label="Cerrar">
+          <span className="tm-title">{t.enterText}</span>
+          <button className="tm-close" onClick={onCancel} aria-label={t.close}>
             <X size={13} strokeWidth={1.8} />
           </button>
         </div>
@@ -148,14 +150,14 @@ export default function TextModal({
           <button
             className={`tm-fmt${bold ? ' tm-fmt--on' : ''}`}
             onClick={() => setBold((v) => !v)}
-            aria-label="Negrita"
+            aria-label={t.bold}
           >
             <b>B</b>
           </button>
           <button
             className={`tm-fmt${underline ? ' tm-fmt--on' : ''}`}
             onClick={() => setUnderline((v) => !v)}
-            aria-label="Subrayado"
+            aria-label={t.underline}
           >
             <u>U</u>
           </button>
@@ -180,7 +182,7 @@ export default function TextModal({
           <button
             className="tm-fmt"
             onClick={() => setFontSize((v) => Math.max(6, v - 1))}
-            aria-label="Reducir tamaño"
+            aria-label={t.decreaseSize}
           >
             <CircleMinus size={11} strokeWidth={1.5} />
           </button>
@@ -188,7 +190,7 @@ export default function TextModal({
           <button
             className="tm-fmt"
             onClick={() => setFontSize((v) => Math.min(200, v + 1))}
-            aria-label="Aumentar tamaño"
+            aria-label={t.increaseSize}
           >
             <CirclePlus size={11} strokeWidth={1.5} />
           </button>
@@ -196,12 +198,12 @@ export default function TextModal({
           <div className="tm-sep" />
 
           {/* Color */}
-          <span className="tm-color-label">Color</span>
+          <span className="tm-color-label">{t.color}</span>
           <button
             className="tm-color-swatch"
             style={{ background: fill }}
             onClick={() => colorInputRef.current?.click()}
-            aria-label="Color de texto"
+            aria-label={t.textColor}
           />
           <input
             ref={colorInputRef}
@@ -218,11 +220,11 @@ export default function TextModal({
         <div className="tm-toolbar tm-toolbar--row2">
 
           {/* Line height */}
-          <span className="tm-detail-label">Interlineado</span>
+          <span className="tm-detail-label">{t.lineHeight}</span>
           <button
             className="tm-fmt"
             onClick={() => setLineHeight((v) => Math.max(0.8, parseFloat((v - 0.1).toFixed(2))))}
-            aria-label="Reducir interlineado"
+            aria-label={t.decreaseLH}
           >
             <CircleMinus size={11} strokeWidth={1.5} />
           </button>
@@ -230,7 +232,7 @@ export default function TextModal({
           <button
             className="tm-fmt"
             onClick={() => setLineHeight((v) => Math.min(3.0, parseFloat((v + 0.1).toFixed(2))))}
-            aria-label="Aumentar interlineado"
+            aria-label={t.increaseLH}
           >
             <CirclePlus size={11} strokeWidth={1.5} />
           </button>
@@ -238,11 +240,11 @@ export default function TextModal({
           <div className="tm-sep" />
 
           {/* Letter spacing */}
-          <span className="tm-detail-label">Espaciado</span>
+          <span className="tm-detail-label">{t.spacing}</span>
           <button
             className="tm-fmt"
             onClick={() => setCharSpacing((v) => Math.max(-200, v - 10))}
-            aria-label="Reducir espaciado"
+            aria-label={t.decreaseSpacing}
           >
             <CircleMinus size={11} strokeWidth={1.5} />
           </button>
@@ -250,7 +252,7 @@ export default function TextModal({
           <button
             className="tm-fmt"
             onClick={() => setCharSpacing((v) => Math.min(500, v + 10))}
-            aria-label="Aumentar espaciado"
+            aria-label={t.increaseSpacing}
           >
             <CirclePlus size={11} strokeWidth={1.5} />
           </button>
@@ -265,7 +267,7 @@ export default function TextModal({
           className="tm-body"
           value={text}
           onChange={(e) => setText(e.target.value)}
-          placeholder="Escribe tu texto..."
+          placeholder={t.textPlaceholder}
           style={{
             fontFamily:     fontFamily,
             fontWeight:     bold ? 'bold' : 'normal',
@@ -280,7 +282,7 @@ export default function TextModal({
 
         {/* Footer */}
         <div className="tm-footer">
-          <button className="tm-action" onClick={onCancel}>Cancelar</button>
+          <button className="tm-action" onClick={onCancel}>{t.cancel}</button>
           <button
             className="tm-action tm-action--ok"
             onClick={() => onConfirm({
