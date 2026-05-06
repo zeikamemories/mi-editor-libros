@@ -13,9 +13,10 @@ interface TopbarProps {
   isExporting: boolean
   projectId: string
   onShare?: () => void
+  onTourOpen?: () => void
 }
 
-export default function Topbar({ onPreview, onExportJpg, onExportPdf, isExporting, projectId, onShare }: TopbarProps) {
+export default function Topbar({ onPreview, onExportJpg, onExportPdf, isExporting, projectId, onShare, onTourOpen }: TopbarProps) {
   const { lang, t, toggleLang } = useLang()
 
   // ── Export dropdown ────────────────────────────────────────────────────────
@@ -82,7 +83,7 @@ export default function Topbar({ onPreview, onExportJpg, onExportPdf, isExportin
       <div className="topbar-spacer" />
 
       <div className="topbar-actions">
-        <button className="topbar-action-btn">
+        <button className="topbar-action-btn" data-tour-trigger onClick={onTourOpen}>
           <Info size={20} strokeWidth={1.5} />
           <span className="topbar-label">{t.description}</span>
         </button>

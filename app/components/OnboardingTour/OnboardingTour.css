@@ -1,0 +1,126 @@
+/* ── Tour overlay ── */
+
+.tour-root {
+  position: fixed;
+  inset: 0;
+  z-index: 9000;
+  pointer-events: all;
+}
+
+/* ── SVG spotlight ── */
+
+.tour-svg {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+
+.tour-spot-rect {
+  /* no transition on mount so first frame snaps into place */
+}
+
+.tour-spot-rect--animated {
+  transition: x 0.35s cubic-bezier(0.4, 0, 0.2, 1),
+              y 0.35s cubic-bezier(0.4, 0, 0.2, 1),
+              width  0.35s cubic-bezier(0.4, 0, 0.2, 1),
+              height 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* ── Card ── */
+
+.tour-card {
+  position: fixed;
+  width: 300px;
+  background: #252525;
+  border-radius: 0;
+  padding: 18px 20px 16px;
+  z-index: 9001;
+  pointer-events: all;
+  box-shadow: 0 6px 24px rgba(0, 0, 0, 0.45);
+}
+
+.tour-title {
+  font-family: var(--font-body), sans-serif;
+  font-size: 18px;
+  font-weight: 700;
+  color: #ffffff;
+  margin: 0 0 8px;
+  line-height: 1.2;
+}
+
+.tour-desc {
+  font-family: var(--font-body), sans-serif;
+  font-size: 13px;
+  font-weight: 400;
+  color: rgba(255, 255, 255, 0.88);
+  margin: 0 0 16px;
+  line-height: 1.5;
+}
+
+/* ── Footer ── */
+
+.tour-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.tour-dots {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.tour-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.35);
+  border: none;
+  padding: 0;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.tour-dot--active,
+.tour-dot--done {
+  background: #528ED6;
+}
+
+.tour-nav {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.tour-nav-btn {
+  background: none;
+  border: none;
+  color: #ffffff;
+  font-size: 20px;
+  cursor: pointer;
+  padding: 4px 6px;
+  border-radius: 4px;
+  line-height: 1;
+  transition: opacity 0.15s;
+  font-family: var(--font-body), sans-serif;
+}
+
+.tour-nav-btn:hover {
+  opacity: 0.7;
+}
+
+.tour-nav-btn--gotit {
+  font-size: 13px;
+  font-weight: 600;
+  background: #528ED6;
+  border-radius: 4px;
+  padding: 5px 12px;
+  color: #ffffff;
+}
+
+.tour-nav-btn--gotit:hover {
+  opacity: 0.85;
+}

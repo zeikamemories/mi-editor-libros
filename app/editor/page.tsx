@@ -18,6 +18,7 @@ const Canvas       = dynamic(() => import('../components/Canvas/Canvas'),       
 const PreviewModal = dynamic(() => import('../components/PreviewModal/PreviewModal'), { ssr: false })
 import LayoutPanel from '../components/LayoutPanel/LayoutPanel'
 import PageStrip   from '../components/PageStrip/PageStrip'
+import OnboardingTour, { tourHasBeenSeen } from '../components/OnboardingTour/OnboardingTour'
 import type { Layout } from '../components/LayoutPanel/LayoutPanel'
 
 import { BOOK_SIZE }                                      from '../config/bookSize'
@@ -83,6 +84,7 @@ export default function EditorPage() {
   const [guides,         setGuides]         = useState<Guide[]>([])
   const [panMode,        setPanMode]        = useState(false)
   const [frameTool,      setFrameTool]      = useState(false)
+  const [tourOpen,       setTourOpen]       = useState(false)
   const [activePageBg,   setActivePageBg]   = useState('#FFFFFF')
   const [showGrid,       setShowGrid]       = useState(false)
   const [gridSettings,   setGridSettings]   = useState<GridSettings>({
@@ -112,6 +114,11 @@ export default function EditorPage() {
   const blankThumbRef    = useRef<string>('')
   const noEditThumbRef   = useRef<string>('')
   const logoThumbRef     = useRef<string>('')
+
+  // ── Auto-open tour on first visit ─────────────────────────────────────────
+  useEffect(() => {
+    if (!tourHasBeenSeen()) setTourOpen(true)
+  }, [])
 
   // Generate initial thumbnails on mount so the strip never shows grey rects
   useEffect(() => {
@@ -932,7 +939,7 @@ export default function EditorPage() {
     <LanguageProvider>
     <>
     <div className="editor-root">
-      <Topbar onPreview={handleOpenPreview} onExportJpg={handleExportJpg} onExportPdf={handleExportPdf} isExporting={isExporting} projectId={projectId} onShare={handleShare} />
+      <Topbar onPreview={handleOpenPreview} onExportJpg={handleExportJpg} onExportPdf={handleExportPdf} isExporting={isExporting} projectId={projectId} onShare={handleShare} onTourOpen={() => setTourOpen(true)} />
 
       <div className="editor-body">
         <PhotoPanel
@@ -1036,6 +1043,8 @@ export default function EditorPage() {
         onClose={handleClosePreview}
       />
     )}
+
+    <OnboardingTour open={tourOpen} onClose={() => setTourOpen(false)} />
 
     {textModal && (
       <TextModal
