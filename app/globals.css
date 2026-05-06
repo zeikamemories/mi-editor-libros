@@ -1,4 +1,11 @@
 @font-face {
+  font-family: 'BauerBodoni';
+  src: url('/fonts/Bauer Bodoni Regular.otf') format('opentype');
+  font-weight: 400;
+  font-style: normal;
+}
+
+@font-face {
   font-family: 'CostumedHero';
   src: url('/fonts/costumedherojnl 2.ttf') format('truetype');
   font-weight: 400;
@@ -48,6 +55,8 @@
 
   --font-display: 'amandine', serif;
   --font-body: 'OverusedGrotesk', sans-serif;
+  --font-serif: 'BauerBodoni', serif;
+  --font-handwriting: 'adobe-handwriting-ernie', cursive;
 
   --color-bg:      var(--color-cream);
   --color-text:    var(--color-black);

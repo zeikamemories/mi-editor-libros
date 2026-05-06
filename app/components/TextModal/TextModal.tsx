@@ -20,6 +20,8 @@ export const TEXT_FONTS = [
   { label: 'Century Old Style',     value: 'century-old-style-std' },
   { label: 'Geller Headline',       value: 'geller-headline' },
   { label: 'Handwriting Tiffany',   value: 'adobe-handwriting-tiffany' },
+  { label: 'Bauer Bodoni',          value: 'BauerBodoni' },
+  { label: 'Handwriting Ernie',     value: 'adobe-handwriting-ernie' },
 ] as const
 
 // ─── Types ────────────────────────────────────────────────────────────────────

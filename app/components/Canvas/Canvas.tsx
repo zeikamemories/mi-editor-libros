@@ -1037,6 +1037,7 @@ export default function Canvas({
           return
         }
 
+
         if (isPanMode.current) {
           // Different canvas from where the image lives → exit
           if (panIndicatorCanvasRef.current !== fc) {
@@ -1462,6 +1463,7 @@ export default function Canvas({
     // Clipboard stores plain serialized data — avoids Fabric clone() quirks in v7
     type ClipboardEntry =
       | { kind: 'photo'; src: string; frameX: number; frameY: number; frameW: number; frameH: number; naturalW: number; naturalH: number; coverScale: number; editScale: number; cropX: number; cropY: number }
+      | { kind: 'freePhoto'; src: string; left: number; top: number; scaleX: number; scaleY: number; naturalW: number; naturalH: number }
       | { kind: 'frame'; frameX: number; frameY: number; frameW: number; frameH: number }
       | { kind: 'text';  text: string; left: number; top: number; width: number; fontSize: number; fontFamily: string; fill: string }
     const clipboard = { current: null as ClipboardEntry | null }
@@ -1499,6 +1501,17 @@ export default function Canvas({
             editScale:  (d.editScale  as number) ?? 1,
             cropX:      obj.cropX ?? 0,
             cropY:      obj.cropY ?? 0,
+          }
+        } else if (d?.type === 'freePhoto' && obj instanceof fabric.FabricImage) {
+          clipboard.current = {
+            kind:     'freePhoto',
+            src:      obj.getSrc(),
+            left:     obj.left    ?? 0,
+            top:      obj.top     ?? 0,
+            scaleX:   obj.scaleX  ?? 1,
+            scaleY:   obj.scaleY  ?? 1,
+            naturalW: d.naturalW  as number,
+            naturalH: d.naturalH  as number,
           }
         } else if (d?.type === 'frame' && obj instanceof fabric.Rect) {
           clipboard.current = {
