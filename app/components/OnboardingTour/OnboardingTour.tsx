@@ -3,43 +3,36 @@
 import { useState, useEffect, useCallback, useRef } from 'react'
 import './OnboardingTour.css'
 
-const TOUR_KEY = 'zeika_tour_seen'
-
 const STEPS = [
   {
     title: 'Upload images',
-    desc:  'Upload images from your computer, filter and order them as you want them. You can drag them to the canvas.',
+    desc:  'Upload images from your computer, then filter and arrange them on the canvas. You can drag them.',
     target: '.photo-panel',
   },
   {
     title: 'Layout Panel',
-    desc:  'Drag the layout you prefer to the canvas. Choose a background or decorations too!',
+    desc:  'Drag your preferred layout onto the canvas. Choose a background or decoration too.',
     target: '.layout-panel',
   },
   {
     title: 'Tool Bar',
-    desc:  'Use the toolbar to add text, do a custom grid or photo frame, rulers, color background and much more.',
+    desc:  'Use the toolbar to add text, custom grids, photo frames, rulers, color backgrounds, and more.',
     target: '.toolbar',
   },
   {
     title: 'Page Strip',
-    desc:  'See all your pages and by pressing the + you can add more pages.',
+    desc:  'View all your pages and add new ones using the + button.',
     target: '.page-strip',
   },
   {
     title: 'Top Bar',
-    desc:  'Preview, share, save and print your book!',
+    desc:  'Preview, share, save, and print your book.',
     target: '.topbar',
   },
 ]
 
 interface Rect { x: number; y: number; w: number; h: number }
 interface Props { open: boolean; onClose: () => void }
-
-export function tourHasBeenSeen(): boolean {
-  if (typeof window === 'undefined') return false
-  return localStorage.getItem(TOUR_KEY) === '1'
-}
 
 export default function OnboardingTour({ open, onClose }: Props) {
   const [step,      setStep]      = useState(0)
@@ -69,10 +62,12 @@ export default function OnboardingTour({ open, onClose }: Props) {
     if (!open) { setReady(false); setStep(0); return }
     const newSpot = measure(STEPS[0].target)
     setSpot(newSpot)
-    setCardPos(calcCardPos())
-    // Tiny delay so the initial rect renders without transition before we enable it
-    const t = setTimeout(() => setReady(true), 50)
-    return () => clearTimeout(t)
+    // Topbar is dynamically imported (ssr:false) so [data-tour-trigger] may not
+    // be in the DOM yet when the tour auto-opens on mount. Delay measurement so
+    // the button is available, then enable transitions 60ms later.
+    const posTimer   = setTimeout(() => setCardPos(calcCardPos()), 200)
+    const readyTimer = setTimeout(() => setReady(true), 260)
+    return () => { clearTimeout(posTimer); clearTimeout(readyTimer) }
   }, [open, measure, calcCardPos])
 
   useEffect(() => {
@@ -81,7 +76,6 @@ export default function OnboardingTour({ open, onClose }: Props) {
   }, [step, open, ready, measure])
 
   const handleClose = useCallback(() => {
-    localStorage.setItem(TOUR_KEY, '1')
     onClose()
   }, [onClose])
 
@@ -114,7 +108,7 @@ export default function OnboardingTour({ open, onClose }: Props) {
             />
           </mask>
         </defs>
-        <rect width="100%" height="100%" fill="rgba(0,0,0,0.65)" mask="url(#tour-mask)" />
+        <rect width="100%" height="100%" fill="rgba(0,0,0,0.35)" mask="url(#tour-mask)" />
       </svg>
 
       {/* ── Card ── */}
@@ -139,11 +133,14 @@ export default function OnboardingTour({ open, onClose }: Props) {
           </div>
 
           <div className="tour-nav">
-            {!isFirst && (
-              <button className="tour-nav-btn" onClick={() => setStep(s => s - 1)} aria-label="Back">
-                ←
-              </button>
-            )}
+            <button
+              className="tour-nav-btn"
+              onClick={() => setStep(s => s - 1)}
+              aria-label="Back"
+              style={{ visibility: isFirst ? 'hidden' : 'visible' }}
+            >
+              ←
+            </button>
             {isLast ? (
               <button className="tour-nav-btn tour-nav-btn--gotit" onClick={handleClose}>
                 Got it

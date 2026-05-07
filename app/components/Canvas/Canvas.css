@@ -412,3 +412,52 @@
 .canvas-zoom-btn:hover {
   opacity: 1;
 }
+
+/* ─── Right-click context menu ───────────────────────────────────────────── */
+
+.canvas-ctx-menu {
+  position: fixed;
+  z-index: 9999;
+  background: #ffffff;
+  border: 1px solid rgba(0, 0, 0, 0.10);
+  border-radius: 4px;
+  padding: 4px 0;
+  min-width: 178px;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.12), 0 1px 4px rgba(0, 0, 0, 0.06);
+  pointer-events: all;
+}
+
+.canvas-ctx-item {
+  display: block;
+  width: 100%;
+  background: none;
+  border: none;
+  text-align: left;
+  font-family: var(--font-body), sans-serif;
+  font-size: 13px;
+  font-weight: 400;
+  color: #191919;
+  padding: 7px 14px;
+  cursor: pointer;
+  transition: background 0.1s;
+  line-height: 1.2;
+  white-space: nowrap;
+}
+
+.canvas-ctx-item:hover {
+  background: #F0EFEB;
+}
+
+.canvas-ctx-sep {
+  height: 1px;
+  background: rgba(0, 0, 0, 0.08);
+  margin: 4px 0;
+}
+
+.canvas-ctx-item--delete {
+  color: #C0392B;
+}
+
+.canvas-ctx-item--delete:hover {
+  background: #FDF0EF;
+}

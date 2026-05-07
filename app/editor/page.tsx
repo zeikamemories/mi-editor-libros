@@ -18,7 +18,7 @@ const Canvas       = dynamic(() => import('../components/Canvas/Canvas'),       
 const PreviewModal = dynamic(() => import('../components/PreviewModal/PreviewModal'), { ssr: false })
 import LayoutPanel from '../components/LayoutPanel/LayoutPanel'
 import PageStrip   from '../components/PageStrip/PageStrip'
-import OnboardingTour, { tourHasBeenSeen } from '../components/OnboardingTour/OnboardingTour'
+import OnboardingTour from '../components/OnboardingTour/OnboardingTour'
 import type { Layout } from '../components/LayoutPanel/LayoutPanel'
 
 import { BOOK_SIZE }                                      from '../config/bookSize'
@@ -115,9 +115,9 @@ export default function EditorPage() {
   const noEditThumbRef   = useRef<string>('')
   const logoThumbRef     = useRef<string>('')
 
-  // ── Auto-open tour on first visit ─────────────────────────────────────────
+  // ── Auto-open tour on every page load ─────────────────────────────────────
   useEffect(() => {
-    if (!tourHasBeenSeen()) setTourOpen(true)
+    setTourOpen(true)
   }, [])
 
   // Generate initial thumbnails on mount so the strip never shows grey rects
@@ -210,11 +210,18 @@ export default function EditorPage() {
     const usedSrcs = new Set<string>()
     for (const snapshot of Object.values(spreadsData.current)) {
       for (const page of [snapshot.left, snapshot.right]) {
-        for (const frame of page.frames) {
-          if (!frame.isEmpty && frame.photo) usedSrcs.add(frame.photo)
-        }
-        for (const fp of page.freePhotos ?? []) {
-          usedSrcs.add(fp.src)
+        if (page.objects !== undefined) {
+          for (const entry of page.objects) {
+            if (entry.kind === 'photo') usedSrcs.add(entry.photo)
+            if (entry.kind === 'freePhoto') usedSrcs.add(entry.src)
+          }
+        } else {
+          for (const frame of page.frames ?? []) {
+            if (!frame.isEmpty && frame.photo) usedSrcs.add(frame.photo)
+          }
+          for (const fp of page.freePhotos ?? []) {
+            usedSrcs.add(fp.src)
+          }
         }
       }
     }
@@ -241,11 +248,12 @@ export default function EditorPage() {
   const renderPageThumb = useCallback((pageData: PageData): Promise<string> => {
     const THUMB_W = 82
     const THUMB_H = 106
-    const isEmpty =
-      pageData.frames.length === 0 &&
-      pageData.texts.length  === 0 &&
-      (pageData.freePhotos?.length ?? 0) === 0 &&
-      !pageData.backgroundImage
+    const isEmpty = pageData.objects !== undefined
+      ? pageData.objects.length === 0 && !pageData.backgroundImage
+      : (pageData.frames?.length ?? 0) === 0 &&
+        (pageData.texts?.length  ?? 0) === 0 &&
+        (pageData.freePhotos?.length ?? 0) === 0 &&
+        !pageData.backgroundImage
     if (isEmpty) {
       const c = document.createElement('canvas')
       c.width = THUMB_W; c.height = THUMB_H
@@ -626,13 +634,17 @@ export default function EditorPage() {
     // Editable pages: spread-1 right, then spreads 2…totalContentSpreads+1 both sides
     const available: Array<{ spreadIndex: number; side: 'left' | 'right' }> = []
 
-    const s1rFilled = spreadsData.current[1]?.right?.frames.some((f) => !f.isEmpty) ?? false
+    const pageHasPhoto = (page: PageData | undefined) => page?.objects !== undefined
+      ? page.objects.some((o) => o.kind === 'photo')
+      : page?.frames?.some((f) => !f.isEmpty) ?? false
+
+    const s1rFilled = pageHasPhoto(spreadsData.current[1]?.right)
     if (!s1rFilled) available.push({ spreadIndex: 1, side: 'right' })
 
     for (let si = 2; si <= totalContentSpreads + 1; si++) {
       const saved = spreadsData.current[si]
-      if (!(saved?.left?.frames.some((f)  => !f.isEmpty) ?? false)) available.push({ spreadIndex: si, side: 'left'  })
-      if (!(saved?.right?.frames.some((f) => !f.isEmpty) ?? false)) available.push({ spreadIndex: si, side: 'right' })
+      if (!pageHasPhoto(saved?.left))  available.push({ spreadIndex: si, side: 'left'  })
+      if (!pageHasPhoto(saved?.right)) available.push({ spreadIndex: si, side: 'right' })
     }
 
     if (available.length === 0) return
@@ -642,7 +654,7 @@ export default function EditorPage() {
     const base  = Math.floor(total / pages)
     const extra = total % pages
 
-    const blankPage = (): PageData => ({ background: '#FFFFFF', pageW: PAGE_W, pageH: PAGE_H, frames: [], texts: [] })
+    const blankPage = (): PageData => ({ background: '#FFFFFF', pageW: PAGE_W, pageH: PAGE_H, objects: [] })
 
     let photoIdx = 0
 
@@ -754,7 +766,7 @@ export default function EditorPage() {
   // ── Apply background to all pages ─────────────────────────────────────────
   const handleApplyBgToAll = useCallback(() => {
     const color = activePageBg
-    const blankPage = (): PageData => ({ background: color, pageW: PAGE_W, pageH: PAGE_H, frames: [], texts: [] })
+    const blankPage = (): PageData => ({ background: color, pageW: PAGE_W, pageH: PAGE_H, objects: [] })
 
     // Cover every spread — visited ones get their content preserved, unvisited
     // ones get a minimal entry so deserializePage will apply the color on first load.
@@ -840,7 +852,7 @@ export default function EditorPage() {
     const folder = zip.folder(projectName)!
 
     const blankPage = (): PageData => ({
-      background: '#FFFFFF', pageW: PAGE_W, pageH: PAGE_H, frames: [], texts: [],
+      background: '#FFFFFF', pageW: PAGE_W, pageH: PAGE_H, objects: [],
     })
 
     // Mirrors PageStrip's buildSpreads: skips "Inside" (spread 1 left) and "Outside" (last spread right)
@@ -886,7 +898,7 @@ export default function EditorPage() {
     saveCurrentSpread()
 
     const blankPage = (): PageData => ({
-      background: '#FFFFFF', pageW: PAGE_W, pageH: PAGE_H, frames: [], texts: [],
+      background: '#FFFFFF', pageW: PAGE_W, pageH: PAGE_H, objects: [],
     })
 
     const pageWidthMm  = 432

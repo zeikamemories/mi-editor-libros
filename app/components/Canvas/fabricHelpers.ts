@@ -603,31 +603,42 @@ export function addShape(
 
 // ─── 6. serializePage ───────────────────────────────────────────────────────
 
-type SerializedFrame = {
-  frameX: number
-  frameY: number
-  frameW: number
-  frameH: number
-  isEmpty: boolean
-  photo?: string
-  coverScale?: number
-  editScale?: number
-  cropX?: number
-  cropY?: number
-  naturalW?: number
-  naturalH?: number
-  // legacy fields (backward compat — ignored on load, center crop used instead)
-  scaleX?: number
-  scaleY?: number
-  imgLeft?: number
-  imgTop?: number
+// ─── Serialized entry types (one per canvas object kind) ────────────────────
+// All entries include a `kind` discriminator so they can live in one ordered
+// array that preserves canvas z-order across types.
+
+type FrameEntry = {
+  kind:    'frame'
+  frameX:  number
+  frameY:  number
+  frameW:  number
+  frameH:  number
 }
 
-type SerializedText = {
+type PhotoEntry = {
+  kind:       'photo'
+  frameX:     number
+  frameY:     number
+  frameW:     number
+  frameH:     number
+  photo:      string
+  coverScale: number
+  editScale:  number
+  cropX:      number
+  cropY:      number
+  naturalW:   number
+  naturalH:   number
+}
+
+type TextEntry = {
+  kind:        'text'
   text:        string
   left:        number
   top:         number
   width:       number
+  angle:       number
+  scaleX:      number
+  scaleY:      number
   fontSize:    number
   fontFamily:  string
   fill:        string
@@ -638,7 +649,8 @@ type SerializedText = {
   charSpacing?: number
 }
 
-type SerializedFreePhoto = {
+type FreePhotoEntry = {
+  kind:     'freePhoto'
   src:      string
   left:     number
   top:      number
@@ -649,7 +661,8 @@ type SerializedFreePhoto = {
   naturalH: number
 }
 
-type SerializedShape = {
+type ShapeEntry = {
+  kind:        'shape'
   shape:       ShapeKind
   left:        number
   top:         number
@@ -663,15 +676,46 @@ type SerializedShape = {
   strokeWidth: number
 }
 
+type SerializedEntry = FrameEntry | PhotoEntry | TextEntry | FreePhotoEntry | ShapeEntry
+
 export type PageData = {
   background:       string
   backgroundImage?: string
   pageW:            number
   pageH:            number
-  frames:           SerializedFrame[]
-  texts:            SerializedText[]
-  freePhotos?:      SerializedFreePhoto[]
-  shapes?:          SerializedShape[]
+  // Primary format: all canvas objects in z-order (bottom → top)
+  objects?:         SerializedEntry[]
+  // Legacy fields — present in data saved before this format; used as fallback
+  frames?:     LegacyFrame[]
+  texts?:      LegacyText[]
+  freePhotos?: LegacyFreePhoto[]
+  shapes?:     LegacyShape[]
+}
+
+// ─── Legacy types (backward compat only) ────────────────────────────────────
+
+type LegacyFrame = {
+  frameX: number; frameY: number; frameW: number; frameH: number
+  isEmpty: boolean
+  photo?: string; coverScale?: number; editScale?: number
+  cropX?: number; cropY?: number; naturalW?: number; naturalH?: number
+}
+type LegacyText = {
+  text: string; left: number; top: number; width: number
+  fontSize: number; fontFamily: string; fill: string
+  fontWeight?: string; underline?: boolean; textAlign?: string
+  lineHeight?: number; charSpacing?: number
+}
+type LegacyFreePhoto = {
+  src: string; left: number; top: number
+  scaleX: number; scaleY: number; angle: number
+  naturalW: number; naturalH: number
+}
+type LegacyShape = {
+  shape: ShapeKind; left: number; top: number
+  width: number; height: number
+  scaleX: number; scaleY: number; angle: number
+  fill: string; stroke: string; strokeWidth: number
 }
 
 export function serializePage(
@@ -679,33 +723,28 @@ export function serializePage(
   pageW: number,
   pageH: number,
 ): PageData {
-  const frames:      SerializedFrame[]     = []
-  const texts:       SerializedText[]      = []
-  const freePhotos:  SerializedFreePhoto[] = []
-  const shapes:      SerializedShape[]     = []
+  const objects: SerializedEntry[] = []
 
   for (const obj of canvas.getObjects()) {
     const data = (obj as FabricObjectWithData).data
 
     if (data?.type === 'frame') {
       const br = obj.getBoundingRect()
-      frames.push({
-        frameX:  br.left,
-        frameY:  br.top,
-        frameW:  br.width,
-        frameH:  br.height,
-        isEmpty: true,
+      objects.push({
+        kind:   'frame',
+        frameX: br.left,
+        frameY: br.top,
+        frameW: br.width,
+        frameH: br.height,
       })
-    }
-
-    if (data?.type === 'photo' && obj instanceof fabric.FabricImage) {
+    } else if (data?.type === 'photo' && obj instanceof fabric.FabricImage) {
       const pd = data as PhotoData
-      frames.push({
+      objects.push({
+        kind:       'photo',
         frameX:     pd.frameX,
         frameY:     pd.frameY,
         frameW:     pd.frameW,
         frameH:     pd.frameH,
-        isEmpty:    false,
         photo:      obj.getSrc(),
         coverScale: pd.coverScale,
         editScale:  pd.editScale,
@@ -714,40 +753,39 @@ export function serializePage(
         naturalW:   pd.naturalW,
         naturalH:   pd.naturalH,
       })
-    }
-
-    if (data?.type === 'freePhoto' && obj instanceof fabric.FabricImage) {
+    } else if (data?.type === 'freePhoto' && obj instanceof fabric.FabricImage) {
       const fp = data as FreePhotoData
-      freePhotos.push({
+      objects.push({
+        kind:     'freePhoto',
         src:      obj.getSrc(),
-        left:     obj.left     ?? 0,
-        top:      obj.top      ?? 0,
-        scaleX:   obj.scaleX   ?? 1,
-        scaleY:   obj.scaleY   ?? 1,
-        angle:    obj.angle    ?? 0,
+        left:     obj.left   ?? 0,
+        top:      obj.top    ?? 0,
+        scaleX:   obj.scaleX ?? 1,
+        scaleY:   obj.scaleY ?? 1,
+        angle:    obj.angle  ?? 0,
         naturalW: fp.naturalW,
         naturalH: fp.naturalH,
       })
-    }
-
-    if (data?.type === 'text' && obj instanceof fabric.Textbox) {
-      texts.push({
-        text:        obj.text ?? '',
-        left:        obj.left ?? 0,
-        top:         obj.top ?? 0,
-        width:       obj.width ?? pageW * 0.5,
-        fontSize:    obj.fontSize ?? 24,
+    } else if (data?.type === 'text' && obj instanceof fabric.Textbox) {
+      objects.push({
+        kind:        'text',
+        text:        obj.text       ?? '',
+        left:        obj.left       ?? 0,
+        top:         obj.top        ?? 0,
+        width:       obj.width      ?? pageW * 0.5,
+        angle:       obj.angle      ?? 0,
+        scaleX:      obj.scaleX     ?? 1,
+        scaleY:      obj.scaleY     ?? 1,
+        fontSize:    obj.fontSize   ?? 24,
         fontFamily:  obj.fontFamily ?? 'amandine',
-        fill:        (obj.fill as string) ?? '#191919',
+        fill:        (obj.fill as string)       ?? '#191919',
         fontWeight:  (obj.fontWeight as string) ?? 'normal',
-        underline:   obj.underline ?? false,
-        textAlign:   obj.textAlign ?? 'left',
+        underline:   obj.underline  ?? false,
+        textAlign:   obj.textAlign  ?? 'left',
         lineHeight:  obj.lineHeight ?? 1.16,
         charSpacing: obj.charSpacing ?? 0,
       })
-    }
-
-    if (data?.type === 'shape') {
+    } else if (data?.type === 'shape') {
       const sd = data as ShapeData
       const w = sd.shape === 'circle'
         ? 2 * (obj as unknown as fabric.Ellipse).rx
@@ -755,7 +793,8 @@ export function serializePage(
       const h = sd.shape === 'circle'
         ? 2 * (obj as unknown as fabric.Ellipse).ry
         : (obj.height ?? 100)
-      shapes.push({
+      objects.push({
+        kind:        'shape',
         shape:       sd.shape,
         left:        obj.left        ?? 0,
         top:         obj.top         ?? 0,
@@ -779,10 +818,7 @@ export function serializePage(
     backgroundImage,
     pageW,
     pageH,
-    frames,
-    texts,
-    freePhotos,
-    shapes,
+    objects,
   }
 }
 
@@ -817,14 +853,14 @@ export function buildPageFromLayout(
   pageW:    number,
   pageH:    number,
 ): PageData {
-  const frames = layout.frames.map((frame, i) => {
+  const objects: SerializedEntry[] = layout.frames.map((frame, i) => {
     const frameX = frame.x * pageW
     const frameY = frame.y * pageH
     const frameW = frame.w * pageW
     const frameH = frame.h * pageH
 
     const photo = photos[i]
-    if (!photo) return { frameX, frameY, frameW, frameH, isEmpty: true as const }
+    if (!photo) return { kind: 'frame' as const, frameX, frameY, frameW, frameH }
 
     const nW         = photo.naturalW || 1
     const nH         = photo.naturalH || 1
@@ -833,11 +869,11 @@ export function buildPageFromLayout(
     const virtH      = frameH / coverScale
 
     return {
+      kind:       'photo' as const,
       frameX,
       frameY,
       frameW,
       frameH,
-      isEmpty:    false as const,
       photo:      photo.src,
       coverScale,
       editScale:  1,
@@ -848,7 +884,7 @@ export function buildPageFromLayout(
     }
   })
 
-  return { background: '#FFFFFF', pageW, pageH, frames, texts: [] }
+  return { background: '#FFFFFF', pageW, pageH, objects }
 }
 
 // ─── 7b. exportPageAsJpg ────────────────────────────────────────────────────
@@ -893,163 +929,221 @@ export async function deserializePage(
     canvas.backgroundImage = bgImg
   }
 
-  for (const sf of pageData.frames) {
-    if (sf.isEmpty) {
-      const rect = new fabric.Rect({
-        left:    sf.frameX,
-        top:     sf.frameY,
-        width:   sf.frameW,
-        height:  sf.frameH,
-        originX: 'left',
-        originY: 'top',
-        fill:         '#F0EFEB',
-        stroke:       '#528ED6',
-        strokeWidth:  1,
-        strokeDashArray: [5, 5],
-        strokeUniform:   true,
-        selectable:    true,
-        evented:       true,
-        lockRotation:  true,
-      }) as fabric.Rect & { data: FrameData }
+  if (pageData.objects !== undefined) {
+    // New format: restore all objects in saved z-order (bottom → top)
+    for (const entry of pageData.objects) {
+      if (entry.kind === 'frame') {
+        const rect = new fabric.Rect({
+          left:   entry.frameX,
+          top:    entry.frameY,
+          width:  entry.frameW,
+          height: entry.frameH,
+          originX: 'left',
+          originY: 'top',
+          fill:            '#F0EFEB',
+          stroke:          '#528ED6',
+          strokeWidth:     1,
+          strokeDashArray: [5, 5],
+          strokeUniform:   true,
+          selectable:      true,
+          evented:         true,
+          lockRotation:    true,
+        }) as fabric.Rect & { data: FrameData }
+        rect.data = { type: 'frame', isEmpty: true, frameX: entry.frameX, frameY: entry.frameY, frameW: entry.frameW, frameH: entry.frameH }
+        canvas.add(rect)
 
-      rect.data = {
-        type: 'frame',
-        isEmpty: true,
-        frameX: sf.frameX,
-        frameY: sf.frameY,
-        frameW: sf.frameW,
-        frameH: sf.frameH,
+      } else if (entry.kind === 'photo') {
+        const img = await fabric.FabricImage.fromURL(entry.photo, { crossOrigin: 'anonymous' })
+        const { frameX, frameY, frameW, frameH, naturalW, naturalH, coverScale, editScale } = entry
+        const scaleXY = coverScale * editScale
+        const virtW   = frameW / scaleXY
+        const virtH   = frameH / scaleXY
+        img.set({
+          originX: 'center', originY: 'center',
+          left:    frameX + frameW / 2,
+          top:     frameY + frameH / 2,
+          scaleX:  scaleXY, scaleY: scaleXY,
+          width:   virtW,   height: virtH,
+          cropX:   entry.cropX, cropY: entry.cropY,
+          selectable: true, evented: true,
+          borderColor: '#528ED6', borderScaleFactor: 2,
+        })
+        img.clipPath = makeClipRect(frameX, frameY, frameW, frameH)
+        img.setControlsVisibility({ mt: true, mb: true, ml: true, mr: true, tl: true, tr: true, bl: true, br: true, mtr: true })
+        ;(img as unknown as fabric.FabricObject & { data: PhotoData }).data = {
+          type: 'photo', frameX, frameY, frameW, frameH, naturalW, naturalH, coverScale, editScale,
+        }
+        canvas.add(img)
+
+      } else if (entry.kind === 'freePhoto') {
+        const img = await fabric.FabricImage.fromURL(entry.src, { crossOrigin: 'anonymous' })
+        img.set({
+          originX: 'center', originY: 'center',
+          left:    entry.left,  top:    entry.top,
+          scaleX:  entry.scaleX, scaleY: entry.scaleY,
+          angle:   entry.angle,
+          selectable: true, evented: true,
+          borderColor: '#528ED6', borderScaleFactor: 2,
+          lockUniScaling: true,
+        })
+        img.setControlsVisibility({ mt: false, mb: false, ml: false, mr: false })
+        ;(img as unknown as fabric.FabricObject & { data: FreePhotoData }).data = {
+          type: 'freePhoto', naturalW: entry.naturalW, naturalH: entry.naturalH,
+        }
+        canvas.add(img)
+
+      } else if (entry.kind === 'text') {
+        const textbox = new fabric.Textbox(entry.text, {
+          left:        entry.left,
+          top:         entry.top,
+          width:       entry.width,
+          angle:       entry.angle      ?? 0,
+          scaleX:      entry.scaleX     ?? 1,
+          scaleY:      entry.scaleY     ?? 1,
+          fontFamily:  entry.fontFamily,
+          fontSize:    entry.fontSize,
+          fill:        entry.fill,
+          fontWeight:  entry.fontWeight  ?? 'normal',
+          underline:   entry.underline   ?? false,
+          textAlign:   (entry.textAlign  ?? 'left') as fabric.Textbox['textAlign'],
+          lineHeight:  entry.lineHeight  ?? 1.16,
+          charSpacing: entry.charSpacing ?? 0,
+        }) as fabric.Textbox & { data: TextData }
+        textbox.data = { type: 'text' }
+        textbox.set({ lockUniScaling: false })
+        textbox.setControlsVisibility({ mt: false, mb: false })
+        canvas.add(textbox)
+
+      } else if (entry.kind === 'shape') {
+        const base = {
+          originX: 'center' as const, originY: 'center' as const,
+          left:    entry.left,  top:    entry.top,
+          scaleX:  entry.scaleX, scaleY: entry.scaleY,
+          angle:   entry.angle,
+          fill:    entry.fill,  stroke: entry.stroke,
+          strokeWidth: entry.strokeWidth,
+          strokeUniform: true, selectable: true, evented: true,
+        }
+        let obj: fabric.FabricObject
+        switch (entry.shape) {
+          case 'rect':     obj = new fabric.Rect({ ...base, width: entry.width, height: entry.height }); break
+          case 'circle':   obj = new fabric.Ellipse({ ...base, rx: entry.width / 2, ry: entry.height / 2 }); break
+          case 'triangle': obj = new fabric.Triangle({ ...base, width: entry.width, height: entry.height }); break
+          case 'line':     obj = new fabric.Line([0, 0, entry.width, 0], { ...base, fill: 'transparent' }); break
+          case 'arrow':    obj = new fabric.Path(ARROW_PATH, { ...base }); break
+        }
+        ;(obj as fabric.FabricObject & { data: ShapeData }).data = { type: 'shape', shape: entry.shape }
+        canvas.add(obj)
       }
-      canvas.add(rect)
-    } else if (sf.photo) {
-      const img = await fabric.FabricImage.fromURL(sf.photo, { crossOrigin: 'anonymous' })
+    }
+  } else {
+    // Legacy fallback: restore from separate arrays (data saved before objects format)
+    for (const sf of pageData.frames ?? []) {
+      if (sf.isEmpty) {
+        const rect = new fabric.Rect({
+          left:    sf.frameX, top:    sf.frameY,
+          width:   sf.frameW, height: sf.frameH,
+          originX: 'left',   originY: 'top',
+          fill:            '#F0EFEB',
+          stroke:          '#528ED6',
+          strokeWidth:     1,
+          strokeDashArray: [5, 5],
+          strokeUniform:   true,
+          selectable:      true,
+          evented:         true,
+          lockRotation:    true,
+        }) as fabric.Rect & { data: FrameData }
+        rect.data = { type: 'frame', isEmpty: true, frameX: sf.frameX, frameY: sf.frameY, frameW: sf.frameW, frameH: sf.frameH }
+        canvas.add(rect)
+      } else if (sf.photo) {
+        const img = await fabric.FabricImage.fromURL(sf.photo, { crossOrigin: 'anonymous' })
+        const naturalW   = sf.naturalW ?? (img.width  || img.getScaledWidth())
+        const naturalH   = sf.naturalH ?? (img.height || img.getScaledHeight())
+        const coverScale = sf.coverScale ?? Math.max(sf.frameW / naturalW, sf.frameH / naturalH)
+        const editScale  = sf.editScale  ?? 1
+        const scaleXY    = coverScale * editScale
+        const virtW      = sf.frameW / scaleXY
+        const virtH      = sf.frameH / scaleXY
+        const cropX      = sf.cropX ?? (naturalW - virtW) / 2
+        const cropY      = sf.cropY ?? (naturalH - virtH) / 2
+        img.set({
+          originX: 'center', originY: 'center',
+          left:    sf.frameX + sf.frameW / 2,
+          top:     sf.frameY + sf.frameH / 2,
+          scaleX:  scaleXY, scaleY: scaleXY,
+          width:   virtW,   height: virtH,
+          cropX,   cropY,
+          selectable: true, evented: true,
+          borderColor: '#528ED6', borderScaleFactor: 2,
+        })
+        img.clipPath = makeClipRect(sf.frameX, sf.frameY, sf.frameW, sf.frameH)
+        img.setControlsVisibility({ mt: true, mb: true, ml: true, mr: true, tl: true, tr: true, bl: true, br: true, mtr: true })
+        ;(img as unknown as fabric.FabricObject & { data: PhotoData }).data = {
+          type: 'photo', frameX: sf.frameX, frameY: sf.frameY, frameW: sf.frameW, frameH: sf.frameH,
+          naturalW, naturalH, coverScale, editScale,
+        }
+        canvas.add(img)
+      }
+    }
 
-      const naturalW   = sf.naturalW ?? (img.width  || img.getScaledWidth())
-      const naturalH   = sf.naturalH ?? (img.height || img.getScaledHeight())
-      const coverScale = sf.coverScale ?? Math.max(sf.frameW / naturalW, sf.frameH / naturalH)
-      const editScale  = sf.editScale  ?? 1
-      const scaleXY    = coverScale * editScale
-      const virtW      = sf.frameW / scaleXY
-      const virtH      = sf.frameH / scaleXY
-      // Use saved cropX/Y; fall back to center crop for old serialized data
-      const cropX      = sf.cropX ?? (naturalW - virtW) / 2
-      const cropY      = sf.cropY ?? (naturalH - virtH) / 2
-
+    for (const fp of pageData.freePhotos ?? []) {
+      const img = await fabric.FabricImage.fromURL(fp.src, { crossOrigin: 'anonymous' })
       img.set({
-        originX:           'center',
-        originY:           'center',
-        left:              sf.frameX + sf.frameW / 2,
-        top:               sf.frameY + sf.frameH / 2,
-        scaleX:            scaleXY,
-        scaleY:            scaleXY,
-        width:             virtW,
-        height:            virtH,
-        cropX,
-        cropY,
-        selectable:        true,
-        evented:           true,
-        borderColor:       '#528ED6',
-        borderScaleFactor: 2,
+        originX: 'center', originY: 'center',
+        left: fp.left, top: fp.top,
+        scaleX: fp.scaleX, scaleY: fp.scaleY, angle: fp.angle,
+        selectable: true, evented: true,
+        borderColor: '#528ED6', borderScaleFactor: 2,
+        lockUniScaling: true,
       })
-
-      img.clipPath = makeClipRect(sf.frameX, sf.frameY, sf.frameW, sf.frameH)
-      img.setControlsVisibility({ mt: true, mb: true, ml: true, mr: true, tl: true, tr: true, bl: true, br: true, mtr: true })
-
-      ;(img as unknown as fabric.FabricObject & { data: PhotoData }).data = {
-        type:    'photo',
-        frameX:  sf.frameX,
-        frameY:  sf.frameY,
-        frameW:  sf.frameW,
-        frameH:  sf.frameH,
-        naturalW,
-        naturalH,
-        coverScale,
-        editScale,
+      img.setControlsVisibility({ mt: false, mb: false, ml: false, mr: false })
+      ;(img as unknown as fabric.FabricObject & { data: FreePhotoData }).data = {
+        type: 'freePhoto', naturalW: fp.naturalW, naturalH: fp.naturalH,
       }
       canvas.add(img)
     }
-  }
 
-  for (const fp of pageData.freePhotos ?? []) {
-    const img = await fabric.FabricImage.fromURL(fp.src, { crossOrigin: 'anonymous' })
-    img.set({
-      originX:           'center',
-      originY:           'center',
-      left:              fp.left,
-      top:               fp.top,
-      scaleX:            fp.scaleX,
-      scaleY:            fp.scaleY,
-      angle:             fp.angle,
-      selectable:        true,
-      evented:           true,
-      borderColor:       '#528ED6',
-      borderScaleFactor: 2,
-    })
-    img.set({ lockUniScaling: true })
-    img.setControlsVisibility({ mt: false, mb: false, ml: false, mr: false })
-    ;(img as unknown as fabric.FabricObject & { data: FreePhotoData }).data = {
-      type:    'freePhoto',
-      naturalW: fp.naturalW,
-      naturalH: fp.naturalH,
+    for (const st of pageData.texts ?? []) {
+      const textbox = new fabric.Textbox(st.text, {
+        left:        st.left,
+        top:         st.top,
+        width:       st.width,
+        fontFamily:  st.fontFamily,
+        fontSize:    st.fontSize,
+        fill:        st.fill,
+        fontWeight:  st.fontWeight  ?? 'normal',
+        underline:   st.underline   ?? false,
+        textAlign:   (st.textAlign  ?? 'left') as fabric.Textbox['textAlign'],
+        lineHeight:  st.lineHeight  ?? 1.16,
+        charSpacing: st.charSpacing ?? 0,
+      }) as fabric.Textbox & { data: TextData }
+      textbox.data = { type: 'text' }
+      textbox.set({ lockUniScaling: false })
+      textbox.setControlsVisibility({ mt: false, mb: false })
+      canvas.add(textbox)
     }
-    canvas.add(img)
-  }
 
-  for (const st of pageData.texts) {
-    const textbox = new fabric.Textbox(st.text, {
-      left:        st.left,
-      top:         st.top,
-      width:       st.width,
-      fontFamily:  st.fontFamily,
-      fontSize:    st.fontSize,
-      fill:        st.fill,
-      fontWeight:  st.fontWeight  ?? 'normal',
-      underline:   st.underline   ?? false,
-      textAlign:   (st.textAlign  ?? 'left') as fabric.Textbox['textAlign'],
-      lineHeight:  st.lineHeight  ?? 1.16,
-      charSpacing: st.charSpacing ?? 0,
-    }) as fabric.Textbox & { data: TextData }
-
-    textbox.data = { type: 'text' }
-    canvas.add(textbox)
-  }
-
-  for (const ss of pageData.shapes ?? []) {
-    const base = {
-      originX:       'center'  as const,
-      originY:       'center'  as const,
-      left:          ss.left,
-      top:           ss.top,
-      scaleX:        ss.scaleX,
-      scaleY:        ss.scaleY,
-      angle:         ss.angle,
-      fill:          ss.fill,
-      stroke:        ss.stroke,
-      strokeWidth:   ss.strokeWidth,
-      strokeUniform: true,
-      selectable:    true,
-      evented:       true,
+    for (const ss of pageData.shapes ?? []) {
+      const base = {
+        originX: 'center' as const, originY: 'center' as const,
+        left:    ss.left,  top:    ss.top,
+        scaleX:  ss.scaleX, scaleY: ss.scaleY,
+        angle:   ss.angle,
+        fill:    ss.fill,  stroke: ss.stroke,
+        strokeWidth: ss.strokeWidth,
+        strokeUniform: true, selectable: true, evented: true,
+      }
+      let obj: fabric.FabricObject
+      switch (ss.shape) {
+        case 'rect':     obj = new fabric.Rect({ ...base, width: ss.width, height: ss.height }); break
+        case 'circle':   obj = new fabric.Ellipse({ ...base, rx: ss.width / 2, ry: ss.height / 2 }); break
+        case 'triangle': obj = new fabric.Triangle({ ...base, width: ss.width, height: ss.height }); break
+        case 'line':     obj = new fabric.Line([0, 0, ss.width, 0], { ...base, fill: 'transparent' }); break
+        case 'arrow':    obj = new fabric.Path(ARROW_PATH, { ...base }); break
+      }
+      ;(obj as fabric.FabricObject & { data: ShapeData }).data = { type: 'shape', shape: ss.shape }
+      canvas.add(obj)
     }
-    let obj: fabric.FabricObject
-    switch (ss.shape) {
-      case 'rect':
-        obj = new fabric.Rect({ ...base, width: ss.width, height: ss.height })
-        break
-      case 'circle':
-        obj = new fabric.Ellipse({ ...base, rx: ss.width / 2, ry: ss.height / 2 })
-        break
-      case 'triangle':
-        obj = new fabric.Triangle({ ...base, width: ss.width, height: ss.height })
-        break
-      case 'line':
-        obj = new fabric.Line([0, 0, ss.width, 0], { ...base, fill: 'transparent' })
-        break
-      case 'arrow':
-        obj = new fabric.Path(ARROW_PATH, { ...base })
-        break
-    }
-    ;(obj as fabric.FabricObject & { data: ShapeData }).data = { type: 'shape', shape: ss.shape }
-    canvas.add(obj)
   }
 
   canvas.renderAll()

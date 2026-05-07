@@ -534,6 +534,11 @@ export default function Canvas({
   const [multiSel, setMultiSel]     = useState<MultiSel>(null)
   const suppressMultiSelRef = useRef(false)
 
+  // ── Context menu ─────────────────────────────────────────────────────────
+  type CtxMenu = { x: number; y: number; obj: fabric.FabricObject; fc: fabric.Canvas } | null
+  const [ctxMenu, setCtxMenu] = useState<CtxMenu>(null)
+  const ctxMenuRef = useRef<HTMLDivElement>(null)
+
   // ── Content-grabber (pan) state — refs avoid stale closure issues ────────
   const isPanMode             = useRef(false)
   const panTargetRef          = useRef<fabric.FabricImage | null>(null)
@@ -1178,6 +1183,18 @@ export default function Canvas({
       })
       fc.on('text:editing:exited',  () => setTextEditing(false))
 
+      // ── Right-click context menu ──────────────────────────────────────────
+      fc.on('contextmenu', (e) => {
+        const nativeE = e.e as MouseEvent
+        nativeE.preventDefault()
+        if (isPanMode.current) return
+        const { target } = e
+        if (!target) return
+        const data = (target as unknown as fabric.FabricObject & { data?: { type: string } }).data
+        if (!data?.type) return
+        setCtxMenu({ x: nativeE.clientX, y: nativeE.clientY, obj: target, fc })
+      })
+
       // ── Photo scaling ────────────────────────────────────────────────────────
       fc.on('object:scaling', (e) => {
         const obj = e.target as unknown as fabric.FabricImage & {
@@ -1676,6 +1693,17 @@ export default function Canvas({
     }
   }, []) // eslint-disable-line react-hooks/exhaustive-deps
 
+  // ── Close context menu on pointer-down outside the menu ──────────────────
+  useEffect(() => {
+    if (!ctxMenu) return
+    const close = (e: PointerEvent) => {
+      if (ctxMenuRef.current?.contains(e.target as Node)) return
+      setCtxMenu(null)
+    }
+    document.addEventListener('pointerdown', close)
+    return () => document.removeEventListener('pointerdown', close)
+  }, [ctxMenu])
+
   // ── Drag & drop ───────────────────────────────────────────────────────────
   const handleDrop = useCallback(
     async (e: React.DragEvent<HTMLDivElement>, page: 'left' | 'right') => {
@@ -1927,6 +1955,47 @@ export default function Canvas({
           }}
         />
       )}
+
+      {/* ── Context menu ── */}
+      {ctxMenu && (() => {
+        const MENU_W = 178
+        const MENU_H = 178
+        const x = ctxMenu.x + 4 + MENU_W > window.innerWidth  ? ctxMenu.x - MENU_W : ctxMenu.x + 4
+        const y = ctxMenu.y + 4 + MENU_H > window.innerHeight ? ctxMenu.y - MENU_H : ctxMenu.y + 4
+
+        const run = (action: () => void) => {
+          action()
+          ctxMenu.fc.renderAll()
+          setCtxMenu(null)
+        }
+
+        const deleteObj = () => {
+          const { obj, fc } = ctxMenu
+          type PhotoData = { type: string; frameX: number; frameY: number; frameW: number; frameH: number }
+          const data = (obj as unknown as fabric.FabricObject & { data?: PhotoData }).data
+          if (obj instanceof fabric.Textbox) setTextSel(null)
+          fc.discardActiveObject()
+          fc.remove(obj)
+          if (data?.type === 'photo') restoreEmptyFrame(fc, { frameX: data.frameX, frameY: data.frameY, frameW: data.frameW, frameH: data.frameH })
+          fc.renderAll()
+          setCtxMenu(null)
+        }
+
+        return (
+          <div
+            className="canvas-ctx-menu"
+            ref={ctxMenuRef}
+            style={{ top: y, left: x }}
+          >
+            <button className="canvas-ctx-item" onClick={() => run(() => { ctxMenu.fc.bringObjectForward(ctxMenu.obj); ctxMenu.fc.fire('object:modified', { target: ctxMenu.obj }) })}>Bring Forward</button>
+            <button className="canvas-ctx-item" onClick={() => run(() => { ctxMenu.fc.sendObjectBackwards(ctxMenu.obj); ctxMenu.fc.fire('object:modified', { target: ctxMenu.obj }) })}>Send Backward</button>
+            <button className="canvas-ctx-item" onClick={() => run(() => { ctxMenu.fc.bringObjectToFront(ctxMenu.obj); ctxMenu.fc.fire('object:modified', { target: ctxMenu.obj }) })}>Bring to Front</button>
+            <button className="canvas-ctx-item" onClick={() => run(() => { ctxMenu.fc.sendObjectToBack(ctxMenu.obj); ctxMenu.fc.fire('object:modified', { target: ctxMenu.obj }) })}>Send to Back</button>
+            <div className="canvas-ctx-sep" />
+            <button className="canvas-ctx-item canvas-ctx-item--delete" onClick={deleteObj}>Delete</button>
+          </div>
+        )
+      })()}
 
       {/* ── Zoom controls ── */}
       <div className="canvas-zoom-badge">

@@ -28,8 +28,7 @@ const EMPTY_PAGE: PageData = {
   background: '#ffffff',
   pageW: PAGE_W,
   pageH: PAGE_H,
-  frames: [],
-  texts:  [],
+  objects: [],
 }
 
 const TITLEBAR_H = 50
