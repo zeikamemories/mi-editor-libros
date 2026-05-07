@@ -888,12 +888,15 @@ export function buildPageFromLayout(
 }
 
 // ─── 7b. exportPageAsJpg ────────────────────────────────────────────────────
+// adjacentPage: the OTHER page of the spread, and which side it comes from.
+// This is needed to render photos/freePhotos that visually span the spine.
 
 export async function exportPageAsJpg(
   pageData: PageData,
   canvasWidth: number,
   canvasHeight: number,
   multiplier: number = 3.125,
+  adjacentPage?: { data: PageData; fromSide: 'left' | 'right' },
 ): Promise<string> {
   const offscreen = new fabric.Canvas(undefined, {
     width: canvasWidth,
@@ -901,6 +904,68 @@ export async function exportPageAsJpg(
     backgroundColor: '#ffffff',
   })
   await deserializePage(offscreen, pageData, canvasWidth, canvasHeight)
+
+  // Render spanning objects from the adjacent page (spread mirrors)
+  if (adjacentPage) {
+    // SPINE = 1px gap between canvas pages (matches Canvas.tsx constant)
+    const CANVAS_GAP = canvasWidth + 1
+    const { data: adj, fromSide } = adjacentPage
+    // offsetX converts adjacent-canvas coords → this-canvas coords
+    const offsetX = fromSide === 'left' ? -CANVAS_GAP : CANVAS_GAP
+    const entries = adj.objects ?? []
+
+    for (const entry of entries) {
+      if (entry.kind === 'photo') {
+        // Left adjacent spans right when its frame's right edge exceeds canvasWidth
+        // Right adjacent spans left when its frame's left edge is negative
+        const spans = fromSide === 'left'
+          ? entry.frameX + entry.frameW > canvasWidth
+          : entry.frameX < 0
+        if (!spans) continue
+
+        const { frameX, frameY, frameW, frameH, coverScale, editScale, cropX, cropY } = entry
+        const scaleXY = coverScale * editScale
+        const virtW   = frameW / scaleXY
+        const virtH   = frameH / scaleXY
+
+        const img = await fabric.FabricImage.fromURL(entry.photo, { crossOrigin: 'anonymous' })
+        img.set({
+          originX: 'center', originY: 'center',
+          left:    frameX + frameW / 2 + offsetX,
+          top:     frameY + frameH / 2,
+          scaleX:  scaleXY, scaleY: scaleXY,
+          width:   virtW,   height: virtH,
+          cropX, cropY,
+          selectable: false, evented: false,
+        })
+        img.clipPath = makeClipRect(frameX + offsetX, frameY, frameW, frameH)
+        offscreen.add(img)
+        offscreen.sendObjectToBack(img)
+
+      } else if (entry.kind === 'freePhoto') {
+        // Half-width of the scaled image
+        const hw = entry.naturalW * entry.scaleX / 2
+        const spans = fromSide === 'left'
+          ? entry.left + hw > canvasWidth
+          : entry.left - hw < 0
+        if (!spans) continue
+
+        const img = await fabric.FabricImage.fromURL(entry.src, { crossOrigin: 'anonymous' })
+        img.set({
+          originX: 'center', originY: 'center',
+          left:    entry.left + offsetX,
+          top:     entry.top,
+          scaleX:  entry.scaleX, scaleY: entry.scaleY,
+          angle:   entry.angle,
+          selectable: false, evented: false,
+        })
+        offscreen.add(img)
+        offscreen.sendObjectToBack(img)
+      }
+    }
+    offscreen.renderAll()
+  }
+
   const dataUrl = offscreen.toDataURL({
     format: 'jpeg',
     quality: 1,

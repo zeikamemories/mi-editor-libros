@@ -1,7 +1,7 @@
 'use client'
 
 import { useRef, useState, useEffect } from 'react'
-import { Undo2, Redo2, Shapes, ImageUpscale, Type, Ruler, Hand, PaintBucket, Pipette, Grid, Square, Circle, Triangle, Minus, ArrowRight } from 'lucide-react'
+import { Undo2, Redo2, Shapes, ImageUpscale, Type, Ruler, PaintBucket, Pipette, Grid, Square, Circle, Triangle, Minus, ArrowRight } from 'lucide-react'
 import { useLang } from '../../context/LanguageContext'
 import type { GridSettings } from '../Canvas/Canvas'
 import type { ShapeKind } from '../Canvas/fabricHelpers'
@@ -11,7 +11,6 @@ interface ToolbarProps {
   canUndo: boolean
   canRedo: boolean
   rulerMode: boolean
-  panMode: boolean
   frameTool: boolean
   viewMode: 'editor' | 'spreads'
   pageBackground: string
@@ -21,7 +20,6 @@ interface ToolbarProps {
   onRedo: () => void
   onToggleRuler: () => void
   onAddText: () => void
-  onPanModeToggle: () => void
   onFrameToolToggle: () => void
   onViewModeChange: (mode: 'editor' | 'spreads') => void
   onPageBgChange: (color: string) => void
@@ -43,7 +41,6 @@ export default function Toolbar({
   canUndo,
   canRedo,
   rulerMode,
-  panMode,
   frameTool,
   viewMode,
   pageBackground,
@@ -53,7 +50,6 @@ export default function Toolbar({
   onRedo,
   onToggleRuler,
   onAddText,
-  onPanModeToggle,
   onFrameToolToggle,
   onViewModeChange,
   onPageBgChange,
@@ -204,15 +200,6 @@ export default function Toolbar({
         >
           <Ruler size={22} strokeWidth={1.5} />
           <span className="toolbar-tooltip">{t.ruler}</span>
-        </button>
-
-        <button
-          className={`toolbar-btn${panMode ? ' toolbar-btn--active' : ''}`}
-          onClick={onPanModeToggle}
-          aria-label={t.hand}
-        >
-          <Hand size={22} strokeWidth={1.5} />
-          <span className="toolbar-tooltip">{t.hand}</span>
         </button>
 
         {/* Grid */}

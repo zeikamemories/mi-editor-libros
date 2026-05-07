@@ -82,7 +82,6 @@ export default function EditorPage() {
   const [zoom,           setZoom]           = useState(0.75) // overridden by Canvas on mount
   const [rulerMode,      setRulerMode]      = useState(false)
   const [guides,         setGuides]         = useState<Guide[]>([])
-  const [panMode,        setPanMode]        = useState(false)
   const [frameTool,      setFrameTool]      = useState(false)
   const [tourOpen,       setTourOpen]       = useState(false)
   const [activePageBg,   setActivePageBg]   = useState('#FFFFFF')
@@ -98,8 +97,9 @@ export default function EditorPage() {
   const historyIndex = useRef(-1)
 
   // ── Fabric instances ───────────────────────────────────────────────────────
-  const fabricLeft  = useRef<fabric.Canvas | null>(null)
-  const fabricRight = useRef<fabric.Canvas | null>(null)
+  const fabricLeft    = useRef<fabric.Canvas | null>(null)
+  const fabricRight   = useRef<fabric.Canvas | null>(null)
+  const syncMirrorsRef = useRef<(() => void) | null>(null)
 
   // ── Text edit modal ────────────────────────────────────────────────────────
   const [textModal, setTextModal] = useState<{
@@ -321,9 +321,10 @@ export default function EditorPage() {
 
   // ── Canvas ready: restore saved state, then wire change listeners ───────────
   const handleCanvasReady = useCallback(
-    async (left: fabric.Canvas, right: fabric.Canvas) => {
-      fabricLeft.current  = left
-      fabricRight.current = right
+    async (left: fabric.Canvas, right: fabric.Canvas, syncMirrors: () => void) => {
+      fabricLeft.current   = left
+      fabricRight.current  = right
+      syncMirrorsRef.current = syncMirrors
 
       // Restore the current spread BEFORE registering change listeners.
       // If we registered listeners first, every object:added event fired by
@@ -333,6 +334,7 @@ export default function EditorPage() {
       if (saved) {
         await deserializePage(left,  saved.left,  PAGE_W, PAGE_H)
         await deserializePage(right, saved.right, PAGE_W, PAGE_H)
+        syncMirrors()
       }
 
       const onChange = () => saveCurrentSpread()
@@ -532,6 +534,7 @@ export default function EditorPage() {
       if (saved) {
         await deserializePage(lc, saved.left,  PAGE_W, PAGE_H)
         await deserializePage(rc, saved.right, PAGE_W, PAGE_H)
+        syncMirrorsRef.current?.()
       } else {
         lc.remove(...lc.getObjects())
         rc.remove(...rc.getObjects())
@@ -724,15 +727,10 @@ export default function EditorPage() {
   const handleGridSettingsChange = useCallback((s: GridSettings) => setGridSettings(s), [])
 
   // ── Viewport pan mode ─────────────────────────────────────────────────────
-  const handlePanModeToggle = useCallback(() => {
-    setPanMode((v) => !v)
-    setFrameTool(false)
-  }, [])
 
   // ── Frame draw tool ────────────────────────────────────────────────────────
   const handleFrameToolToggle = useCallback(() => {
     setFrameTool((v) => !v)
-    setPanMode(false)
   }, [])
   const handleFrameToolDeactivate = useCallback(() => setFrameTool(false), [])
 
@@ -875,10 +873,13 @@ export default function EditorPage() {
     pageExports.push({ spreadIndex: lastIdx, side: 'left', name: String(lastLeftNum).padStart(2, '0') })
 
     for (const { spreadIndex, side, name } of pageExports) {
-      const spread  = spreadsData.current[spreadIndex]
-      const page    = spread?.[side] ?? blankPage()
-      const dataUrl = await exportPageAsJpg(page, PAGE_W, PAGE_H, 3.125)
-      const base64  = dataUrl?.split(',')[1] ?? ''
+      const spread     = spreadsData.current[spreadIndex]
+      const page       = spread?.[side] ?? blankPage()
+      const otherSide  = side === 'left' ? 'right' : 'left'
+      const adjData    = spread?.[otherSide]
+      const adjacent   = adjData ? { data: adjData, fromSide: otherSide as 'left' | 'right' } : undefined
+      const dataUrl    = await exportPageAsJpg(page, PAGE_W, PAGE_H, 3.125, adjacent)
+      const base64     = dataUrl?.split(',')[1] ?? ''
       folder.file(`${name}.jpg`, base64, { base64: true })
     }
 
@@ -915,8 +916,8 @@ export default function EditorPage() {
       const leftData  = spread?.left  ?? blankPage()
       const rightData = spread?.right ?? blankPage()
 
-      const leftUrl  = await exportPageAsJpg(leftData,  PAGE_W, PAGE_H, 1)
-      const rightUrl = await exportPageAsJpg(rightData, PAGE_W, PAGE_H, 1)
+      const leftUrl  = await exportPageAsJpg(leftData,  PAGE_W, PAGE_H, 1, { data: rightData, fromSide: 'right' })
+      const rightUrl = await exportPageAsJpg(rightData, PAGE_W, PAGE_H, 1, { data: leftData,  fromSide: 'left'  })
 
       if (i > 0) pdf.addPage()
       pdf.addImage(leftUrl,  'JPEG', 0,                  0, pageWidthMm / 2, pageHeightMm)
@@ -968,7 +969,6 @@ export default function EditorPage() {
             canUndo={canUndo}
             canRedo={canRedo}
             rulerMode={rulerMode}
-            panMode={panMode}
             frameTool={frameTool}
             viewMode={viewMode}
             pageBackground={activePageBg}
@@ -978,7 +978,6 @@ export default function EditorPage() {
             onRedo={handleRedo}
             onToggleRuler={handleToggleRuler}
             onAddText={handleAddText}
-            onPanModeToggle={handlePanModeToggle}
             onFrameToolToggle={handleFrameToolToggle}
             onViewModeChange={handleViewModeChange}
             onPageBgChange={handlePageBgChange}
@@ -1008,7 +1007,6 @@ export default function EditorPage() {
                 currentSpread={currentSpread}
                 totalSpreads={totalSpreads}
                 viewMode={viewMode}
-                panMode={panMode}
                 frameTool={frameTool}
                 onObjectSelected={handleObjectSelected}
                 onCanvasReady={handleCanvasReady}

@@ -118,6 +118,16 @@ Auto-create picks: layout_1_3 for 1 photo, layout_2_4 for 2, layout_3_1 for 3, l
 - `saveCurrentSpread` is called on every canvas mutation (object:added/modified/removed).
 - Thumbnail capture is debounced 400ms; initial thumbnails are generated from plain 2D canvas (fast-path for empty pages).
 
+## Canvas ↔ Preview/Export parity rule
+**Any visual feature that works on the editor canvas MUST also work in PreviewModal, ZIP export, and PDF export.** These three rendering paths all use `exportPageAsJpg` (fabricHelpers.ts), which calls `deserializePage` on an offscreen Fabric canvas. They do NOT share the live canvas's runtime state.
+
+Common failure modes when adding canvas features:
+- **Spread mirrors** (objects spanning both pages): runtime-only in Canvas.tsx (`spreadMirrors` Map). Must also be rendered in `exportPageAsJpg` via the `adjacentPage` parameter — pass the paired page data when calling `exportPageAsJpg` so the spanning portion is drawn on the correct offscreen canvas.
+- **Layer order changes**: must be serialized in `PageData.objects` in z-order (bottom→top). If z-order isn't in the serialized format, it won't show in preview.
+- **Any new object type**: add deserialization in `deserializePage` (new format path AND legacy fallback), and serialization in `serializePage`.
+
+When you fix or add something in Canvas.tsx, always check: does it depend on runtime state that isn't in `PageData`? If yes, propagate it to `exportPageAsJpg`.
+
 ## Important rules
 - ALWAYS use CSS variables from globals.css for colors and typography.
 - Root is `app/` — never write `src/app/`.

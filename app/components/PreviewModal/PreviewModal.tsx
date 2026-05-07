@@ -129,19 +129,24 @@ export default function PreviewModal({
     const tasks: Promise<string>[] = []
     // Book order: Tapa → inner spreads → Contra
     // Inside (spread 1 left) and Outside (last spread right) are non-editable — rendered as gray placeholders
-    tasks.push(exportPageAsJpg(spreadsData[0]?.right ?? EMPTY_PAGE, PAGE_W, PAGE_H, 1)) // Tapa
+    const s0 = spreadsData[0]
+    tasks.push(exportPageAsJpg(s0?.right ?? EMPTY_PAGE, PAGE_W, PAGE_H, 1,   // Tapa
+      s0?.left  ? { data: s0.left,  fromSide: 'left'  } : undefined))
     for (let s = 1; s < totalSpreads; s++) {
       const data     = spreadsData[s]
+      const left     = data?.left  ?? EMPTY_PAGE
+      const right    = data?.right ?? EMPTY_PAGE
       const isInside  = s === 1
       const isOutside = s === totalSpreads - 1
       tasks.push(isInside
         ? Promise.resolve(renderNoEditPage(t.noEditable))
-        : exportPageAsJpg(data?.left ?? EMPTY_PAGE, PAGE_W, PAGE_H, 1))
+        : exportPageAsJpg(left,  PAGE_W, PAGE_H, 1, { data: right, fromSide: 'right' }))
       tasks.push(isOutside
         ? Promise.resolve(renderNoEditPage(t.noEditable))
-        : exportPageAsJpg(data?.right ?? EMPTY_PAGE, PAGE_W, PAGE_H, 1))
+        : exportPageAsJpg(right, PAGE_W, PAGE_H, 1, { data: left,  fromSide: 'left'  }))
     }
-    tasks.push(exportPageAsJpg(spreadsData[0]?.left ?? EMPTY_PAGE, PAGE_W, PAGE_H, 1))  // Contra
+    tasks.push(exportPageAsJpg(s0?.left ?? EMPTY_PAGE, PAGE_W, PAGE_H, 1,    // Contra
+      s0?.right ? { data: s0.right, fromSide: 'right' } : undefined))
 
     Promise.all(tasks).then(images => {
       if (!cancelled) { setPageImages(images); setLoading(false) }

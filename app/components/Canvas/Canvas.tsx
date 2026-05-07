@@ -35,10 +35,9 @@ interface CanvasProps {
   currentSpread: number
   totalSpreads: number
   viewMode: 'editor' | 'spreads'
-  panMode: boolean
   frameTool: boolean
   onObjectSelected: (obj: fabric.FabricObject | null) => void
-  onCanvasReady: (left: fabric.Canvas, right: fabric.Canvas) => void
+  onCanvasReady: (left: fabric.Canvas, right: fabric.Canvas, syncMirrors: () => void) => void
   onSpreadChange: (spread: number) => void
   onZoomChange: (zoom: number) => void
   onActivePageChange: (page: 'left' | 'right') => void
@@ -483,7 +482,6 @@ export default function Canvas({
   currentSpread,
   totalSpreads,
   viewMode,
-  panMode,
   frameTool,
   onObjectSelected,
   onCanvasReady,
@@ -611,6 +609,45 @@ export default function Canvas({
     }
   }, [])
 
+  // ── Middle mouse button: viewport pan (hold to drag, like Figma) ──────────
+  useEffect(() => {
+    let active = false
+    let sx = 0, sy = 0, ssl = 0, sst = 0
+
+    const onDown = (e: MouseEvent) => {
+      if (e.button !== 1) return
+      if (!outerRef.current?.contains(e.target as Node)) return
+      e.preventDefault()
+      const inner = innerRef.current
+      if (!inner) return
+      active = true
+      sx = e.clientX; sy = e.clientY
+      ssl = inner.scrollLeft; sst = inner.scrollTop
+      document.body.style.cursor = 'grabbing'
+    }
+    const onMove = (e: MouseEvent) => {
+      if (!active) return
+      const inner = innerRef.current
+      if (!inner) return
+      inner.scrollLeft = ssl - (e.clientX - sx)
+      inner.scrollTop  = sst - (e.clientY - sy)
+    }
+    const onUp = (e: MouseEvent) => {
+      if (e.button !== 1) return
+      active = false
+      document.body.style.cursor = ''
+    }
+
+    document.addEventListener('mousedown', onDown)
+    document.addEventListener('mousemove', onMove)
+    document.addEventListener('mouseup',   onUp)
+    return () => {
+      document.removeEventListener('mousedown', onDown)
+      document.removeEventListener('mousemove', onMove)
+      document.removeEventListener('mouseup',   onUp)
+    }
+  }, [])
+
   // ── Frame draw tool: crosshair cursor + block object selection ───────────
   useEffect(() => {
     isFrameToolRef.current = frameTool
@@ -625,7 +662,7 @@ export default function Canvas({
   }, [frameTool])
 
   // ── Viewport drag: move scroll while overlay is up ────────────────────────
-  const isViewportPanning = panMode || spacebarPan
+  const isViewportPanning = spacebarPan
   useEffect(() => {
     if (!isViewportPanning) {
       isVPDragging.current = false
@@ -879,6 +916,8 @@ export default function Canvas({
         c.selection     = true
         c.defaultCursor = 'default'
         if (panIndicatorRef.current) c.remove(panIndicatorRef.current)
+        // Sync spread mirror after exiting pan mode so crop/scale changes reflect
+        if (img) syncSpreadMirror(img as unknown as fabric.FabricImage, c, c === lc ? rc : lc)
         c.renderAll()
       }
       panIndicatorRef.current       = null
@@ -915,6 +954,68 @@ export default function Canvas({
 
     // Must be declared before bind() so event-handler closures can reference it.
     const spreadMirrors = new Map<fabric.FabricImage, fabric.FabricImage>()
+
+    // ── Phantom selection handles: drawn on mirror canvas for spanning objects ─
+    let currentSpanSel: { master: fabric.FabricImage; masterCanvas: fabric.Canvas } | null = null
+
+    const PHANTOM_SZ   = 10
+    const PHANTOM_BLUE = '#528ED6'
+
+    function drawPhantomSelection(thisCanvas: fabric.Canvas) {
+      if (!currentSpanSel) return
+      const { master, masterCanvas } = currentSpanSel
+      const mirrorCanvas = masterCanvas === lc ? rc : lc
+      if (thisCanvas !== mirrorCanvas) return
+
+      const data = (master as unknown as { data?: { type: string; frameX?: number; frameY?: number; frameW?: number; frameH?: number } }).data
+      if (!data) return
+
+      const gap     = PAGE_W + SPINE
+      const offsetX = masterCanvas === lc ? -gap : gap
+
+      let rl: number, rt: number, rw: number, rh: number
+      if (data.type === 'photo') {
+        rl = (data.frameX ?? 0) + offsetX
+        rt =  data.frameY ?? 0
+        rw =  data.frameW ?? 0
+        rh =  data.frameH ?? 0
+      } else if (data.type === 'freePhoto') {
+        const hw = master.getScaledWidth()  / 2
+        const hh = master.getScaledHeight() / 2
+        rl = (master.left ?? 0) + offsetX - hw
+        rt = (master.top  ?? 0)            - hh
+        rw = hw * 2
+        rh = hh * 2
+      } else return
+
+      const ctx = mirrorCanvas.lowerCanvasEl.getContext('2d')
+      if (!ctx) return
+
+      const HS = PHANTOM_SZ / 2
+      ctx.save()
+
+      ctx.strokeStyle = PHANTOM_BLUE
+      ctx.lineWidth   = 1
+      ctx.setLineDash([])
+      ctx.strokeRect(rl, rt, rw, rh)
+
+      const drawH = (x: number, y: number) => {
+        ctx.fillStyle   = '#ffffff'
+        ctx.strokeStyle = PHANTOM_BLUE
+        ctx.lineWidth   = 1
+        ctx.fillRect(x - HS, y - HS, PHANTOM_SZ, PHANTOM_SZ)
+        ctx.strokeRect(x - HS, y - HS, PHANTOM_SZ, PHANTOM_SZ)
+      }
+      const mx = rl + rw / 2
+      const my = rt + rh / 2
+      const r  = rl + rw
+      const b  = rt + rh
+      drawH(rl, rt); drawH(mx, rt); drawH(r, rt)
+      drawH(rl, my);                drawH(r, my)
+      drawH(rl, b);  drawH(mx, b);  drawH(r, b)
+
+      ctx.restore()
+    }
 
     const enterImgPanMode = (img: fabric.FabricImage, fc: fabric.Canvas) => {
       if (isPanMode.current) return
@@ -987,6 +1088,7 @@ export default function Canvas({
       fc.add(indicator)
       panIndicatorRef.current       = indicator
       panIndicatorCanvasRef.current = fc
+      fc.setActiveObject(img)
       fc.renderAll()
       setPanModeActive(true)
     }
@@ -1008,6 +1110,17 @@ export default function Canvas({
         setActivePage(side)
         onActivePageChangeRef.current(side)
         activeCanvas = fc
+
+        // ── Spread mirror click: redirect selection to original on native canvas ──
+        const mirrorData = (e.target as unknown as { data?: { type: string; original?: fabric.FabricImage } } | undefined)?.data
+        if (mirrorData?.type === 'spreadMirror' && mirrorData.original) {
+          const nativeCanvas = side === 'left' ? rc : lc
+          fc.discardActiveObject()
+          nativeCanvas.setActiveObject(mirrorData.original)
+          nativeCanvas.renderAll()
+          activeCanvas = nativeCanvas
+          return
+        }
 
         // ── Fallback double-click detection (manual timing, guards against missed dblclick) ──
         if (!isFrameToolRef.current && !isPanMode.current) {
@@ -1134,22 +1247,41 @@ export default function Canvas({
           obj.setControlsVisibility({ mt: false, mb: false, ml: false, mr: false })
         }
       }
+      const updateSpanSel = (selObj: fabric.FabricObject | undefined) => {
+        const otherFc = side === 'left' ? rc : lc
+        const data = (selObj as unknown as { data?: { type: string } } | undefined)?.data
+        if (selObj && (data?.type === 'photo' || data?.type === 'freePhoto')
+            && spreadMirrors.has(selObj as unknown as fabric.FabricImage)) {
+          currentSpanSel = { master: selObj as unknown as fabric.FabricImage, masterCanvas: fc }
+        } else {
+          currentSpanSel = null
+        }
+        otherFc.renderAll()
+      }
+
       fc.on('selection:created', (e) => {
         onObjectSelectedRef.current(e.selected?.[0] ?? null)
         updateTextSel(e.selected?.[0], side)
         applyTextControls(e.selected?.[0])
         syncMultiSel(fc, side)
+        updateSpanSel(e.selected?.[0])
       })
       fc.on('selection:updated', (e) => {
         onObjectSelectedRef.current(e.selected?.[0] ?? null)
         updateTextSel(e.selected?.[0], side)
         applyTextControls(e.selected?.[0])
         syncMultiSel(fc, side)
+        updateSpanSel(e.selected?.[0])
       })
       fc.on('selection:cleared', () => {
         onObjectSelectedRef.current(null)
         setTextSel(null)
         if (!suppressMultiSelRef.current) setMultiSel(null)
+        if (currentSpanSel?.masterCanvas === fc) {
+          currentSpanSel = null
+          const otherFc = side === 'left' ? rc : lc
+          otherFc.renderAll()
+        }
       })
       fc.on('object:modified', (e) => {
         if (e.target instanceof fabric.Textbox) {
@@ -1407,58 +1539,100 @@ export default function Canvas({
 
       to.add(cloned)
       to.setActiveObject(cloned)
+      // If the transferred object now spans back to the source canvas, create its mirror
+      syncSpreadMirror(cloned as unknown as fabric.FabricImage, to, from)
       to.renderAll()
     }
 
-    // ── Spread mirrors: freePhoto objects that visually span both pages ────────
+    // ── Spread mirrors: objects that visually span both pages ────────────────
     function syncSpreadMirror(
       master: fabric.FabricImage,
       masterCanvas: fabric.Canvas,
       otherCanvas:  fabric.Canvas,
     ) {
-      const data = (master as unknown as { data?: { type: string } }).data
-      if (data?.type !== 'freePhoto') return
+      const data = (master as unknown as { data?: { type: string; frameX?: number; frameY?: number; frameW?: number; frameH?: number } }).data
+      if (data?.type !== 'freePhoto' && data?.type !== 'photo') return
 
-      const hw = master.getScaledWidth()  / 2
-      const cx = master.left ?? 0
-      const overlaps = masterCanvas === lc ? (cx + hw) > PAGE_W : (cx - hw) < 0
-      const offsetX  = masterCanvas === lc ? -CANVAS_GAP : CANVAS_GAP
-
+      const offsetX = masterCanvas === lc ? -CANVAS_GAP : CANVAS_GAP
       let mirror = spreadMirrors.get(master)
 
-      if (!overlaps) {
-        if (mirror) {
-          otherCanvas.remove(mirror)
-          spreadMirrors.delete(master)
-          otherCanvas.renderAll()
+      if (data.type === 'freePhoto') {
+        const hw = master.getScaledWidth() / 2
+        const cx = master.left ?? 0
+        const overlaps = masterCanvas === lc ? (cx + hw) > PAGE_W : (cx - hw) < 0
+
+        if (!overlaps) {
+          if (mirror) { otherCanvas.remove(mirror); spreadMirrors.delete(master); otherCanvas.renderAll() }
+          return
         }
-        return
-      }
 
-      const ml = cx + offsetX
-      const mt = master.top ?? 0
+        const ml = cx + offsetX
+        const mt = master.top ?? 0
 
-      if (mirror) {
-        mirror.set({ left: ml, top: mt, scaleX: master.scaleX, scaleY: master.scaleY, angle: master.angle ?? 0 })
-        mirror.setCoords()
-        otherCanvas.renderAll()
+        if (mirror) {
+          mirror.set({ left: ml, top: mt, scaleX: master.scaleX, scaleY: master.scaleY, angle: master.angle ?? 0 })
+          mirror.setCoords()
+          otherCanvas.renderAll()
+        } else {
+          fabric.FabricImage.fromURL(master.getSrc(), { crossOrigin: 'anonymous' }).then((img) => {
+            if (!masterCanvas.getObjects().includes(master as unknown as fabric.FabricObject)) return
+            img.set({ originX: 'center', originY: 'center', left: ml, top: mt,
+              scaleX: master.scaleX ?? 1, scaleY: master.scaleY ?? 1, angle: master.angle ?? 0,
+              selectable: false, evented: true })
+            ;(img as unknown as { data: { type: string; original: fabric.FabricImage } }).data = { type: 'spreadMirror', original: master }
+            spreadMirrors.set(master, img)
+            otherCanvas.add(img)
+            otherCanvas.sendObjectToBack(img)
+            otherCanvas.renderAll()
+          })
+        }
       } else {
-        const src = master.getSrc()
-        fabric.FabricImage.fromURL(src, { crossOrigin: 'anonymous' }).then((img) => {
-          if (!masterCanvas.getObjects().includes(master as unknown as fabric.FabricObject)) return
-          img.set({
-            originX: 'center', originY: 'center',
+        // photo type: frame may span the spine — show the overflow portion on the other canvas
+        const frameX = data.frameX ?? (master.left ?? 0) - (data.frameW ?? 0) / 2
+        const frameY = data.frameY ?? 0
+        const frameW = data.frameW ?? 0
+        const frameH = data.frameH ?? 0
+        const overlaps = masterCanvas === lc ? frameX + frameW > PAGE_W : frameX < 0
+
+        if (!overlaps) {
+          if (mirror) { otherCanvas.remove(mirror); spreadMirrors.delete(master); otherCanvas.renderAll() }
+          return
+        }
+
+        const ml = (master.left ?? 0) + offsetX
+        const mt = master.top ?? 0
+        const mirrorClipX = frameX + offsetX
+        const mirrorClipY = frameY
+
+        if (mirror) {
+          mirror.set({
             left: ml, top: mt,
             scaleX: master.scaleX ?? 1, scaleY: master.scaleY ?? 1,
-            angle: master.angle ?? 0,
-            selectable: false, evented: false,
+            width:  master.width  ?? 0, height: master.height ?? 0,
+            cropX:  master.cropX  ?? 0, cropY:  master.cropY  ?? 0,
           })
-          ;(img as unknown as { data: { type: string } }).data = { type: 'spreadMirror' }
-          spreadMirrors.set(master, img)
-          otherCanvas.add(img)
-          otherCanvas.sendObjectToBack(img)
+          if (mirror.clipPath) mirror.clipPath.set({ left: mirrorClipX, top: mirrorClipY, width: frameW, height: frameH })
+          mirror.setCoords()
           otherCanvas.renderAll()
-        })
+        } else {
+          fabric.FabricImage.fromURL(master.getSrc(), { crossOrigin: 'anonymous' }).then((img) => {
+            if (!masterCanvas.getObjects().includes(master as unknown as fabric.FabricObject)) return
+            img.set({
+              originX: 'center', originY: 'center',
+              left: ml, top: mt,
+              scaleX: master.scaleX ?? 1, scaleY: master.scaleY ?? 1,
+              width:  master.width  ?? 0, height: master.height ?? 0,
+              cropX:  master.cropX  ?? 0, cropY:  master.cropY  ?? 0,
+              selectable: false, evented: true,
+            })
+            img.clipPath = makeClipRect(mirrorClipX, mirrorClipY, frameW, frameH)
+            ;(img as unknown as { data: { type: string; original: fabric.FabricImage } }).data = { type: 'spreadMirror', original: master }
+            spreadMirrors.set(master, img)
+            otherCanvas.add(img)
+            otherCanvas.sendObjectToBack(img)
+            otherCanvas.renderAll()
+          })
+        }
       }
     }
 
@@ -1475,7 +1649,21 @@ export default function Canvas({
       if (cx < 0) await transferToCanvas(e.target, rc, lc, CANVAS_GAP)
     })
 
-    onCanvasReadyRef.current(lc, rc)
+    function syncAllMirrors() {
+      for (const obj of lc.getObjects()) {
+        const d = (obj as unknown as { data?: { type: string } }).data
+        if (d?.type === 'photo' || d?.type === 'freePhoto') syncSpreadMirror(obj as unknown as fabric.FabricImage, lc, rc)
+      }
+      for (const obj of rc.getObjects()) {
+        const d = (obj as unknown as { data?: { type: string } }).data
+        if (d?.type === 'photo' || d?.type === 'freePhoto') syncSpreadMirror(obj as unknown as fabric.FabricImage, rc, lc)
+      }
+    }
+    onCanvasReadyRef.current(lc, rc, syncAllMirrors)
+
+    // ── Draw phantom handles on mirror canvas after every render ─────────────
+    lc.on('after:render', () => drawPhantomSelection(lc))
+    rc.on('after:render', () => drawPhantomSelection(rc))
 
     // Clipboard stores plain serialized data — avoids Fabric clone() quirks in v7
     type ClipboardEntry =
