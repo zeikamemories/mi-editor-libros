@@ -72,6 +72,7 @@ export default function TextModal({
 
   const { t } = useLang()
   const [fontPickerOpen, setFontPickerOpen] = useState(false)
+  const [hoveredFont,    setHoveredFont]    = useState<string | null>(null)
   const colorInputRef  = useRef<HTMLInputElement>(null)
   const textareaRef    = useRef<HTMLTextAreaElement>(null)
   const fontPickerRef  = useRef<HTMLDivElement>(null)
@@ -130,12 +131,13 @@ export default function TextModal({
               <ChevronDown size={10} strokeWidth={2} />
             </button>
             {fontPickerOpen && (
-              <div className="tm-font-list">
+              <div className="tm-font-list" onMouseLeave={() => setHoveredFont(null)}>
                 {TEXT_FONTS.map((f) => (
                   <button
                     key={f.value}
                     className={`tm-font-option${fontFamily === f.value ? ' tm-font-option--active' : ''}`}
                     style={{ fontFamily: f.value }}
+                    onMouseEnter={() => setHoveredFont(f.value)}
                     onClick={() => { setFontFamily(f.value); setFontPickerOpen(false) }}
                     type="button"
                   >
@@ -271,7 +273,7 @@ export default function TextModal({
           onChange={(e) => setText(e.target.value)}
           placeholder={t.textPlaceholder}
           style={{
-            fontFamily:     fontFamily,
+            fontFamily:     hoveredFont ?? fontFamily,
             fontWeight:     bold ? 'bold' : 'normal',
             textDecoration: underline ? 'underline' : 'none',
             textAlign:      textAlign as React.CSSProperties['textAlign'],

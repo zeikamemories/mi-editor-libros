@@ -36,6 +36,7 @@ interface CanvasProps {
   totalSpreads: number
   viewMode: 'editor' | 'spreads'
   frameTool: boolean
+  textTool:  boolean
   onObjectSelected: (obj: fabric.FabricObject | null) => void
   onCanvasReady: (left: fabric.Canvas, right: fabric.Canvas, syncMirrors: () => void) => void
   onSpreadChange: (spread: number) => void
@@ -45,6 +46,7 @@ interface CanvasProps {
   onPhotoDrop: (photoId: string) => void
   onTextEdit?: (textbox: fabric.Textbox, side: 'left' | 'right') => void
   onFrameToolDeactivate: () => void
+  onTextToolDeactivate:  () => void
   onUndo?: () => void
   onRedo?: () => void
 }
@@ -483,6 +485,7 @@ export default function Canvas({
   totalSpreads,
   viewMode,
   frameTool,
+  textTool,
   onObjectSelected,
   onCanvasReady,
   onSpreadChange,
@@ -492,6 +495,7 @@ export default function Canvas({
   onPhotoDrop,
   onTextEdit,
   onFrameToolDeactivate,
+  onTextToolDeactivate,
   onUndo,
   onRedo,
 }: CanvasProps) {
@@ -527,6 +531,10 @@ export default function Canvas({
   const [textSel,     setTextSel]     = useState<TextSel>(null)
   const [textEditing, setTextEditing] = useState(false)
 
+  // ── Text-frame cursor overlays ─────────────────────────────────────────────
+  type TFOverlay = { id: string; side: 'left' | 'right'; x: number; y: number }
+  const [tfOverlays, setTFOverlays] = useState<TFOverlay[]>([])
+
   // ── Multi-selection alignment toolbar ──────────────────────────────────────
   type MultiSel = { side: 'left' | 'right'; selTop: number; selBottom: number; selLeft: number; selWidth: number } | null
   const [multiSel, setMultiSel]     = useState<MultiSel>(null)
@@ -551,15 +559,18 @@ export default function Canvas({
     startImgTop:  number
   } | null>(null)
 
-  // ── Frame draw tool state ─────────────────────────────────────────────────
+  // ── Frame / text draw tool state ─────────────────────────────────────────
   const isFrameToolRef = useRef(false)
+  const isTextToolRef  = useRef(false)
   const frameDrawRef   = useRef<{
+    kind:    'frame' | 'text'
     canvas:  fabric.Canvas
     startX:  number
     startY:  number
     preview: fabric.Rect
   } | null>(null)
   const onFrameToolDeactivateRef = useRef(onFrameToolDeactivate)
+  const onTextToolDeactivateRef  = useRef(onTextToolDeactivate)
 
   // Mirror latest callbacks/values into refs so effects stay stable
   const onObjectSelectedRef   = useRef(onObjectSelected)
@@ -581,6 +592,7 @@ export default function Canvas({
   useEffect(() => { onPhotoDropRef.current         = onPhotoDrop         }, [onPhotoDrop])
   useEffect(() => { onTextEditRef.current               = onTextEdit               }, [onTextEdit])
   useEffect(() => { onFrameToolDeactivateRef.current    = onFrameToolDeactivate    }, [onFrameToolDeactivate])
+  useEffect(() => { onTextToolDeactivateRef.current     = onTextToolDeactivate     }, [onTextToolDeactivate])
   useEffect(() => { onUndoRef.current               = onUndo               }, [onUndo])
   useEffect(() => { onRedoRef.current               = onRedo               }, [onRedo])
   useEffect(() => { zoomRef.current = zoom }, [zoom])
@@ -648,7 +660,7 @@ export default function Canvas({
     }
   }, [])
 
-  // ── Frame draw tool: crosshair cursor + block object selection ───────────
+  // ── Frame / text draw tool: crosshair cursor + block object selection ─────
   useEffect(() => {
     isFrameToolRef.current = frameTool
     const lc = leftFabric.current
@@ -660,6 +672,18 @@ export default function Canvas({
       fc.renderAll()
     })
   }, [frameTool])
+
+  useEffect(() => {
+    isTextToolRef.current = textTool
+    const lc = leftFabric.current
+    const rc = rightFabric.current
+    if (!lc || !rc) return
+    ;[lc, rc].forEach(fc => {
+      fc.defaultCursor  = textTool ? 'crosshair' : 'default'
+      fc.skipTargetFind = textTool
+      fc.renderAll()
+    })
+  }, [textTool])
 
   // ── Viewport drag: move scroll while overlay is up ────────────────────────
   const isViewportPanning = spacebarPan
@@ -1096,7 +1120,7 @@ export default function Canvas({
     const bind = (fc: fabric.Canvas, side: 'left' | 'right') => {
       // ── Primary double-click: Fabric's native event (most reliable in production) ──
       fc.on('mouse:dblclick', (e) => {
-        if (isFrameToolRef.current || isPanMode.current) return
+        if (isFrameToolRef.current || isTextToolRef.current || isPanMode.current) return
         const { target } = e
         if (!target) return
         const data = (target as unknown as fabric.FabricObject & { data?: { type: string } }).data
@@ -1111,6 +1135,13 @@ export default function Canvas({
         onActivePageChangeRef.current(side)
         activeCanvas = fc
 
+        // ── Deselect the other canvas whenever this one receives a click ──
+        const otherCanvas = side === 'left' ? rc : lc
+        if (otherCanvas.getActiveObject()) {
+          otherCanvas.discardActiveObject()
+          otherCanvas.renderAll()
+        }
+
         // ── Spread mirror click: redirect selection to original on native canvas ──
         const mirrorData = (e.target as unknown as { data?: { type: string; original?: fabric.FabricImage } } | undefined)?.data
         if (mirrorData?.type === 'spreadMirror' && mirrorData.original) {
@@ -1123,15 +1154,38 @@ export default function Canvas({
         }
 
         // ── Fallback double-click detection (manual timing, guards against missed dblclick) ──
-        if (!isFrameToolRef.current && !isPanMode.current) {
+        if (!isFrameToolRef.current && !isTextToolRef.current && !isPanMode.current) {
           const { target } = e
           const now = Date.now()
           const last = lastClickRef.current
           if (target && last && last.target === target && now - last.time < 400) {
             lastClickRef.current = null
-            const data = (target as unknown as fabric.FabricObject & { data?: { type: string } }).data
+            const data = (target as unknown as fabric.FabricObject & { data?: { type: string; frameX: number; frameY: number; frameW: number; frameH: number } }).data
             if (data?.type === 'photo') {
               enterImgPanMode(target as fabric.FabricImage, fc)
+              return
+            }
+            if (data?.type === 'textFrame') {
+              fc.remove(target)
+              const textbox = new fabric.Textbox(t.defaultTextContent, {
+                left:       data.frameX,
+                top:        data.frameY,
+                originX:    'left',
+                originY:    'top',
+                width:      data.frameW,
+                fontFamily: 'amandine',
+                fontSize:   24,
+                lineHeight: 1.16,
+                fill:       '#191919',
+                textAlign:  'center',
+              }) as unknown as fabric.Textbox & { data: { type: string; boxH?: number } }
+              textbox.data = { type: 'text', boxH: data.frameH }
+              textbox.set({ lockUniScaling: false, lockScalingX: false, lockScalingY: false })
+              ;(textbox as unknown as { height: number }).height = data.frameH
+              fc.add(textbox)
+              fc.setActiveObject(textbox)
+              fc.renderAll()
+              onTextEditRef.current?.(textbox, side)
               return
             }
           }
@@ -1140,17 +1194,19 @@ export default function Canvas({
         }
 
         // ── Frame draw tool ───────────────────────────────────────────────────
-        if (isFrameToolRef.current) {
+        if (isFrameToolRef.current || isTextToolRef.current) {
+          const kind    = isTextToolRef.current ? 'text' : 'frame'
           const ptr     = toCanvasPoint(fc, e.e as MouseEvent)
           const preview = new fabric.Rect({
             left: ptr.x, top: ptr.y, width: 0, height: 0,
             originX: 'left', originY: 'top',
-            fill: '#F0EFEB', stroke: '#528ED6', strokeWidth: 1,
+            fill: kind === 'text' ? 'rgba(240,239,235,0.4)' : '#F0EFEB',
+            stroke: '#528ED6', strokeWidth: 1,
             strokeDashArray: [5, 5], strokeUniform: true,
             selectable: false, evented: false,
           })
           fc.add(preview)
-          frameDrawRef.current = { canvas: fc, startX: ptr.x, startY: ptr.y, preview }
+          frameDrawRef.current = { kind, canvas: fc, startX: ptr.x, startY: ptr.y, preview }
           fc.renderAll()
           return
         }
@@ -1213,17 +1269,42 @@ export default function Canvas({
       // ── Mouse up: finalize frame draw or persist panned position ─────────
       fc.on('mouse:up', () => {
         if (frameDrawRef.current?.canvas === fc) {
-          const { preview, canvas } = frameDrawRef.current
+          const { kind, preview, canvas } = frameDrawRef.current
           const frameX = preview.left   ?? 0
           const frameY = preview.top    ?? 0
           const frameW = preview.width  ?? 0
           const frameH = preview.height ?? 0
           canvas.remove(preview)
           frameDrawRef.current = null
+
           if (frameW > 10 && frameH > 10) {
-            const frame = createFrameAtPx(canvas, frameX, frameY, frameW, frameH)
-            canvas.setActiveObject(frame)
-            onFrameToolDeactivateRef.current()
+            if (kind === 'text') {
+              const tfId = Math.random().toString(36).slice(2)
+              const rect = new fabric.Rect({
+                left:   frameX,
+                top:    frameY,
+                width:  frameW,
+                height: frameH,
+                originX: 'left',
+                originY: 'top',
+                fill:          'transparent',
+                stroke:        '#528ED6',
+                strokeWidth:   1.5,
+                strokeUniform: true,
+                selectable:    true,
+                evented:       true,
+                lockRotation:  true,
+              }) as unknown as fabric.Rect & { data: { type: string; id: string; frameX: number; frameY: number; frameW: number; frameH: number } }
+              rect.data = { type: 'textFrame', id: tfId, frameX, frameY, frameW, frameH }
+              canvas.add(rect)
+              canvas.setActiveObject(rect)
+              canvas.renderAll()
+              onTextToolDeactivateRef.current()
+            } else {
+              const frame = createFrameAtPx(canvas, frameX, frameY, frameW, frameH)
+              canvas.setActiveObject(frame)
+              onFrameToolDeactivateRef.current()
+            }
           }
           canvas.renderAll()
           return
@@ -1238,8 +1319,8 @@ export default function Canvas({
       const applyTextControls = (obj: fabric.FabricObject | undefined) => {
         if (!obj) return
         if (obj instanceof fabric.Textbox) {
-          obj.set({ lockUniScaling: false })
-          obj.setControlsVisibility({ mt: false, mb: false })
+          obj.set({ lockUniScaling: false, lockScalingX: false, lockScalingY: false })
+          obj.setControlsVisibility({ mt: true, mb: true, ml: true, mr: true, tl: true, tr: true, bl: true, br: true, mtr: true })
         }
         const data = (obj as unknown as fabric.FabricObject & { data?: { type: string } }).data
         if (data?.type === 'freePhoto') {
@@ -1283,16 +1364,50 @@ export default function Canvas({
           otherFc.renderAll()
         }
       })
+      fc.on('object:added', (e) => {
+        const d = (e.target as unknown as { data?: { type?: string; id?: string } }).data
+        if (d?.type === 'textFrame' && d.id) {
+          const br = e.target.getBoundingRect()
+          setTFOverlays(prev => [...prev.filter(o => o.id !== d.id), { id: d.id!, side, x: br.left, y: br.top }])
+        }
+      })
       fc.on('object:modified', (e) => {
         if (e.target instanceof fabric.Textbox) {
+          // Normalize accumulated scaleY → explicit height (text size unchanged)
+          const tb = e.target as unknown as fabric.Textbox & { scaleY?: number; height?: number; data?: { type: string; boxH?: number } }
+          const sy = tb.scaleY ?? 1
+          if (Math.abs(sy - 1) > 0.001) {
+            const newH = Math.max(20, (tb.height ?? 50) * sy)
+            ;(tb as unknown as { height: number }).height = newH
+            tb.set({ scaleY: 1 })
+            if (tb.data) tb.data.boxH = newH
+            tb.setCoords()
+          } else if (tb.data?.boxH != null) {
+            // Ensure height matches stored boxH (e.g. after width-only resize)
+            const stored = tb.data.boxH
+            const cur    = tb.height ?? stored
+            if (cur < stored) {
+              ;(tb as unknown as { height: number }).height = stored
+              tb.setCoords()
+            }
+          }
           const br = e.target.getBoundingRect()
           setTextSel({ side, top: br.top, left: br.left, width: br.width })
+        }
+        const d = (e.target as unknown as { data?: { type?: string; id?: string } }).data
+        if (d?.type === 'textFrame' && d.id) {
+          const br = e.target.getBoundingRect()
+          setTFOverlays(prev => prev.map(o => o.id === d.id ? { ...o, x: br.left, y: br.top } : o))
         }
         syncMultiSel(fc, side)
         const otherFc = side === 'left' ? rc : lc
         if (e.target) syncSpreadMirror(e.target as unknown as fabric.FabricImage, fc, otherFc)
       })
       fc.on('object:removed', (e) => {
+        const d = (e.target as unknown as { data?: { type?: string; id?: string } }).data
+        if (d?.type === 'textFrame' && d.id) {
+          setTFOverlays(prev => prev.filter(o => o.id !== d.id))
+        }
         const removed = e.target as unknown as fabric.FabricImage
         const mirror  = spreadMirrors.get(removed)
         if (mirror) {
@@ -1313,7 +1428,22 @@ export default function Canvas({
         }
         setTextEditing(true)
       })
-      fc.on('text:editing:exited',  () => setTextEditing(false))
+      fc.on('text:editing:exited', () => {
+        setTextEditing(false)
+        const obj = fc.getActiveObject()
+        if (obj instanceof fabric.Textbox) {
+          const tb   = obj as unknown as fabric.Textbox & { height?: number; data?: { boxH?: number } }
+          const boxH = tb.data?.boxH
+          if (boxH != null) {
+            const contentH = tb.height ?? 0
+            const restoreH = Math.max(contentH, boxH)
+            ;(tb as unknown as { height: number }).height = restoreH
+            tb.data!.boxH = restoreH
+            tb.setCoords()
+            fc.renderAll()
+          }
+        }
+      })
 
       // ── Right-click context menu ──────────────────────────────────────────
       fc.on('contextmenu', (e) => {
@@ -1329,6 +1459,18 @@ export default function Canvas({
 
       // ── Photo scaling ────────────────────────────────────────────────────────
       fc.on('object:scaling', (e) => {
+        // ── Textbox: convert scaleX → width for live text reflow; leave scaleY ──
+        if (e.target instanceof fabric.Textbox) {
+          const tb = e.target as unknown as fabric.Textbox & { scaleX?: number; scaleY?: number }
+          const sx = tb.scaleX ?? 1
+          if (Math.abs(sx - 1) > 0.001) {
+            const newW = Math.max(40, (tb.width ?? 100) * sx)
+            tb.set({ width: newW, scaleX: 1 })
+            tb.setCoords()
+          }
+          return
+        }
+
         const obj = e.target as unknown as fabric.FabricImage & {
           data?: { type: string; frameX: number; frameY: number; frameW: number; frameH: number; naturalW: number; naturalH: number; coverScale: number; editScale: number }
           clipPath?: fabric.Rect
@@ -1398,7 +1540,7 @@ export default function Canvas({
       // ── Object moving: clamp in edit mode, update clipPath in normal mode ───
       fc.on('object:moving', (e) => {
         const obj = e.target as unknown as fabric.FabricObject & {
-          data?: { type: string; frameX: number; frameY: number; frameW: number; frameH: number; naturalW: number; naturalH: number; coverScale: number; editScale: number }
+          data?: { type: string; frameX: number; frameY: number; frameW: number; frameH: number; naturalW: number; naturalH: number; coverScale: number; editScale: number; moved?: boolean }
           clipPath?: fabric.Rect
         }
 
@@ -1432,7 +1574,12 @@ export default function Canvas({
           const newFrameY = cy - pd.frameH / 2
           pd.frameX = newFrameX
           pd.frameY = newFrameY
+          pd.moved  = true
           if (obj.clipPath) obj.clipPath.set({ left: newFrameX, top: newFrameY })
+        }
+
+        if (obj?.data?.type === 'frame') {
+          obj.data.moved = true
         }
 
         // Cross-canvas drag highlight
@@ -1785,6 +1932,28 @@ export default function Canvas({
           activeCanvas.add(img)
           activeCanvas.setActiveObject(img)
 
+        } else if (cb.kind === 'freePhoto') {
+          const img = await fabric.FabricImage.fromURL(cb.src, { crossOrigin: 'anonymous' })
+          img.set({
+            originX:           'center',
+            originY:           'center',
+            left:              cb.left + OFF,
+            top:               cb.top  + OFF,
+            scaleX:            cb.scaleX,
+            scaleY:            cb.scaleY,
+            selectable:        true,
+            evented:           true,
+            borderColor:       '#528ED6',
+            borderScaleFactor: 2,
+            lockUniScaling:    true,
+          })
+          img.setControlsVisibility({ mt: false, mb: false, ml: false, mr: false })
+          ;(img as unknown as fabric.FabricObject & { data: Record<string, unknown> }).data = {
+            type: 'freePhoto', naturalW: cb.naturalW, naturalH: cb.naturalH,
+          }
+          activeCanvas.add(img)
+          activeCanvas.setActiveObject(img)
+
         } else if (cb.kind === 'frame') {
           restoreEmptyFrame(activeCanvas, {
             frameX: cb.frameX + OFF,
@@ -1852,9 +2021,9 @@ export default function Canvas({
 
         for (const obj of selected) {
           if (obj instanceof fabric.Textbox) { hasText = true; continue }
-          const data = (obj as unknown as fabric.FabricObject & { data?: { type: string } & FrameCoords }).data
-          // Deep-copy coords before discard mutates anything
-          if (data?.type === 'photo') framesToRestore.push({ frameX: data.frameX, frameY: data.frameY, frameW: data.frameW, frameH: data.frameH })
+          const data = (obj as unknown as fabric.FabricObject & { data?: { type: string; moved?: boolean } & FrameCoords }).data
+          // Deep-copy coords before discard mutates anything; skip if photo was moved from layout position
+          if (data?.type === 'photo' && !data.moved) framesToRestore.push({ frameX: data.frameX, frameY: data.frameY, frameW: data.frameW, frameH: data.frameH })
         }
 
         // Discard the ActiveSelection — releases objects back to canvas._objects
@@ -1976,7 +2145,20 @@ export default function Canvas({
   return (
     <div className={`canvas-outer${rulerMode ? ' canvas-ruler-active' : ''}`} ref={outerRef}>
       {/* ── Scrollable + centered area ── */}
-      <div className="canvas-inner" ref={innerRef}>
+      <div
+        className="canvas-inner"
+        ref={innerRef}
+        onMouseDown={(e) => {
+          const t = e.target as HTMLElement
+          const inPage = leftPageWrapRef.current?.contains(t) || rightPageWrapRef.current?.contains(t)
+          if (!inPage) {
+            leftFabric.current?.discardActiveObject()
+            leftFabric.current?.renderAll()
+            rightFabric.current?.discardActiveObject()
+            rightFabric.current?.renderAll()
+          }
+        }}
+      >
         <div className="canvas-scroll-pad">
         <div className="canvas-scale-anchor" ref={scaleAnchorRef} style={{ width: scaledW, height: scaledH }}>
           <div
@@ -2030,6 +2212,9 @@ export default function Canvas({
                       <X size={9} strokeWidth={2.5} />
                     </button>
                   )}
+                  {tfOverlays.filter(o => o.side === 'left').map(o => (
+                    <span key={o.id} className="canvas-tf-cursor" style={{ top: o.y + 6, left: o.x + 6 }} aria-hidden="true" />
+                  ))}
                   {multiSel?.side === 'left' && (
                     <div className="canvas-align-toolbar" style={{ top: multiSel.selBottom + 8, left: multiSel.selLeft + multiSel.selWidth / 2 }}>
                       <button className="canvas-align-btn" onClick={() => applyAlignment('left')}      aria-label={t.alignLeft}><AlignStartVertical size={18} strokeWidth={1.5} /></button>
@@ -2087,6 +2272,9 @@ export default function Canvas({
                       <X size={9} strokeWidth={2.5} />
                     </button>
                   )}
+                  {tfOverlays.filter(o => o.side === 'right').map(o => (
+                    <span key={o.id} className="canvas-tf-cursor" style={{ top: o.y + 6, left: o.x + 6 }} aria-hidden="true" />
+                  ))}
                   {multiSel?.side === 'right' && (
                     <div className="canvas-align-toolbar" style={{ top: multiSel.selBottom + 8, left: multiSel.selLeft + multiSel.selWidth / 2 }}>
                       <button className="canvas-align-btn" onClick={() => applyAlignment('left')}      aria-label={t.alignLeft}><AlignStartVertical size={18} strokeWidth={1.5} /></button>
@@ -2159,12 +2347,12 @@ export default function Canvas({
 
         const deleteObj = () => {
           const { obj, fc } = ctxMenu
-          type PhotoData = { type: string; frameX: number; frameY: number; frameW: number; frameH: number }
+          type PhotoData = { type: string; frameX: number; frameY: number; frameW: number; frameH: number; moved?: boolean }
           const data = (obj as unknown as fabric.FabricObject & { data?: PhotoData }).data
           if (obj instanceof fabric.Textbox) setTextSel(null)
           fc.discardActiveObject()
           fc.remove(obj)
-          if (data?.type === 'photo') restoreEmptyFrame(fc, { frameX: data.frameX, frameY: data.frameY, frameW: data.frameW, frameH: data.frameH })
+          if (data?.type === 'photo' && !data.moved) restoreEmptyFrame(fc, { frameX: data.frameX, frameY: data.frameY, frameW: data.frameW, frameH: data.frameH })
           fc.renderAll()
           setCtxMenu(null)
         }

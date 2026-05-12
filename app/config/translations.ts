@@ -109,7 +109,8 @@ export const translations = {
     spacing:         'Espaciado',
     decreaseSpacing: 'Reducir espaciado',
     increaseSpacing: 'Aumentar espaciado',
-    textPlaceholder: 'Escribe tu texto...',
+    textPlaceholder:    'Escribe tu texto...',
+    defaultTextContent: 'Tu texto aquí',
     cancel:          'Cancelar',
     // ShareModal
     sharePreview:    'Compartir previsualización',
@@ -236,7 +237,8 @@ export const translations = {
     spacing:         'Spacing',
     decreaseSpacing: 'Decrease spacing',
     increaseSpacing: 'Increase spacing',
-    textPlaceholder: 'Write your text...',
+    textPlaceholder:    'Write your text...',
+    defaultTextContent: 'Your text here',
     cancel:          'Cancel',
     // ShareModal
     sharePreview:    'Share preview',

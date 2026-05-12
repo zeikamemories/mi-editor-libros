@@ -10,6 +10,7 @@ type FrameData = {
   frameY: number
   frameW: number
   frameH: number
+  moved?: boolean
 }
 
 type PhotoData = {
@@ -22,6 +23,7 @@ type PhotoData = {
   naturalH: number   // intrinsic pixel height of the source image
   coverScale: number // Math.max(frameW/naturalW, frameH/naturalH) — base cover scale
   editScale: number  // zoom multiplier inside frame (≥ 1.0); combined with coverScale
+  moved?: boolean
 }
 
 type TextData = {
@@ -41,7 +43,16 @@ type ShapeData = {
   shape: ShapeKind
 }
 
-type FabricObjectWithData = fabric.FabricObject & { data: FrameData | PhotoData | TextData | FreePhotoData | ShapeData }
+type TextFrameData = {
+  type:   'textFrame'
+  id:     string
+  frameX: number
+  frameY: number
+  frameW: number
+  frameH: number
+}
+
+type FabricObjectWithData = fabric.FabricObject & { data: FrameData | PhotoData | TextData | FreePhotoData | ShapeData | TextFrameData }
 
 // Arrow SVG path — 200 × 40 bounding box, pointing right
 const ARROW_PATH = 'M 0 10 L 140 10 L 140 0 L 200 20 L 140 40 L 140 30 L 0 30 Z'
@@ -229,6 +240,7 @@ export async function dropPhotoOnFrame(
   const frameY = boundingRect.top
   const frameW = boundingRect.width
   const frameH = boundingRect.height
+  const frameMoved = (frameObj as unknown as fabric.Rect & { data?: FrameData }).data?.moved ?? false
 
   // Step 2: load image
   const img = await fabric.FabricImage.fromURL(photoSrc, {
@@ -284,6 +296,7 @@ export async function dropPhotoOnFrame(
     naturalH,
     coverScale,
     editScale: 1,
+    moved: frameMoved || undefined,
   }
 
   // Remove frame AFTER coordinates captured, then add image
@@ -531,8 +544,9 @@ export function addTextBox(
   canvas: fabric.Canvas,
   pageW: number,
   pageH: number,
+  placeholder = 'Tu texto aquí',
 ): fabric.Textbox {
-  const textbox = new fabric.Textbox('Tu texto aquí', {
+  const textbox = new fabric.Textbox(placeholder, {
     left: pageW / 2,
     top: pageH / 2,
     originX: 'center',
@@ -636,6 +650,7 @@ type TextEntry = {
   left:        number
   top:         number
   width:       number
+  height:      number
   angle:       number
   scaleX:      number
   scaleY:      number
@@ -676,7 +691,16 @@ type ShapeEntry = {
   strokeWidth: number
 }
 
-type SerializedEntry = FrameEntry | PhotoEntry | TextEntry | FreePhotoEntry | ShapeEntry
+type TextFrameEntry = {
+  kind:   'textFrame'
+  id:     string
+  frameX: number
+  frameY: number
+  frameW: number
+  frameH: number
+}
+
+type SerializedEntry = FrameEntry | PhotoEntry | TextEntry | FreePhotoEntry | ShapeEntry | TextFrameEntry
 
 export type PageData = {
   background:       string
@@ -737,6 +761,10 @@ export function serializePage(
         frameW: br.width,
         frameH: br.height,
       })
+    } else if (data?.type === 'textFrame') {
+      const tf = data as TextFrameData
+      const br = obj.getBoundingRect()
+      objects.push({ kind: 'textFrame', id: tf.id, frameX: br.left, frameY: br.top, frameW: br.width, frameH: br.height })
     } else if (data?.type === 'photo' && obj instanceof fabric.FabricImage) {
       const pd = data as PhotoData
       objects.push({
@@ -773,6 +801,7 @@ export function serializePage(
         left:        obj.left       ?? 0,
         top:         obj.top        ?? 0,
         width:       obj.width      ?? pageW * 0.5,
+        height:      (obj as unknown as { data?: { boxH?: number } }).data?.boxH ?? (obj.height ?? 0),
         angle:       obj.angle      ?? 0,
         scaleX:      obj.scaleX     ?? 1,
         scaleY:      obj.scaleY     ?? 1,
@@ -1017,6 +1046,25 @@ export async function deserializePage(
         rect.data = { type: 'frame', isEmpty: true, frameX: entry.frameX, frameY: entry.frameY, frameW: entry.frameW, frameH: entry.frameH }
         canvas.add(rect)
 
+      } else if (entry.kind === 'textFrame') {
+        const rect = new fabric.Rect({
+          left:   entry.frameX,
+          top:    entry.frameY,
+          width:  entry.frameW,
+          height: entry.frameH,
+          originX: 'left',
+          originY: 'top',
+          fill:          'transparent',
+          stroke:        '#528ED6',
+          strokeWidth:   1.5,
+          strokeUniform: true,
+          selectable:      true,
+          evented:         true,
+          lockRotation:    true,
+        }) as fabric.Rect & { data: TextFrameData }
+        rect.data = { type: 'textFrame', id: entry.id ?? Math.random().toString(36).slice(2), frameX: entry.frameX, frameY: entry.frameY, frameW: entry.frameW, frameH: entry.frameH }
+        canvas.add(rect)
+
       } else if (entry.kind === 'photo') {
         const img = await fabric.FabricImage.fromURL(entry.photo, { crossOrigin: 'anonymous' })
         const { frameX, frameY, frameW, frameH, naturalW, naturalH, coverScale, editScale } = entry
@@ -1074,9 +1122,14 @@ export async function deserializePage(
           lineHeight:  entry.lineHeight  ?? 1.16,
           charSpacing: entry.charSpacing ?? 0,
         }) as fabric.Textbox & { data: TextData }
-        textbox.data = { type: 'text' }
-        textbox.set({ lockUniScaling: false })
-        textbox.setControlsVisibility({ mt: false, mb: false })
+        const savedH = entry.height ?? 0
+        const contentH = (textbox as unknown as { height?: number }).height ?? 0
+        const boxH = Math.max(contentH, savedH)
+        textbox.data = { type: 'text', boxH } as TextData & { boxH: number }
+        if (boxH > contentH) {
+          ;(textbox as unknown as { height: number }).height = boxH
+        }
+        textbox.set({ lockUniScaling: false, lockScalingX: false, lockScalingY: false })
         canvas.add(textbox)
 
       } else if (entry.kind === 'shape') {

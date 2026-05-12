@@ -67,6 +67,17 @@
   background: #e8f0fb;
 }
 
+@keyframes page-strip-flash {
+  0%   { border-color: transparent; background: transparent; }
+  20%  { border-color: var(--color-blue); background: #e8f0fb; }
+  60%  { border-color: var(--color-blue); background: #e8f0fb; }
+  100% { border-color: transparent; background: transparent; }
+}
+
+.page-strip-spread--flash {
+  animation: page-strip-flash 1.4s ease forwards;
+}
+
 /* ── Delete spread button ────────────────────────────────────────────────── */
 
 .page-strip-delete {

@@ -461,3 +461,19 @@
 .canvas-ctx-item--delete:hover {
   background: #FDF0EF;
 }
+
+/* ─── Text-frame blinking cursor overlay ───────────────────────────────────── */
+
+@keyframes tf-cursor-blink {
+  0%, 100% { opacity: 1; }
+  50%       { opacity: 0; }
+}
+
+.canvas-tf-cursor {
+  position:         absolute;
+  width:            1.5px;
+  height:           20px;
+  background:       #528ED6;
+  pointer-events:   none;
+  animation:        tf-cursor-blink 1s step-end infinite;
+}

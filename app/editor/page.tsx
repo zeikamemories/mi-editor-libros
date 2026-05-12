@@ -23,7 +23,7 @@ import type { Layout } from '../components/LayoutPanel/LayoutPanel'
 
 import { BOOK_SIZE }                                      from '../config/bookSize'
 import type { GridSettings, Guide }                        from '../components/Canvas/Canvas'
-import { applyLayout, addTextBox, addShape, serializePage,
+import { applyLayout, addShape, serializePage,
          deserializePage, dropPhotoOnFrame, dropPhotoFree,
          exportPageAsJpg, buildPageFromLayout,
          dropTextureOnPage, dropStickerOnPage }             from '../components/Canvas/fabricHelpers'
@@ -83,6 +83,7 @@ export default function EditorPage() {
   const [rulerMode,      setRulerMode]      = useState(false)
   const [guides,         setGuides]         = useState<Guide[]>([])
   const [frameTool,      setFrameTool]      = useState(false)
+  const [textTool,       setTextTool]       = useState(false)
   const [tourOpen,       setTourOpen]       = useState(false)
   const [activePageBg,   setActivePageBg]   = useState('#FFFFFF')
   const [showGrid,       setShowGrid]       = useState(false)
@@ -412,14 +413,6 @@ export default function EditorPage() {
     saveCurrentSpread()
   }, [saveCurrentSpread])
 
-  // ── Add text → active page ─────────────────────────────────────────────────
-  const handleAddText = useCallback(() => {
-    const fc = getActiveFabric()
-    if (!fc) return
-    addTextBox(fc, PAGE_W, PAGE_H)
-    saveCurrentSpread()
-  }, [saveCurrentSpread]) // eslint-disable-line react-hooks/exhaustive-deps
-
   // ── Add shape → active page ────────────────────────────────────────────────
   const handleAddShape = useCallback((kind: ShapeKind) => {
     const fc = getActiveFabric()
@@ -731,8 +724,15 @@ export default function EditorPage() {
   // ── Frame draw tool ────────────────────────────────────────────────────────
   const handleFrameToolToggle = useCallback(() => {
     setFrameTool((v) => !v)
+    setTextTool(false)
   }, [])
   const handleFrameToolDeactivate = useCallback(() => setFrameTool(false), [])
+
+  const handleTextToolToggle = useCallback(() => {
+    setTextTool((v) => !v)
+    setFrameTool(false)
+  }, [])
+  const handleTextToolDeactivate = useCallback(() => setTextTool(false), [])
 
   // ── Add texture as free image on active page ──────────────────────────────
   const handleAddTexture = useCallback(async (url: string) => {
@@ -970,6 +970,7 @@ export default function EditorPage() {
             canRedo={canRedo}
             rulerMode={rulerMode}
             frameTool={frameTool}
+            textTool={textTool}
             viewMode={viewMode}
             pageBackground={activePageBg}
             showGrid={showGrid}
@@ -977,7 +978,7 @@ export default function EditorPage() {
             onUndo={handleUndo}
             onRedo={handleRedo}
             onToggleRuler={handleToggleRuler}
-            onAddText={handleAddText}
+            onTextToolToggle={handleTextToolToggle}
             onFrameToolToggle={handleFrameToolToggle}
             onViewModeChange={handleViewModeChange}
             onPageBgChange={handlePageBgChange}
@@ -1008,6 +1009,7 @@ export default function EditorPage() {
                 totalSpreads={totalSpreads}
                 viewMode={viewMode}
                 frameTool={frameTool}
+                textTool={textTool}
                 onObjectSelected={handleObjectSelected}
                 onCanvasReady={handleCanvasReady}
                 onSpreadChange={handleSpreadSelect}
@@ -1017,6 +1019,7 @@ export default function EditorPage() {
                 onPhotoDrop={handlePhotoDrop}
                 onTextEdit={handleTextEdit}
                 onFrameToolDeactivate={handleFrameToolDeactivate}
+                onTextToolDeactivate={handleTextToolDeactivate}
                 onUndo={handleUndo}
                 onRedo={handleRedo}
               />

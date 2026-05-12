@@ -12,6 +12,7 @@ interface ToolbarProps {
   canRedo: boolean
   rulerMode: boolean
   frameTool: boolean
+  textTool:  boolean
   viewMode: 'editor' | 'spreads'
   pageBackground: string
   showGrid: boolean
@@ -19,7 +20,7 @@ interface ToolbarProps {
   onUndo: () => void
   onRedo: () => void
   onToggleRuler: () => void
-  onAddText: () => void
+  onTextToolToggle: () => void
   onFrameToolToggle: () => void
   onViewModeChange: (mode: 'editor' | 'spreads') => void
   onPageBgChange: (color: string) => void
@@ -42,6 +43,7 @@ export default function Toolbar({
   canRedo,
   rulerMode,
   frameTool,
+  textTool,
   viewMode,
   pageBackground,
   showGrid,
@@ -49,7 +51,7 @@ export default function Toolbar({
   onUndo,
   onRedo,
   onToggleRuler,
-  onAddText,
+  onTextToolToggle,
   onFrameToolToggle,
   onViewModeChange,
   onPageBgChange,
@@ -185,8 +187,8 @@ export default function Toolbar({
         </button>
 
         <button
-          className="toolbar-btn"
-          onClick={onAddText}
+          className={`toolbar-btn${textTool ? ' toolbar-btn--active' : ''}`}
+          onClick={onTextToolToggle}
           aria-label={t.text}
         >
           <Type size={22} strokeWidth={1.5} />

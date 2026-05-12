@@ -60,14 +60,30 @@ export default function PageStrip({
   const { t } = useLang()
   const spreads    = buildSpreads(totalContentSpreads, t.back, t.cover, t.inside, t.outside)
   const activeRef  = useRef<HTMLDivElement>(null)
+  const scrollRef  = useRef<HTMLDivElement>(null)
+  const prevTotal  = useRef(totalContentSpreads)
   const [dragOverIndex, setDragOverIndex] = useState<number | null>(null)
   const [hoverIndex, setHoverIndex]       = useState<number | null>(null)
+  const [flashIndex, setFlashIndex]       = useState<number | null>(null)
 
   useEffect(() => {
     activeRef.current?.scrollIntoView({
       inline: 'nearest', behavior: 'smooth', block: 'nearest',
     })
   }, [currentSpread])
+
+  useEffect(() => {
+    if (totalContentSpreads > prevTotal.current) {
+      const newIndex = prevTotal.current + 2
+      setFlashIndex(newIndex)
+      const el = scrollRef.current
+      if (el) el.scrollTo({ left: el.scrollWidth, behavior: 'smooth' })
+      const timer = setTimeout(() => setFlashIndex(null), 1400)
+      prevTotal.current = totalContentSpreads
+      return () => clearTimeout(timer)
+    }
+    prevTotal.current = totalContentSpreads
+  }, [totalContentSpreads])
 
   // A spread is variable (deletable) if it's not one of the 3 fixed ones
   const isVariable = (spreadIndex: number) =>
@@ -111,11 +127,12 @@ export default function PageStrip({
       </div>
 
       {/* Scrollable spreads */}
-      <div className="page-strip-scroll">
+      <div className="page-strip-scroll" ref={scrollRef}>
         {spreads.map((spread) => {
           const active   = spread.index === currentSpread
           const variable = isVariable(spread.index)
           const dragOver = dragOverIndex === spread.index
+          const flash    = flashIndex === spread.index
 
           return (
             <div
@@ -125,6 +142,7 @@ export default function PageStrip({
                 'page-strip-spread',
                 active   ? 'page-strip-spread--active'   : '',
                 dragOver ? 'page-strip-spread--drag-over' : '',
+                flash    ? 'page-strip-spread--flash'     : '',
               ].filter(Boolean).join(' ')}
               onClick={() => onSpreadSelect(spread.index)}
               onMouseEnter={() => setHoverIndex(spread.index)}
