@@ -116,11 +116,6 @@ export default function EditorPage() {
   const noEditThumbRef   = useRef<string>('')
   const logoThumbRef     = useRef<string>('')
 
-  // ── Auto-open tour on every page load ─────────────────────────────────────
-  useEffect(() => {
-    setTourOpen(true)
-  }, [])
-
   // Generate initial thumbnails on mount so the strip never shows grey rects
   useEffect(() => {
     const W = 82    // 816 × 0.1
