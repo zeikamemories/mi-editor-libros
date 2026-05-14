@@ -5,6 +5,7 @@ import Image from 'next/image'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { Monitor } from 'lucide-react'
+import { supabase } from '../lib/supabase'
 import './nuevo.css'
 
 // ── Types ────────────────────────────────────────────────────────────────────
@@ -309,6 +310,7 @@ export default function NuevoPage() {
   })
   const [photos,         setPhotos]         = useState<Photo[]>([])
   const [uploadingCount, setUploadingCount] = useState(0)
+  const [creating,       setCreating]       = useState(false)
 
   const selectedBook = BOOK_SIZES.find((b) => b.id === selectedSize) ?? null
 
@@ -332,12 +334,24 @@ export default function NuevoPage() {
 
   const handleDeletePhoto = (id: string) => setPhotos((prev) => prev.filter((p) => p.id !== id))
 
-  const handleNext = () => {
+  const handleNext = async () => {
     if (step < 3) {
       setStep(step + 1)
-    } else {
-      sessionStorage.setItem('zeika_photos', JSON.stringify(photos))
+      return
+    }
+    setCreating(true)
+    try {
+      const { data, error } = await supabase
+        .from('projects')
+        .insert({ name: details.nombre || 'Sin título', photos, spreads: {} })
+        .select('id')
+        .single()
+      if (error || !data) throw error
+      sessionStorage.setItem('zeika_project_id', data.id)
       router.push('/editor')
+    } catch (err) {
+      console.error('Error creando proyecto:', err)
+      setCreating(false)
     }
   }
 
@@ -347,10 +361,11 @@ export default function NuevoPage() {
   }
 
   const nextDisabled =
+    creating ||
     (step === 1 && !selectedSize) ||
     (step === 3 && photos.length === 0 && uploadingCount === 0)
 
-  const nextLabel = step === 3 ? 'ABRIR EDITOR' : 'SIGUIENTE'
+  const nextLabel = creating ? 'CREANDO...' : step === 3 ? 'ABRIR EDITOR' : 'SIGUIENTE'
 
   return (
     <div className="nuevo-root">

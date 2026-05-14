@@ -31,6 +31,7 @@ import type { PageData, PhotoAssignment, ShapeKind }       from '../components/C
 import { LAYOUTS }                                         from '../config/layouts'
 
 import { LanguageProvider } from '../context/LanguageContext'
+import { supabase } from '../lib/supabase'
 import './editor.css'
 
 const PAGE_W = BOOK_SIZE.widthPx   // 816
@@ -50,22 +51,17 @@ export default function EditorPage() {
   // ── Export ────────────────────────────────────────────────────────────────
   const [isExporting, setIsExporting] = useState(false)
 
-  // ── Project identity (stable for this session) ─────────────────────────────
-  const [projectId] = useState(() => crypto.randomUUID())
+  // ── Project identity + DB load state ─────────────────────────────────────
+  const projectIdRef             = useRef<string | null>(null)
+  const [dbLoaded,  setDbLoaded] = useState(false)
+  const supabaseSaveTimer        = useRef<ReturnType<typeof setTimeout> | null>(null)
 
   // ── Preview ────────────────────────────────────────────────────────────────
   const [previewOpen,     setPreviewOpen]     = useState(false)
   const [previewSnapshot, setPreviewSnapshot] = useState<Record<number, SpreadSnapshot>>({})
 
   // ── Photos ─────────────────────────────────────────────────────────────────
-  const [photos,       setPhotos]       = useState<Photo[]>(() => {
-    if (typeof window === 'undefined') return []
-    try {
-      const stored = sessionStorage.getItem('zeika_photos')
-      if (stored) { sessionStorage.removeItem('zeika_photos'); return JSON.parse(stored) as Photo[] }
-    } catch {}
-    return []
-  })
+  const [photos, setPhotos] = useState<Photo[]>([])
   const [usedPhotoIds, setUsedPhotoIds] = useState<Set<string>>(new Set())
   const photosRef = useRef<Photo[]>([])
 
@@ -201,6 +197,21 @@ export default function EditorPage() {
   const getActiveFabric   = () => activePageRef.current === 'right' ? fabricRight.current : fabricLeft.current
   const getInactiveFabric = () => activePageRef.current === 'right' ? fabricLeft.current  : fabricRight.current
 
+  // ── Load project from Supabase on mount ──────────────────────────────────
+  useEffect(() => {
+    const id = sessionStorage.getItem('zeika_project_id')
+    if (!id) { setDbLoaded(true); return }
+    projectIdRef.current = id
+    supabase.from('projects').select('photos, spreads').eq('id', id).single()
+      .then(({ data, error }) => {
+        if (!error && data) {
+          if (data.photos) setPhotos(data.photos as Photo[])
+          if (data.spreads) spreadsData.current = data.spreads as Record<number, SpreadSnapshot>
+        }
+        setDbLoaded(true)
+      })
+  }, []) // eslint-disable-line react-hooks/exhaustive-deps
+
   // ── Keep photosRef current so callbacks can read the latest array ─────────
   useEffect(() => { photosRef.current = photos }, [photos])
 
@@ -318,6 +329,17 @@ export default function EditorPage() {
     thumbnailTimerRef.current = setTimeout(() => {
       captureThumbnail(currentSpreadRef.current)
     }, 400)
+
+    // Debounced Supabase save — 2 s after last change
+    if (projectIdRef.current) {
+      if (supabaseSaveTimer.current) clearTimeout(supabaseSaveTimer.current)
+      supabaseSaveTimer.current = setTimeout(() => {
+        supabase.from('projects').update({
+          spreads: spreadsData.current,
+          photos:  photosRef.current,
+        }).eq('id', projectIdRef.current!)
+      }, 2000)
+    }
   }, [pushHistory, captureThumbnail, recomputeUsedPhotos])
 
   // ── Canvas ready: restore saved state, then wire change listeners ───────────
@@ -358,18 +380,29 @@ export default function EditorPage() {
   }, [])
 
   // ── Photo upload ───────────────────────────────────────────────────────────
-  const handlePhotoUpload = useCallback((uploaded: Photo[]) => {
-    setPhotos((prev) => [...prev, ...uploaded])
+  const savePhotosToSupabase = useCallback((updated: Photo[]) => {
+    if (!projectIdRef.current) return
+    supabase.from('projects').update({ photos: updated }).eq('id', projectIdRef.current)
   }, [])
+
+  const handlePhotoUpload = useCallback((uploaded: Photo[]) => {
+    setPhotos((prev) => {
+      const next = [...prev, ...uploaded]
+      savePhotosToSupabase(next)
+      return next
+    })
+  }, [savePhotosToSupabase])
 
   // ── Photo delete (from panel) ──────────────────────────────────────────────
   const handlePhotoDelete = useCallback((photoId: string) => {
     setPhotos((prev) => {
-      photosRef.current = prev.filter((p) => p.id !== photoId)
-      return photosRef.current
+      const next = prev.filter((p) => p.id !== photoId)
+      photosRef.current = next
+      savePhotosToSupabase(next)
+      return next
     })
     recomputeUsedPhotos()
-  }, [recomputeUsedPhotos])
+  }, [recomputeUsedPhotos, savePhotosToSupabase])
 
   // ── Photo click: place in first empty frame, active page first ─────────────
   const handlePhotoClick = useCallback(async (photo: Photo) => {
@@ -974,18 +1007,28 @@ export default function EditorPage() {
   // ── Share: save project to localStorage so the preview route can load it ──
   const handleShare = useCallback(() => {
     saveCurrentSpread()
+    const pid = projectIdRef.current ?? 'local'
     localStorage.setItem(
-      `zeika_project_${projectId}`,
+      `zeika_project_${pid}`,
       JSON.stringify({ spreadsData: spreadsData.current, totalSpreads }),
     )
-  }, [saveCurrentSpread, projectId, totalSpreads])
+  }, [saveCurrentSpread, totalSpreads])
 
   // ── Render ─────────────────────────────────────────────────────────────────
+  if (!dbLoaded) {
+    return (
+      <div className="editor-loading">
+        <div className="editor-loading-spinner" />
+        Cargando proyecto…
+      </div>
+    )
+  }
+
   return (
     <LanguageProvider>
     <>
     <div className="editor-root">
-      <Topbar onPreview={handleOpenPreview} onExportJpg={handleExportJpg} onExportPdf={handleExportPdf} isExporting={isExporting} projectId={projectId} onShare={handleShare} onTourOpen={() => setTourOpen(true)} />
+      <Topbar onPreview={handleOpenPreview} onExportJpg={handleExportJpg} onExportPdf={handleExportPdf} isExporting={isExporting} projectId={projectIdRef.current ?? ''} onShare={handleShare} onTourOpen={() => setTourOpen(true)} />
 
       <div className="editor-body">
         <PhotoPanel

@@ -21,3 +21,31 @@
   flex: 1;
   overflow: hidden;
 }
+
+.editor-loading {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 100vh;
+  gap: 16px;
+  background: var(--color-bg);
+  color: var(--color-black);
+  font-family: var(--font-body);
+  font-size: 13px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.editor-loading-spinner {
+  width: 28px;
+  height: 28px;
+  border: 2px solid #ddd;
+  border-top-color: var(--color-blue);
+  border-radius: 50%;
+  animation: editor-spin 0.7s linear infinite;
+}
+
+@keyframes editor-spin {
+  to { transform: rotate(360deg); }
+}
