@@ -20,6 +20,7 @@ interface PhotoPanelProps {
   onPhotoClick:  (photo: Photo) => void
   onDelete:      (photoId: string) => void
   onAutoCreate?: () => Promise<void>
+  autoCreateDisabled?: boolean
 }
 
 type SortBy = 'fecha' | 'nombre'
@@ -68,6 +69,7 @@ export default function PhotoPanel({
   onPhotoClick,
   onDelete,
   onAutoCreate,
+  autoCreateDisabled = false,
 }: PhotoPanelProps) {
   const { t } = useLang()
   const fileInputRef  = useRef<HTMLInputElement>(null)
@@ -297,20 +299,19 @@ export default function PhotoPanel({
       </div>
 
       {/* ── Auto-crear ── */}
-      {onAutoCreate && (
-        <div className="photo-panel-autocreate-row">
-          <button
-            className="photo-autocreate-btn"
-            disabled={autoCreating || photos.length === 0}
-            onClick={async () => {
-              setAutoCreating(true)
-              try { await onAutoCreate() } finally { setAutoCreating(false) }
-            }}
-          >
-            {autoCreating ? t.generating : t.autoCreate}
-          </button>
-        </div>
-      )}
+      <div className="photo-panel-autocreate-row">
+        <button
+          className={`photo-autocreate-btn${autoCreateDisabled ? ' photo-autocreate-btn--unavailable' : ''}`}
+          disabled={autoCreateDisabled || autoCreating || photos.length === 0}
+          onClick={async () => {
+            if (!onAutoCreate) return
+            setAutoCreating(true)
+            try { await onAutoCreate() } finally { setAutoCreating(false) }
+          }}
+        >
+          {autoCreating ? t.generating : t.autoCreate}
+        </button>
+      </div>
     </aside>
   )
 }

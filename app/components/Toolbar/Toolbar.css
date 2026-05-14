@@ -368,3 +368,15 @@
 .toolbar-view-btn:not(.toolbar-view-btn--active):hover {
   background: #e4e4e4;
 }
+
+/* ── Shape color popover ─────────────────────────────────────────────────── */
+
+.toolbar-shape-color-popover {
+  min-width: 90px;
+}
+
+.toolbar-shape-color-label {
+  font-family: var(--font-body);
+  font-size: 11px;
+  color: #555;
+}

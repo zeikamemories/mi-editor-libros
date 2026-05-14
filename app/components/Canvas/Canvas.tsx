@@ -49,6 +49,7 @@ interface CanvasProps {
   onTextToolDeactivate:  () => void
   onUndo?: () => void
   onRedo?: () => void
+  onShapeDoubleClick?: (color: string) => void
 }
 
 function spreadLabel(spread: number, totalSpreads: number, back: string, cover: string): { left: string; right: string } {
@@ -498,6 +499,7 @@ export default function Canvas({
   onTextToolDeactivate,
   onUndo,
   onRedo,
+  onShapeDoubleClick,
 }: CanvasProps) {
   const leftElRef   = useRef<HTMLCanvasElement>(null)
   const rightElRef  = useRef<HTMLCanvasElement>(null)
@@ -582,6 +584,7 @@ export default function Canvas({
   const onTextEditRef         = useRef(onTextEdit)
   const onUndoRef             = useRef(onUndo)
   const onRedoRef             = useRef(onRedo)
+  const onShapeDoubleClickRef = useRef(onShapeDoubleClick)
   const zoomRef               = useRef(zoom)
 
   useEffect(() => { onObjectSelectedRef.current   = onObjectSelected   }, [onObjectSelected])
@@ -595,6 +598,7 @@ export default function Canvas({
   useEffect(() => { onTextToolDeactivateRef.current     = onTextToolDeactivate     }, [onTextToolDeactivate])
   useEffect(() => { onUndoRef.current               = onUndo               }, [onUndo])
   useEffect(() => { onRedoRef.current               = onRedo               }, [onRedo])
+  useEffect(() => { onShapeDoubleClickRef.current   = onShapeDoubleClick   }, [onShapeDoubleClick])
   useEffect(() => { zoomRef.current = zoom }, [zoom])
   useEffect(() => { isTextEditingRef.current = textEditing }, [textEditing])
 
@@ -1123,10 +1127,15 @@ export default function Canvas({
         if (isFrameToolRef.current || isTextToolRef.current || isPanMode.current) return
         const { target } = e
         if (!target) return
-        const data = (target as unknown as fabric.FabricObject & { data?: { type: string } }).data
+        const data = (target as unknown as fabric.FabricObject & { data?: { type: string; shape?: string } }).data
         if (data?.type === 'photo') {
           lastClickRef.current = null
           enterImgPanMode(target as fabric.FabricImage, fc)
+        } else if (data?.type === 'shape') {
+          const color = data.shape === 'line'
+            ? ((target as unknown as { stroke: string }).stroke ?? '#191919')
+            : ((target as unknown as { fill: string }).fill ?? '#D0D0D0')
+          onShapeDoubleClickRef.current?.(color)
         }
       })
 
@@ -1279,27 +1288,27 @@ export default function Canvas({
 
           if (frameW > 10 && frameH > 10) {
             if (kind === 'text') {
-              const tfId = Math.random().toString(36).slice(2)
-              const rect = new fabric.Rect({
-                left:   frameX,
-                top:    frameY,
-                width:  frameW,
-                height: frameH,
-                originX: 'left',
-                originY: 'top',
-                fill:          'transparent',
-                stroke:        '#528ED6',
-                strokeWidth:   1.5,
-                strokeUniform: true,
-                selectable:    true,
-                evented:       true,
-                lockRotation:  true,
-              }) as unknown as fabric.Rect & { data: { type: string; id: string; frameX: number; frameY: number; frameW: number; frameH: number } }
-              rect.data = { type: 'textFrame', id: tfId, frameX, frameY, frameW, frameH }
-              canvas.add(rect)
-              canvas.setActiveObject(rect)
+              const textbox = new fabric.Textbox(t.defaultTextContent, {
+                left:       frameX,
+                top:        frameY,
+                originX:    'left',
+                originY:    'top',
+                width:      frameW,
+                fontFamily: 'amandine',
+                fontSize:   24,
+                lineHeight: 1.16,
+                fill:       '#191919',
+                textAlign:  'center',
+              }) as unknown as fabric.Textbox & { data: { type: string; boxH?: number } }
+              textbox.data = { type: 'text', boxH: frameH }
+              ;(textbox as unknown as { height: number }).height = frameH
+              textbox.set({ lockUniScaling: false, lockScalingX: false, lockScalingY: false })
+              textbox.setControlsVisibility({ tl: true, tr: true, bl: true, br: true, mt: false, mb: false, ml: true, mr: true, mtr: true })
+              canvas.add(textbox)
+              canvas.setActiveObject(textbox)
               canvas.renderAll()
               onTextToolDeactivateRef.current()
+              onTextEditRef.current?.(textbox as unknown as fabric.Textbox, side)
             } else {
               const frame = createFrameAtPx(canvas, frameX, frameY, frameW, frameH)
               canvas.setActiveObject(frame)
@@ -1320,7 +1329,7 @@ export default function Canvas({
         if (!obj) return
         if (obj instanceof fabric.Textbox) {
           obj.set({ lockUniScaling: false, lockScalingX: false, lockScalingY: false })
-          obj.setControlsVisibility({ mt: true, mb: true, ml: true, mr: true, tl: true, tr: true, bl: true, br: true, mtr: true })
+          obj.setControlsVisibility({ tl: true, tr: true, bl: true, br: true, mt: false, mb: false, ml: true, mr: true, mtr: true })
         }
         const data = (obj as unknown as fabric.FabricObject & { data?: { type: string } }).data
         if (data?.type === 'freePhoto') {
@@ -1373,24 +1382,28 @@ export default function Canvas({
       })
       fc.on('object:modified', (e) => {
         if (e.target instanceof fabric.Textbox) {
-          // Normalize accumulated scaleY → explicit height (text size unchanged)
-          const tb = e.target as unknown as fabric.Textbox & { scaleY?: number; height?: number; data?: { type: string; boxH?: number } }
-          const sy = tb.scaleY ?? 1
-          if (Math.abs(sy - 1) > 0.001) {
-            const newH = Math.max(20, (tb.height ?? 50) * sy)
-            ;(tb as unknown as { height: number }).height = newH
-            tb.set({ scaleY: 1 })
-            if (tb.data) tb.data.boxH = newH
-            tb.setCoords()
-          } else if (tb.data?.boxH != null) {
-            // Ensure height matches stored boxH (e.g. after width-only resize)
-            const stored = tb.data.boxH
-            const cur    = tb.height ?? stored
-            if (cur < stored) {
-              ;(tb as unknown as { height: number }).height = stored
-              tb.setCoords()
-            }
+          const tb = e.target as unknown as fabric.Textbox & {
+            scaleX?: number; scaleY?: number; width?: number; height?: number
+            fontSize?: number; data?: { type: string; boxH?: number }
+            calcTextHeight: () => number
           }
+          const sx = tb.scaleX ?? 1
+          const sy = tb.scaleY ?? 1
+          if (Math.abs(sx - 1) > 0.001 || Math.abs(sy - 1) > 0.001) {
+            // Corner resize: bake uniform scale into fontSize + width, auto-size height
+            const scale = (sx + sy) / 2
+            const newFontSize = Math.round(Math.max(6, (tb.fontSize ?? 24) * scale))
+            const newWidth    = Math.max(40, (tb.width  ?? 100) * scale)
+            tb.set({ fontSize: newFontSize, width: newWidth, scaleX: 1, scaleY: 1 })
+            const newH = tb.calcTextHeight()
+            ;(tb as unknown as { height: number }).height = newH
+            if (tb.data) tb.data.boxH = newH
+          } else {
+            // Width-only resize: sync boxH to current height
+            const h = tb.height ?? 0
+            if (tb.data) tb.data.boxH = h
+          }
+          tb.setCoords()
           const br = e.target.getBoundingRect()
           setTextSel({ side, top: br.top, left: br.left, width: br.width })
         }
@@ -1459,14 +1472,22 @@ export default function Canvas({
 
       // ── Photo scaling ────────────────────────────────────────────────────────
       fc.on('object:scaling', (e) => {
-        // ── Textbox: convert scaleX → width for live text reflow; leave scaleY ──
+        // ── Textbox: side handles → width reflow; corner handles → uniform visual scale ──
         if (e.target instanceof fabric.Textbox) {
-          const tb = e.target as unknown as fabric.Textbox & { scaleX?: number; scaleY?: number }
-          const sx = tb.scaleX ?? 1
-          if (Math.abs(sx - 1) > 0.001) {
-            const newW = Math.max(40, (tb.width ?? 100) * sx)
-            tb.set({ width: newW, scaleX: 1 })
-            tb.setCoords()
+          const tb     = e.target as unknown as fabric.Textbox & { scaleX?: number; scaleY?: number }
+          const corner = ((e as unknown as { transform?: { corner?: string } }).transform)?.corner ?? ''
+          const isSide = corner === 'ml' || corner === 'mr'
+          if (isSide) {
+            const sx = tb.scaleX ?? 1
+            if (Math.abs(sx - 1) > 0.001) {
+              const newW = Math.max(40, (tb.width ?? 100) * sx)
+              tb.set({ width: newW, scaleX: 1, scaleY: 1 })
+              tb.setCoords()
+            }
+          } else {
+            // Keep scale uniform while dragging
+            const sx = tb.scaleX ?? 1
+            tb.set({ scaleY: sx })
           }
           return
         }

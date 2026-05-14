@@ -28,6 +28,10 @@ interface ToolbarProps {
   onToggleGrid: () => void
   onGridSettingsChange: (s: GridSettings) => void
   onAddShape?: (kind: ShapeKind) => void
+  shapeColorPickerOpen?: boolean
+  selectedShapeColor?: string
+  onShapeColorChange?: (color: string) => void
+  onShapeColorPickerClose?: () => void
 }
 
 const SHAPE_ICONS: { kind: ShapeKind; Icon: React.ComponentType<{ size: number; strokeWidth: number }> }[] = [
@@ -59,6 +63,10 @@ export default function Toolbar({
   onToggleGrid,
   onGridSettingsChange,
   onAddShape,
+  shapeColorPickerOpen,
+  selectedShapeColor,
+  onShapeColorChange,
+  onShapeColorPickerClose,
 }: ToolbarProps) {
   const { t } = useLang()
 
@@ -80,6 +88,7 @@ export default function Toolbar({
 
   const [shapesOpen, setShapesOpen] = useState(false)
   const shapesWrapRef               = useRef<HTMLDivElement>(null)
+  const shapeColorInputRef          = useRef<HTMLInputElement>(null)
 
   useEffect(() => {
     if (!paintOpen) return
@@ -113,6 +122,17 @@ export default function Toolbar({
     document.addEventListener('pointerdown', onPointerDown)
     return () => document.removeEventListener('pointerdown', onPointerDown)
   }, [shapesOpen])
+
+  useEffect(() => {
+    if (!shapeColorPickerOpen) return
+    const onPointerDown = (e: PointerEvent) => {
+      if (shapesWrapRef.current && !shapesWrapRef.current.contains(e.target as Node)) {
+        onShapeColorPickerClose?.()
+      }
+    }
+    document.addEventListener('pointerdown', onPointerDown)
+    return () => document.removeEventListener('pointerdown', onPointerDown)
+  }, [shapeColorPickerOpen, onShapeColorPickerClose])
 
   const handleEyedropper = async () => {
     type EyeDropperAPI = { open: () => Promise<{ sRGBHex: string }> }
@@ -173,6 +193,29 @@ export default function Toolbar({
                   <span>{label}</span>
                 </button>
               ))}
+            </div>
+          )}
+
+          {shapeColorPickerOpen && selectedShapeColor != null && (
+            <div className="toolbar-paint-popover toolbar-shape-color-popover">
+              <div className="toolbar-paint-row">
+                <button
+                  className="toolbar-paint-swatch"
+                  style={{ background: selectedShapeColor }}
+                  onClick={() => shapeColorInputRef.current?.click()}
+                  aria-label={t.pickColor}
+                />
+                <input
+                  ref={shapeColorInputRef}
+                  type="color"
+                  value={selectedShapeColor.startsWith('#') ? selectedShapeColor : '#d0d0d0'}
+                  onChange={(e) => onShapeColorChange?.(e.target.value)}
+                  className="toolbar-paint-input"
+                  aria-hidden="true"
+                  tabIndex={-1}
+                />
+                <span className="toolbar-shape-color-label">{t.color}</span>
+              </div>
             </div>
           )}
         </div>

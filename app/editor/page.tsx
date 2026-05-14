@@ -108,6 +108,11 @@ export default function EditorPage() {
     side:    'left' | 'right'
   } | null>(null)
 
+  // ── Selected shape color ──────────────────────────────────────────────────
+  const selectedShapeRef        = useRef<fabric.FabricObject | null>(null)
+  const [selectedShapeColor,    setSelectedShapeColor]    = useState<string>('#D0D0D0')
+  const [shapeColorPickerOpen,  setShapeColorPickerOpen]  = useState(false)
+
   // ── Thumbnails (live previews in PageStrip) ────────────────────────────────
   const [thumbnails,      setThumbnails]      = useState<Record<number, { left: string; right: string }>>({})
   const thumbnailTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
@@ -435,6 +440,12 @@ export default function EditorPage() {
       lineHeight:  opts.lineHeight,
       charSpacing: opts.charSpacing,
     })
+    const contentH = (textbox as unknown as { calcTextHeight: () => number }).calcTextHeight()
+    ;(textbox as unknown as { height: number }).height = contentH
+    ;(textbox as unknown as { data?: { boxH?: number } }).data && (
+      ((textbox as unknown as { data: { boxH: number } }).data.boxH = contentH)
+    )
+    textbox.setCoords()
     const fc = side === 'left' ? fabricLeft.current : fabricRight.current
     fc?.renderAll()
     saveCurrentSpread()
@@ -787,9 +798,36 @@ export default function EditorPage() {
     regenerateThumbnails(currentSpreadRef.current, totalSpreads)
   }, [activePageBg, totalSpreads, saveCurrentSpread, captureThumbnail, regenerateThumbnails])
 
-  // ── Object selected (future: show properties) ─────────────────────────────
-  const handleObjectSelected = useCallback((_obj: fabric.FabricObject | null) => {
-    // futuro: mostrar propiedades en toolbar
+  // ── Object selected ───────────────────────────────────────────────────────
+  const handleObjectSelected = useCallback((obj: fabric.FabricObject | null) => {
+    const data = (obj as unknown as { data?: { type?: string } })?.data
+    if (data?.type === 'shape') {
+      selectedShapeRef.current = obj
+    } else {
+      selectedShapeRef.current = null
+    }
+  }, [])
+
+  const handleShapeDoubleClick = useCallback((color: string) => {
+    setSelectedShapeColor(color)
+    setShapeColorPickerOpen(true)
+  }, [])
+
+  const handleShapeColorChange = useCallback((color: string) => {
+    const obj = selectedShapeRef.current
+    if (!obj) return
+    const data = (obj as unknown as { data?: { shape?: string } }).data
+    if (data?.shape === 'line') {
+      obj.set({ stroke: color })
+    } else {
+      obj.set({ fill: color })
+    }
+    setSelectedShapeColor(color)
+    const fc = (obj as unknown as { canvas?: fabric.Canvas }).canvas
+    if (fc) {
+      fc.renderAll()
+      fc.fire('object:modified', { target: obj })
+    }
   }, [])
 
   // ── View mode toggle ──────────────────────────────────────────────────────
@@ -956,7 +994,7 @@ export default function EditorPage() {
           onUpload={handlePhotoUpload}
           onPhotoClick={handlePhotoClick}
           onDelete={handlePhotoDelete}
-          onAutoCreate={handleAutoCreate}
+          autoCreateDisabled
         />
 
         <div className="editor-center">
@@ -981,6 +1019,10 @@ export default function EditorPage() {
             onToggleGrid={handleToggleGrid}
             onGridSettingsChange={handleGridSettingsChange}
             onAddShape={handleAddShape}
+            shapeColorPickerOpen={shapeColorPickerOpen}
+            selectedShapeColor={selectedShapeColor}
+            onShapeColorChange={handleShapeColorChange}
+            onShapeColorPickerClose={() => setShapeColorPickerOpen(false)}
           />
 
           {viewMode === 'spreads' ? (
@@ -1017,6 +1059,7 @@ export default function EditorPage() {
                 onTextToolDeactivate={handleTextToolDeactivate}
                 onUndo={handleUndo}
                 onRedo={handleRedo}
+                onShapeDoubleClick={handleShapeDoubleClick}
               />
 
               <PageStrip
@@ -1053,6 +1096,7 @@ export default function EditorPage() {
     )}
 
     <OnboardingTour open={tourOpen} onClose={() => setTourOpen(false)} />
+
 
     {textModal && (
       <TextModal

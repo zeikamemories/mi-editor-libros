@@ -546,12 +546,13 @@ export function addTextBox(
   pageH: number,
   placeholder = 'Tu texto aquí',
 ): fabric.Textbox {
+  const W = pageW * 0.22
   const textbox = new fabric.Textbox(placeholder, {
-    left: pageW / 2,
-    top: pageH / 2,
-    originX: 'center',
-    originY: 'center',
-    width: pageW * 0.22,
+    left: (pageW - W) / 2,
+    top: pageH / 2 - 20,
+    originX: 'left',
+    originY: 'top',
+    width: W,
     fontFamily: 'amandine',
     fontSize: 24,
     fill: '#191919',
@@ -559,8 +560,8 @@ export function addTextBox(
   }) as fabric.Textbox & { data: TextData }
 
   textbox.data = { type: 'text' }
-  textbox.set({ lockUniScaling: false })
-  textbox.setControlsVisibility({ mt: false, mb: false })
+  textbox.set({ lockUniScaling: false, lockScalingX: false, lockScalingY: false })
+  textbox.setControlsVisibility({ tl: true, tr: true, bl: true, br: true, mt: false, mb: false, ml: true, mr: true, mtr: true })
 
   canvas.add(textbox)
   canvas.setActiveObject(textbox)
@@ -1109,6 +1110,8 @@ export async function deserializePage(
         const textbox = new fabric.Textbox(entry.text, {
           left:        entry.left,
           top:         entry.top,
+          originX:     'left',
+          originY:     'top',
           width:       entry.width,
           angle:       entry.angle      ?? 0,
           scaleX:      entry.scaleX     ?? 1,
