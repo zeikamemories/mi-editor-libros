@@ -1177,16 +1177,17 @@ export default function Canvas({
             if (data?.type === 'textFrame') {
               fc.remove(target)
               const textbox = new fabric.Textbox(t.defaultTextContent, {
-                left:       data.frameX,
-                top:        data.frameY,
-                originX:    'left',
-                originY:    'top',
-                width:      data.frameW,
-                fontFamily: 'amandine',
-                fontSize:   24,
-                lineHeight: 1.16,
-                fill:       '#191919',
-                textAlign:  'center',
+                left:            data.frameX,
+                top:             data.frameY,
+                originX:         'left',
+                originY:         'top',
+                width:           data.frameW,
+                fontFamily:      'amandine',
+                fontSize:        24,
+                lineHeight:      1.16,
+                fill:            '#191919',
+                textAlign:       'center',
+                splitByGrapheme: true,
               }) as unknown as fabric.Textbox & { data: { type: string; boxH?: number } }
               textbox.data = { type: 'text', boxH: data.frameH }
               textbox.set({ lockUniScaling: false, lockScalingX: false, lockScalingY: false })
@@ -1289,16 +1290,17 @@ export default function Canvas({
           if (frameW > 10 && frameH > 10) {
             if (kind === 'text') {
               const textbox = new fabric.Textbox(t.defaultTextContent, {
-                left:       frameX,
-                top:        frameY,
-                originX:    'left',
-                originY:    'top',
-                width:      frameW,
-                fontFamily: 'amandine',
-                fontSize:   24,
-                lineHeight: 1.16,
-                fill:       '#191919',
-                textAlign:  'center',
+                left:            frameX,
+                top:             frameY,
+                originX:         'left',
+                originY:         'top',
+                width:           frameW,
+                fontFamily:      'amandine',
+                fontSize:        24,
+                lineHeight:      1.16,
+                fill:            '#191919',
+                textAlign:       'center',
+                splitByGrapheme: true,
               }) as unknown as fabric.Textbox & { data: { type: string; boxH?: number } }
               textbox.data = { type: 'text', boxH: frameH }
               ;(textbox as unknown as { height: number }).height = frameH
@@ -1848,6 +1850,11 @@ export default function Canvas({
         e.preventDefault()
         return
       }
+
+      // Don't intercept clipboard shortcuts when focus is in a native text field
+      const targetTag = (e.target as HTMLElement).tagName
+      const isNativeText = targetTag === 'INPUT' || targetTag === 'TEXTAREA' || (e.target as HTMLElement).isContentEditable
+      if (isNativeText && (e.key === 'c' || e.key === 'v' || e.key === 'x')) return
 
       // ── Ctrl/Cmd + C: copy ───────────────────────────────────────────────
       if ((e.ctrlKey || e.metaKey) && e.key === 'c') {

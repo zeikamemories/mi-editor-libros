@@ -462,16 +462,19 @@ export default function EditorPage() {
   const handleTextConfirm = useCallback((opts: TextOpts) => {
     if (!textModal) return
     const { textbox, side } = textModal
+    const savedWidth = textbox.width ?? 200
     textbox.set({
-      text:        opts.text,
-      fontFamily:  opts.fontFamily,
-      fontWeight:  opts.bold ? 'bold' : 'normal',
-      underline:   opts.underline,
-      textAlign:   opts.textAlign as fabric.Textbox['textAlign'],
-      fontSize:    opts.fontSize,
-      fill:        opts.fill,
-      lineHeight:  opts.lineHeight,
-      charSpacing: opts.charSpacing,
+      text:            opts.text,
+      fontFamily:      opts.fontFamily,
+      fontWeight:      opts.bold ? 'bold' : 'normal',
+      underline:       opts.underline,
+      textAlign:       opts.textAlign as fabric.Textbox['textAlign'],
+      fontSize:        opts.fontSize,
+      fill:            opts.fill,
+      lineHeight:      opts.lineHeight,
+      charSpacing:     opts.charSpacing,
+      splitByGrapheme: true,
+      width:           savedWidth,
     })
     const contentH = (textbox as unknown as { calcTextHeight: () => number }).calcTextHeight()
     ;(textbox as unknown as { height: number }).height = contentH
@@ -862,6 +865,18 @@ export default function EditorPage() {
       fc.fire('object:modified', { target: obj })
     }
   }, [])
+
+  // ── Keyboard shortcut: 't' → toggle text tool ────────────────────────────
+  useEffect(() => {
+    const onKeyDown = (e: KeyboardEvent) => {
+      const tag = (e.target as HTMLElement).tagName
+      if (tag === 'INPUT' || tag === 'TEXTAREA' || (e.target as HTMLElement).isContentEditable) return
+      if (textModal) return
+      if (e.key === 't' || e.key === 'T') handleTextToolToggle()
+    }
+    window.addEventListener('keydown', onKeyDown)
+    return () => window.removeEventListener('keydown', onKeyDown)
+  }, [handleTextToolToggle, textModal])
 
   // ── View mode toggle ──────────────────────────────────────────────────────
   const handleViewModeChange = useCallback((mode: 'editor' | 'spreads') => {

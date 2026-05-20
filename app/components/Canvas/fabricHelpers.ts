@@ -557,6 +557,7 @@ export function addTextBox(
     fontSize: 24,
     fill: '#191919',
     textAlign: 'center',
+    splitByGrapheme: true,
   }) as fabric.Textbox & { data: TextData }
 
   textbox.data = { type: 'text' }
@@ -1108,22 +1109,23 @@ export async function deserializePage(
 
       } else if (entry.kind === 'text') {
         const textbox = new fabric.Textbox(entry.text, {
-          left:        entry.left,
-          top:         entry.top,
-          originX:     'left',
-          originY:     'top',
-          width:       entry.width,
-          angle:       entry.angle      ?? 0,
-          scaleX:      entry.scaleX     ?? 1,
-          scaleY:      entry.scaleY     ?? 1,
-          fontFamily:  entry.fontFamily,
-          fontSize:    entry.fontSize,
-          fill:        entry.fill,
-          fontWeight:  entry.fontWeight  ?? 'normal',
-          underline:   entry.underline   ?? false,
-          textAlign:   (entry.textAlign  ?? 'left') as fabric.Textbox['textAlign'],
-          lineHeight:  entry.lineHeight  ?? 1.16,
-          charSpacing: entry.charSpacing ?? 0,
+          left:            entry.left,
+          top:             entry.top,
+          originX:         'left',
+          originY:         'top',
+          width:           entry.width,
+          angle:           entry.angle      ?? 0,
+          scaleX:          entry.scaleX     ?? 1,
+          scaleY:          entry.scaleY     ?? 1,
+          fontFamily:      entry.fontFamily,
+          fontSize:        entry.fontSize,
+          fill:            entry.fill,
+          fontWeight:      entry.fontWeight  ?? 'normal',
+          underline:       entry.underline   ?? false,
+          textAlign:       (entry.textAlign  ?? 'left') as fabric.Textbox['textAlign'],
+          lineHeight:      entry.lineHeight  ?? 1.16,
+          charSpacing:     entry.charSpacing ?? 0,
+          splitByGrapheme: true,
         }) as fabric.Textbox & { data: TextData }
         const savedH = entry.height ?? 0
         const contentH = (textbox as unknown as { height?: number }).height ?? 0
@@ -1226,17 +1228,18 @@ export async function deserializePage(
 
     for (const st of pageData.texts ?? []) {
       const textbox = new fabric.Textbox(st.text, {
-        left:        st.left,
-        top:         st.top,
-        width:       st.width,
-        fontFamily:  st.fontFamily,
-        fontSize:    st.fontSize,
-        fill:        st.fill,
-        fontWeight:  st.fontWeight  ?? 'normal',
-        underline:   st.underline   ?? false,
-        textAlign:   (st.textAlign  ?? 'left') as fabric.Textbox['textAlign'],
-        lineHeight:  st.lineHeight  ?? 1.16,
-        charSpacing: st.charSpacing ?? 0,
+        left:            st.left,
+        top:             st.top,
+        width:           st.width,
+        fontFamily:      st.fontFamily,
+        fontSize:        st.fontSize,
+        fill:            st.fill,
+        fontWeight:      st.fontWeight  ?? 'normal',
+        underline:       st.underline   ?? false,
+        textAlign:       (st.textAlign  ?? 'left') as fabric.Textbox['textAlign'],
+        lineHeight:      st.lineHeight  ?? 1.16,
+        charSpacing:     st.charSpacing ?? 0,
+        splitByGrapheme: true,
       }) as fabric.Textbox & { data: TextData }
       textbox.data = { type: 'text' }
       textbox.set({ lockUniScaling: false })
