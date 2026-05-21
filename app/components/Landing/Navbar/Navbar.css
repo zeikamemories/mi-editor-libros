@@ -1,0 +1,147 @@
+.navbar {
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  background: #FAF8F4;
+  border-bottom: 1px solid #c0bfbc;
+}
+
+.navbar__inner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 1.25rem 20px;
+  max-width: 90rem;
+  margin: 0 auto;
+}
+
+.navbar__logo img {
+  display: block;
+  width: 48px;
+  height: 48px;
+  object-fit: contain;
+}
+
+/* Desktop links — hidden on mobile */
+.navbar__links {
+  display: none;
+}
+
+/* Mobile hamburger */
+.navbar__hamburger {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  background: none;
+  border: none;
+  padding: 4px;
+  cursor: pointer;
+}
+
+.navbar__hamburger span {
+  display: block;
+  width: 24px;
+  height: 1.5px;
+  background: var(--color-black);
+}
+
+/* Mobile overlay */
+.navbar__overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 200;
+  background: #FAF8F4;
+  display: flex;
+  flex-direction: column;
+  padding: 0 20px 40px;
+}
+
+.navbar__overlay-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  height: 70px;
+}
+
+.navbar__close {
+  background: none;
+  border: none;
+  font-size: 20px;
+  cursor: pointer;
+  color: var(--color-black);
+  padding: 4px;
+  letter-spacing: 0;
+}
+
+.navbar__overlay-links {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-top: 40px;
+}
+
+.navbar__overlay-link {
+  font-family: "Times New Roman", Times, serif;
+  letter-spacing: -0.02em;
+  font-size: 42px;
+  font-weight: 400;
+  color: var(--color-black);
+  text-decoration: none;
+  line-height: 1.15;
+}
+
+.navbar__overlay-footer {
+  margin-top: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.navbar__overlay-contact {
+  font-size: 14px;
+  color: var(--color-black);
+  letter-spacing: 0.04em;
+}
+
+.navbar__overlay-socials {
+  display: flex;
+  gap: 20px;
+}
+
+.navbar__overlay-socials a {
+  color: var(--color-black);
+  display: flex;
+  align-items: center;
+}
+
+/* ── Desktop ── */
+@media (min-width: 1024px) {
+  .navbar__inner {
+    padding: 1.25rem 3.125rem;
+  }
+
+  .navbar__links {
+    display: flex;
+    gap: 30px;
+    align-items: center;
+  }
+
+  .navbar__link {
+    font-family: "forma-djr-display", sans-serif;
+    font-weight: 600;
+    font-style: normal;
+    font-size: 18px;
+    color: var(--color-black);
+    text-decoration: none;
+    letter-spacing: 0.04em;
+    transition: opacity 0.2s;
+  }
+
+  .navbar__link:hover {
+    opacity: 0.5;
+  }
+
+  .navbar__hamburger {
+    display: none;
+  }
+}
