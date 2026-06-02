@@ -340,8 +340,9 @@ export default function NuevoPage() {
       return
     }
     setCreating(true)
-    // Save size immediately so the editor can use it even if Supabase fails
+    // Save size and photos immediately so the editor has them even if Supabase fails
     sessionStorage.setItem('zeika_book_size', selectedSize ?? 'vertical')
+    sessionStorage.setItem('zeika_photos', JSON.stringify(photos))
     sessionStorage.removeItem('zeika_project_id')
     try {
       const { data, error } = await supabase

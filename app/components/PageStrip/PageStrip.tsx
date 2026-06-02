@@ -8,6 +8,8 @@ import './PageStrip.css'
 interface PageStripProps {
   currentSpread: number
   totalContentSpreads: number
+  pageW: number
+  pageH: number
   onSpreadSelect: (index: number) => void
   onAddSpread: () => void
   onDeleteSpread?: (index: number) => void
@@ -51,12 +53,16 @@ function buildSpreads(total: number, back: string, cover: string, inside: string
 export default function PageStrip({
   currentSpread,
   totalContentSpreads,
+  pageW,
+  pageH,
   onSpreadSelect,
   onAddSpread,
   onDeleteSpread,
   onLayoutDrop,
   thumbnails,
 }: PageStripProps) {
+  const THUMB_H = 52
+  const THUMB_W = Math.round(THUMB_H * (pageW / pageH))
   const { t } = useLang()
   const spreads    = buildSpreads(totalContentSpreads, t.back, t.cover, t.inside, t.outside)
   const activeRef  = useRef<HTMLDivElement>(null)
@@ -177,7 +183,7 @@ export default function PageStrip({
                 ].filter(Boolean).join(' ')}>
                   {spread.left.label}
                 </span>
-                <div className="page-strip-page-rect">
+                <div className="page-strip-page-rect" style={{ width: THUMB_W, height: THUMB_H }}>
                   {thumbnails?.[spread.index]?.left && (
                     <img src={thumbnails[spread.index].left} alt="" className="page-strip-thumb" />
                   )}
@@ -193,7 +199,7 @@ export default function PageStrip({
                 ].filter(Boolean).join(' ')}>
                   {spread.right.label}
                 </span>
-                <div className="page-strip-page-rect">
+                <div className="page-strip-page-rect" style={{ width: THUMB_W, height: THUMB_H }}>
                   {thumbnails?.[spread.index]?.right && (
                     <img src={thumbnails[spread.index].right} alt="" className="page-strip-thumb" />
                   )}

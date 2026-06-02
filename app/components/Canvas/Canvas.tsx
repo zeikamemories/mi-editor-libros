@@ -2264,7 +2264,7 @@ export default function Canvas({
                 </div>
               </div>
 
-              <div className="canvas-spine" />
+              <div className="canvas-spine" style={{ height: PAGE_H }} />
 
               {/* Right page */}
               <div className="canvas-page-col">

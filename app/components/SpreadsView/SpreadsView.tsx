@@ -8,6 +8,8 @@ interface SpreadsViewProps {
   thumbnails: Record<number, { left: string; right: string }>
   totalSpreads: number
   currentSpread: number
+  pageW: number
+  pageH: number
   onSpreadSelect: (spread: number) => void
   onReorderSpreads: (fromIndex: number, toIndex: number) => void
 }
@@ -34,9 +36,15 @@ export default function SpreadsView({
   thumbnails,
   totalSpreads,
   currentSpread,
+  pageW,
+  pageH,
   onSpreadSelect,
   onReorderSpreads,
 }: SpreadsViewProps) {
+  const pageAspect  = `${pageW} / ${pageH}`
+  const isLandscape = pageW > pageH
+  const gridColumns = isLandscape ? 3 : 4
+  const wrapperWidth = isLandscape ? '88%' : '70%'
   const { t } = useLang()
   const [draggingIdx, setDraggingIdx] = useState<number | null>(null)
   const [dragOverIdx, setDragOverIdx] = useState<number | null>(null)
@@ -79,8 +87,8 @@ export default function SpreadsView({
 
       {/* ── Spreads grid ── */}
       <div className="spreads-scroll">
-        <div className="spreads-grid-wrapper">
-          <div className="spreads-grid">
+        <div className="spreads-grid-wrapper" style={{ width: wrapperWidth }}>
+          <div className="spreads-grid" style={{ gridTemplateColumns: `repeat(${gridColumns}, 1fr)` }}>
             {Array.from({ length: totalSpreads }, (_, i) => {
               const { left: leftLbl, right: rightLbl } = spreadLabel(i, totalSpreads, t.back, t.cover, t.interna)
               const thumb = thumbnails[i]
@@ -115,8 +123,8 @@ export default function SpreadsView({
                     <span>{rightLbl}</span>
                   </div>
                   <div className="spreads-card-pages">
-                    {thumb?.left  ? <img className="spreads-card-page" src={thumb.left}  alt={leftLbl}  draggable={false} /> : <div className="spreads-card-page spreads-card-page--blank" />}
-                    {thumb?.right ? <img className="spreads-card-page" src={thumb.right} alt={rightLbl} draggable={false} /> : <div className="spreads-card-page spreads-card-page--blank" />}
+                    {thumb?.left  ? <img className="spreads-card-page" style={{ aspectRatio: pageAspect }} src={thumb.left}  alt={leftLbl}  draggable={false} /> : <div className="spreads-card-page spreads-card-page--blank" style={{ aspectRatio: pageAspect }} />}
+                    {thumb?.right ? <img className="spreads-card-page" style={{ aspectRatio: pageAspect }} src={thumb.right} alt={rightLbl} draggable={false} /> : <div className="spreads-card-page spreads-card-page--blank" style={{ aspectRatio: pageAspect }} />}
                   </div>
                 </div>
               )
