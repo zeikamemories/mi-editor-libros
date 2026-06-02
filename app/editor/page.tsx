@@ -124,8 +124,8 @@ export default function EditorPage() {
 
   // Generate initial thumbnails on mount so the strip never shows grey rects
   useEffect(() => {
-    const W = 82    // 816 × 0.1
-    const H = 106   // 1058 × 0.1
+    const W = Math.round(PAGE_W * 0.1)
+    const H = Math.round(PAGE_H * 0.1)
     const total = totalContentSpreads + 3  // same as totalSpreads
     const lastIdx = total - 1
 
@@ -166,16 +166,19 @@ export default function EditorPage() {
     }
     setThumbnails(initial)
 
-    // Last spread left page: draw logo over white
+    // Last spread left page: draw logo centered, contained within 55% of each dimension
     const img = new window.Image()
     img.onload = () => {
       const c = mk()
       const ctx = c.getContext('2d')!
       ctx.fillStyle = '#ffffff'
       ctx.fillRect(0, 0, W, H)
-      const logoW = W * 0.55
-      const logoH = logoW * (img.height / img.width)
-      ctx.drawImage(img, (W - logoW) / 2, (H - logoH) / 2 - 4, logoW, logoH)
+      const maxW   = W * 0.55
+      const maxH   = H * 0.55
+      const aspect = img.width / img.height
+      const logoW  = Math.min(maxW, maxH * aspect)
+      const logoH  = logoW / aspect
+      ctx.drawImage(img, (W - logoW) / 2, (H - logoH) / 2, logoW, logoH)
       const logoDataUrl = c.toDataURL('image/jpeg', 0.85)
       logoThumbRef.current = logoDataUrl
       setThumbnails(prev => ({
@@ -205,7 +208,16 @@ export default function EditorPage() {
   // ── Load project from Supabase on mount ──────────────────────────────────
   useEffect(() => {
     const id = sessionStorage.getItem('zeika_project_id')
-    if (!id) { setDbLoaded(true); return }
+    if (!id) {
+      // No DB project — load photos passed from /nuevo via sessionStorage
+      const raw = sessionStorage.getItem('zeika_photos')
+      if (raw) {
+        try { setPhotos(JSON.parse(raw)) } catch (_) {}
+        sessionStorage.removeItem('zeika_photos')
+      }
+      setDbLoaded(true)
+      return
+    }
     projectIdRef.current = id
     supabase.from('projects').select('photos, spreads').eq('id', id).single()
       .then(({ data, error }) => {
@@ -263,8 +275,8 @@ export default function EditorPage() {
   // ── Render a single page to a small thumbnail from saved PageData ─────────
   // Fast-path for empty pages (pure 2D fill); full Fabric render for pages with content.
   const renderPageThumb = useCallback((pageData: PageData): Promise<string> => {
-    const THUMB_W = 82
-    const THUMB_H = 106
+    const THUMB_W = Math.round(PAGE_W * 0.1)
+    const THUMB_H = Math.round(PAGE_H * 0.1)
     const isEmpty = pageData.objects !== undefined
       ? pageData.objects.length === 0 && !pageData.backgroundImage
       : (pageData.frames?.length ?? 0) === 0 &&
@@ -1094,6 +1106,8 @@ export default function EditorPage() {
               thumbnails={thumbnails}
               totalSpreads={totalSpreads}
               currentSpread={currentSpread}
+              pageW={PAGE_W}
+              pageH={PAGE_H}
               onSpreadSelect={handleSpreadsViewSelect}
               onReorderSpreads={handleReorderSpreads}
             />
@@ -1132,6 +1146,8 @@ export default function EditorPage() {
               <PageStrip
                 currentSpread={currentSpread}
                 totalContentSpreads={totalContentSpreads}
+                pageW={PAGE_W}
+                pageH={PAGE_H}
                 onSpreadSelect={handleSpreadSelect}
                 onAddSpread={handleAddSpread}
                 onDeleteSpread={handleDeleteSpread}

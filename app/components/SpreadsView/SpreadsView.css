@@ -21,16 +21,14 @@
 /* ─── 55% width wrapper ──────────────────────────────────────────────────────── */
 
 .spreads-grid-wrapper {
-  width: 55%;
   margin: 0 auto;
   padding-bottom: 120px;
 }
 
-/* ─── Grid: 4 columns ────────────────────────────────────────────────────────── */
+/* ─── Grid: columns set via inline style ─────────────────────────────────────── */
 
 .spreads-grid {
   display: grid;
-  grid-template-columns: repeat(4, 1fr);
   gap: 36px 32px;
   justify-items: center;
 }
@@ -112,7 +110,6 @@
   display: block;
   height: 100%;
   width: auto;
-  aspect-ratio: 816 / 1058;
   object-fit: cover;
 }
 
@@ -120,6 +117,5 @@
   flex: none;
   height: 100%;
   width: auto;
-  aspect-ratio: 816 / 1058;
   background: #ffffff;
 }
