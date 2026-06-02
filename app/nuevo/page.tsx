@@ -340,19 +340,22 @@ export default function NuevoPage() {
       return
     }
     setCreating(true)
+    // Save size immediately so the editor can use it even if Supabase fails
+    sessionStorage.setItem('zeika_book_size', selectedSize ?? 'vertical')
+    sessionStorage.removeItem('zeika_project_id')
     try {
       const { data, error } = await supabase
         .from('projects')
         .insert({ name: details.nombre || 'Sin título', photos, spreads: {} })
         .select('id')
         .single()
-      if (error || !data) throw error
-      sessionStorage.setItem('zeika_project_id', data.id)
-      router.push('/editor')
+      if (!error && data) {
+        sessionStorage.setItem('zeika_project_id', data.id)
+      }
     } catch (err) {
-      console.error('Error creando proyecto:', err)
-      setCreating(false)
+      console.error('Error guardando proyecto:', err)
     }
+    router.push('/editor')
   }
 
   const handleCancel = () => {
@@ -362,10 +365,9 @@ export default function NuevoPage() {
 
   const nextDisabled =
     creating ||
-    (step === 1 && !selectedSize) ||
-    (step === 3 && photos.length === 0 && uploadingCount === 0)
+    (step === 1 && !selectedSize)
 
-  const nextLabel = creating ? 'CREANDO...' : step === 3 ? 'ABRIR EDITOR' : 'SIGUIENTE'
+  const nextLabel = creating ? 'ABRIENDO...' : step === 3 ? 'ABRIR EDITOR' : 'SIGUIENTE'
 
   return (
     <div className="nuevo-root">

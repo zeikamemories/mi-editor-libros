@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect, useCallback, useRef } from 'react'
+import { useState, useEffect, useCallback, useRef, useMemo } from 'react'
 import dynamic from 'next/dynamic'
 import JSZip from 'jszip'
 import { jsPDF } from 'jspdf'
@@ -21,7 +21,7 @@ import PageStrip   from '../components/PageStrip/PageStrip'
 import OnboardingTour from '../components/OnboardingTour/OnboardingTour'
 import type { Layout } from '../components/LayoutPanel/LayoutPanel'
 
-import { BOOK_SIZE }                                      from '../config/bookSize'
+import { getBookSize }                                     from '../config/bookSize'
 import type { GridSettings, Guide }                        from '../components/Canvas/Canvas'
 import { applyLayout, addShape, serializePage,
          deserializePage, dropPhotoOnFrame, dropPhotoFree,
@@ -34,9 +34,6 @@ import { LanguageProvider } from '../context/LanguageContext'
 import { supabase } from '../lib/supabase'
 import './editor.css'
 
-const PAGE_W = BOOK_SIZE.widthPx   // 816
-const PAGE_H = BOOK_SIZE.heightPx  // 1058
-
 // ─── Types ──────────────────────────────────────────────────────────────────
 
 type SpreadSnapshot = { left: PageData; right: PageData }
@@ -44,6 +41,14 @@ type SpreadSnapshot = { left: PageData; right: PageData }
 // ─── Component ──────────────────────────────────────────────────────────────
 
 export default function EditorPage() {
+
+  // ── Book size (set once at mount from sessionStorage) ─────────────────────
+  const bookSize = useMemo(() => {
+    const id = (typeof window !== 'undefined' ? sessionStorage.getItem('zeika_book_size') : null) ?? 'vertical'
+    return getBookSize(id)
+  }, [])
+  const PAGE_W = bookSize.widthPx
+  const PAGE_H = bookSize.heightPx
 
   // ── View mode (editor vs spreads overview) ────────────────────────────────
   const [viewMode, setViewMode] = useState<'editor' | 'spreads'>('editor')
@@ -983,13 +988,14 @@ export default function EditorPage() {
       background: '#FFFFFF', pageW: PAGE_W, pageH: PAGE_H, objects: [],
     })
 
-    const pageWidthMm  = 432
-    const pageHeightMm = 280
+    const pageWidthMm  = bookSize.widthCm * 10 * 2   // spread = 2 pages
+    const pageHeightMm = bookSize.heightCm * 10
+    const isLandscape  = bookSize.widthCm > bookSize.heightCm
 
     const pdf = new jsPDF({
-      orientation: 'landscape',
+      orientation: isLandscape ? 'landscape' : 'portrait',
       unit: 'mm',
-      format: [pageWidthMm, pageHeightMm],
+      format: [isLandscape ? pageWidthMm : pageHeightMm, isLandscape ? pageHeightMm : pageWidthMm],
     })
 
     for (let i = 0; i < totalSpreads; i++) {
@@ -1094,6 +1100,9 @@ export default function EditorPage() {
           ) : (
             <>
               <Canvas
+                pageW={PAGE_W}
+                pageH={PAGE_H}
+                bleedPx={bookSize.bleedPx}
                 zoom={zoom}
                 showGrid={showGrid}
                 rulerMode={rulerMode}
@@ -1134,6 +1143,7 @@ export default function EditorPage() {
         </div>
 
         <LayoutPanel
+          bookOrientation={bookSize.orientation}
           selectedPhotoCount={selectedPhotoCount}
           selectedLayoutId={selectedLayoutId}
           onPhotoCountChange={setSelectedPhotoCount}

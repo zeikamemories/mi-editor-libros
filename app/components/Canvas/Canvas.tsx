@@ -3,22 +3,14 @@
 import { useEffect, useRef, useCallback, useState } from 'react'
 import * as fabric from 'fabric'
 import { X, AlignStartVertical, AlignCenterVertical, AlignEndVertical, AlignVerticalJustifyStart, AlignCenterHorizontal, AlignVerticalJustifyEnd, AlignVerticalSpaceAround, AlignHorizontalSpaceAround } from 'lucide-react'
-import { BOOK_SIZE } from '../../config/bookSize'
 import { dropPhotoOnFrame, dropPhotoFree, dropTextureOnPage, dropStickerOnPage, findFrameAtPoint, findPhotoAtPoint, replacePhotoInFrame, restoreEmptyFrame, createFrameAtPx, makeClipRect } from './fabricHelpers'
 import { useLang } from '../../context/LanguageContext'
 import './Canvas.css'
 
-const PAGE_W = BOOK_SIZE.widthPx   // 816
-const PAGE_H = BOOK_SIZE.heightPx  // 1058
-const BLEED  = BOOK_SIZE.bleedPx   // 11
-
-// Unscaled full spread dimensions (page nums + canvases + nav, no rulers)
+// PAGE_W, PAGE_H, BLEED, SPREAD_W, SPREAD_H are derived from props inside the component
 const PAGE_NUM = 32
 const NAV      = 72
 const SPINE    = 1
-
-const SPREAD_W = PAGE_W + SPINE + PAGE_W   // 1633
-const SPREAD_H = PAGE_NUM + PAGE_H + NAV   // 1162
 
 const ZOOM_MIN = 0.1
 const ZOOM_MAX = 5.0
@@ -26,6 +18,9 @@ const SCROLL_PAD = 400
 
 
 interface CanvasProps {
+  pageW: number
+  pageH: number
+  bleedPx: number
   zoom: number
   showGrid: boolean
   gridSettings: GridSettings
@@ -72,28 +67,28 @@ export interface GridSettings {
   thickness: 'thin' | 'normal'
 }
 
-function GridOverlay({ settings }: { settings: GridSettings }) {
+function GridOverlay({ settings, pageW, pageH }: { settings: GridSettings; pageW: number; pageH: number }) {
   const { cols, rows, color, opacity, thickness } = settings
   const sw  = thickness === 'thin' ? 0.6 : 1.2
   const gap = 5
-  const vLines = Array.from({ length: cols - 1 }, (_, i) => (PAGE_W / cols) * (i + 1))
-  const hLines = Array.from({ length: rows - 1 }, (_, i) => (PAGE_H / rows) * (i + 1))
+  const vLines = Array.from({ length: cols - 1 }, (_, i) => (pageW / cols) * (i + 1))
+  const hLines = Array.from({ length: rows - 1 }, (_, i) => (pageH / rows) * (i + 1))
   return (
     <svg
-      style={{ position: 'absolute', top: 0, left: 0, width: PAGE_W, height: PAGE_H, pointerEvents: 'none', opacity: opacity / 100 }}
-      viewBox={`0 0 ${PAGE_W} ${PAGE_H}`}
+      style={{ position: 'absolute', top: 0, left: 0, width: pageW, height: pageH, pointerEvents: 'none', opacity: opacity / 100 }}
+      viewBox={`0 0 ${pageW} ${pageH}`}
       aria-hidden="true"
     >
       {vLines.map((x) => (
         <g key={x}>
-          <line x1={x - gap / 2} y1={0} x2={x - gap / 2} y2={PAGE_H} stroke={color} strokeWidth={sw} />
-          <line x1={x + gap / 2} y1={0} x2={x + gap / 2} y2={PAGE_H} stroke={color} strokeWidth={sw} />
+          <line x1={x - gap / 2} y1={0} x2={x - gap / 2} y2={pageH} stroke={color} strokeWidth={sw} />
+          <line x1={x + gap / 2} y1={0} x2={x + gap / 2} y2={pageH} stroke={color} strokeWidth={sw} />
         </g>
       ))}
       {hLines.map((y) => (
         <g key={y}>
-          <line x1={0} y1={y - gap / 2} x2={PAGE_W} y2={y - gap / 2} stroke={color} strokeWidth={sw} />
-          <line x1={0} y1={y + gap / 2} x2={PAGE_W} y2={y + gap / 2} stroke={color} strokeWidth={sw} />
+          <line x1={0} y1={y - gap / 2} x2={pageW} y2={y - gap / 2} stroke={color} strokeWidth={sw} />
+          <line x1={0} y1={y + gap / 2} x2={pageW} y2={y + gap / 2} stroke={color} strokeWidth={sw} />
         </g>
       ))}
     </svg>
@@ -453,19 +448,19 @@ function ViewportRulers({
   )
 }
 
-function BleedOverlay() {
+function BleedOverlay({ pageW, pageH, bleedPx }: { pageW: number; pageH: number; bleedPx: number }) {
   return (
     <svg
       className="canvas-bleed-overlay"
-      width={PAGE_W}
-      height={PAGE_H}
-      viewBox={`0 0 ${PAGE_W} ${PAGE_H}`}
+      width={pageW}
+      height={pageH}
+      viewBox={`0 0 ${pageW} ${pageH}`}
       aria-hidden="true"
     >
       <rect
-        x={BLEED} y={BLEED}
-        width={PAGE_W - BLEED * 2}
-        height={PAGE_H - BLEED * 2}
+        x={bleedPx} y={bleedPx}
+        width={pageW - bleedPx * 2}
+        height={pageH - bleedPx * 2}
         fill="none"
         stroke="#528ED6"
         strokeWidth={1}
@@ -476,6 +471,9 @@ function BleedOverlay() {
 }
 
 export default function Canvas({
+  pageW,
+  pageH,
+  bleedPx,
   zoom,
   showGrid,
   gridSettings,
@@ -501,6 +499,12 @@ export default function Canvas({
   onRedo,
   onShapeDoubleClick,
 }: CanvasProps) {
+  const PAGE_W   = pageW
+  const PAGE_H   = pageH
+  const BLEED    = bleedPx
+  const SPREAD_W = PAGE_W + SPINE + PAGE_W
+  const SPREAD_H = PAGE_NUM + PAGE_H + NAV
+
   const leftElRef   = useRef<HTMLCanvasElement>(null)
   const rightElRef  = useRef<HTMLCanvasElement>(null)
   const leftFabric  = useRef<fabric.Canvas | null>(null)
@@ -2212,8 +2216,8 @@ export default function Canvas({
                   onDragLeave={handleDragLeave}
                 >
                   <canvas ref={leftElRef} />
-                  <BleedOverlay />
-                  {showGrid && <GridOverlay settings={gridSettings} />}
+                  <BleedOverlay pageW={PAGE_W} pageH={PAGE_H} bleedPx={BLEED} />
+                  {showGrid && <GridOverlay settings={gridSettings} pageW={PAGE_W} pageH={PAGE_H} />}
                   {rulerMode && <GuidesOverlay pageW={PAGE_W} pageH={PAGE_H} zoom={zoom} guides={guides} onGuidesChange={onGuidesChange} pageWrapRef={leftPageWrapRef} />}
                   {isLastSpread && (
                     <div className="canvas-logo-overlay" aria-hidden="true">
@@ -2277,8 +2281,8 @@ export default function Canvas({
                   onDragLeave={handleDragLeave}
                 >
                   <canvas ref={rightElRef} />
-                  <BleedOverlay />
-                  {showGrid && <GridOverlay settings={gridSettings} />}
+                  <BleedOverlay pageW={PAGE_W} pageH={PAGE_H} bleedPx={BLEED} />
+                  {showGrid && <GridOverlay settings={gridSettings} pageW={PAGE_W} pageH={PAGE_H} />}
                   {rulerMode && <GuidesOverlay pageW={PAGE_W} pageH={PAGE_H} zoom={zoom} guides={guides} onGuidesChange={onGuidesChange} pageWrapRef={rightPageWrapRef} />}
                   {isLastSpread && (
                     <div className="canvas-no-edit-overlay" aria-hidden="true">

@@ -15,6 +15,7 @@ export type Layout = {
   id: string;
   nombre: string;
   photoCount: number;
+  orientation: 'any' | 'portrait' | 'landscape' | 'square';
   frames: Frame[];
 };
 
@@ -37,6 +38,7 @@ const layout_1_1: Layout = {
   id: 'layout_1_1',
   nombre: 'Cuadrada centrada',
   photoCount: 1,
+  orientation: 'any',
   frames: [
     { x: 0.2, y: 0.25, w: 0.6, h: 0.5 },
   ],
@@ -46,6 +48,7 @@ const layout_1_2: Layout = {
   id: 'layout_1_2',
   nombre: 'Paisaje centrado',
   photoCount: 1,
+  orientation: 'any',
   frames: [
     { x: 0.1, y: 0.3, w: 0.8, h: 0.4 },
   ],
@@ -55,6 +58,7 @@ const layout_1_3: Layout = {
   id: 'layout_1_3',
   nombre: 'Página completa',
   photoCount: 1,
+  orientation: 'any',
   frames: [
     { x: 0, y: 0, w: 1, h: 1 },
   ],
@@ -64,6 +68,7 @@ const layout_1_4: Layout = {
   id: 'layout_1_4',
   nombre: 'Borde blanco',
   photoCount: 1,
+  orientation: 'any',
   frames: [
     { x: M, y: M, w: 1 - M * 2, h: 1 - M * 2 },
   ],
@@ -75,6 +80,7 @@ const layout_2_1: Layout = {
   id: 'layout_2_1',
   nombre: 'Dos columnas retrato',
   photoCount: 2,
+  orientation: 'any',
   // 2 cols × 1 row, portrait
   frames: [
     { x: cx(0, 2), y: M, w: fw(2), h: 1 - M * 2 },
@@ -86,6 +92,7 @@ const layout_2_2: Layout = {
   id: 'layout_2_2',
   nombre: 'Dos filas paisaje',
   photoCount: 2,
+  orientation: 'any',
   // 1 col × 2 rows, landscape
   frames: [
     { x: M, y: ry(0, 2), w: 1 - M * 2, h: fh(2) },
@@ -97,6 +104,7 @@ const layout_2_3: Layout = {
   id: 'layout_2_3',
   nombre: 'Dos filas completas',
   photoCount: 2,
+  orientation: 'any',
   // Full bleed, only GAP between rows
   frames: (() => {
     const h = (1 - G) / 2
@@ -111,6 +119,7 @@ const layout_2_4: Layout = {
   id: 'layout_2_4',
   nombre: 'Dos filas con margen',
   photoCount: 2,
+  orientation: 'any',
   // Full width within margin, 2 equal rows
   frames: [
     { x: M, y: ry(0, 2), w: 1 - M * 2, h: fh(2) },
@@ -124,6 +133,7 @@ const layout_3_1: Layout = {
   id: 'layout_3_1',
   nombre: 'Grande arriba, dos abajo',
   photoCount: 3,
+  orientation: 'any',
   frames: (() => {
     const available = 1 - M * 2 - G
     const topH = available * 0.55
@@ -141,6 +151,7 @@ const layout_3_2: Layout = {
   id: 'layout_3_2',
   nombre: 'Dos arriba, grande abajo',
   photoCount: 3,
+  orientation: 'any',
   // Full bleed: 2 cols top + 1 full-width bottom
   frames: (() => {
     const available = 1 - G
@@ -159,6 +170,7 @@ const layout_3_3: Layout = {
   id: 'layout_3_3',
   nombre: 'Tres filas centradas',
   photoCount: 3,
+  orientation: 'any',
   // 1 col × 3 rows within margin
   frames: [
     { x: M, y: ry(0, 3), w: 1 - M * 2, h: fh(3) },
@@ -171,6 +183,7 @@ const layout_3_4: Layout = {
   id: 'layout_3_4',
   nombre: 'Tres columnas centradas',
   photoCount: 3,
+  orientation: 'any',
   // 3 cols × 1 row, vertically centered
   frames: (() => {
     const frameH = 0.4
@@ -189,6 +202,7 @@ const layout_4_1: Layout = {
   id: 'layout_4_1',
   nombre: 'Grilla 2×2 con margen',
   photoCount: 4,
+  orientation: 'any',
   frames: [
     { x: cx(0, 2), y: ry(0, 2), w: fw(2), h: fh(2) },
     { x: cx(1, 2), y: ry(0, 2), w: fw(2), h: fh(2) },
@@ -201,6 +215,7 @@ const layout_4_2: Layout = {
   id: 'layout_4_2',
   nombre: 'Grilla 2×2 completa',
   photoCount: 4,
+  orientation: 'any',
   // Full bleed 2×2
   frames: (() => {
     const s = (1 - G) / 2
@@ -217,6 +232,7 @@ const layout_4_3: Layout = {
   id: 'layout_4_3',
   nombre: 'Grilla 2×2 paisaje centrada',
   photoCount: 4,
+  orientation: 'any',
   // 2×2 landscape frames, vertically centered
   frames: (() => {
     const frameW = fw(2)
@@ -235,6 +251,7 @@ const layout_4_4: Layout = {
   id: 'layout_4_4',
   nombre: 'Grande izquierda, tres derecha',
   photoCount: 4,
+  orientation: 'any',
   frames: (() => {
     const available = 1 - M * 2 - G
     const leftW     = available * 0.52
@@ -256,6 +273,7 @@ const layout_5_1: Layout = {
   id: 'layout_5_1',
   nombre: 'Grilla 2×2 + franja inferior',
   photoCount: 5,
+  orientation: 'any',
   // 2×2 grid + 1 thin wide frame at bottom
   frames: (() => {
     const colW     = fw(2)
@@ -277,6 +295,7 @@ const layout_5_2: Layout = {
   id: 'layout_5_2',
   nombre: 'Dos arriba, tres abajo completo',
   photoCount: 5,
+  orientation: 'any',
   // Full bleed: 2 cols top + 3 cols bottom
   frames: (() => {
     const topH = (1 - G) * 0.5
@@ -297,6 +316,7 @@ const layout_5_3: Layout = {
   id: 'layout_5_3',
   nombre: 'Dos arriba, tres abajo con margen',
   photoCount: 5,
+  orientation: 'any',
   frames: (() => {
     const topW     = fw(2)
     const available = 1 - M * 2 - G  // vertical space for 2 rows

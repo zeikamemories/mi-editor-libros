@@ -1,14 +1,16 @@
 'use client'
 
 import { useState } from 'react'
-import { LAYOUTS, getLayoutsByCantidad } from '../../config/layouts'
+import { LAYOUTS } from '../../config/layouts'
 import type { Layout } from '../../config/layouts'
+import type { BookOrientation } from '../../config/bookSize'
 import { useLang } from '../../context/LanguageContext'
 import './LayoutPanel.css'
 
 export type { Layout }
 
 interface LayoutPanelProps {
+  bookOrientation?: BookOrientation
   selectedPhotoCount: number
   selectedLayoutId: string | null
   onPhotoCountChange: (count: number) => void
@@ -28,9 +30,9 @@ type DecoSubTab = 'stickers' | 'graficos'
 
 const PHOTO_COUNTS = [1, 2, 3, 4, 5]
 
-function LayoutThumbnail({ layout }: { layout: Layout }) {
+function LayoutThumbnail({ layout, aspectRatio }: { layout: Layout; aspectRatio: number }) {
   return (
-    <div className="layout-thumb-aspect">
+    <div className="layout-thumb-aspect" style={{ paddingBottom: `${(1 / aspectRatio) * 100}%` }}>
       <div className="layout-thumb-inner">
         {layout.frames.map((frame, i) => (
           <div
@@ -49,7 +51,14 @@ function LayoutThumbnail({ layout }: { layout: Layout }) {
   )
 }
 
+const ASPECT_RATIOS: Record<BookOrientation, number> = {
+  portrait:  816 / 1058,
+  landscape: 1058 / 816,
+  square:    1,
+}
+
 export default function LayoutPanel({
+  bookOrientation = 'portrait',
   selectedPhotoCount,
   selectedLayoutId,
   onPhotoCountChange,
@@ -63,7 +72,14 @@ export default function LayoutPanel({
   const [decoSubTab, setDecoSubTab] = useState<DecoSubTab>('stickers')
   const [displayFilter, setDisplayFilter] = useState<number | 'all'>('all')
 
-  const layouts = displayFilter === 'all' ? LAYOUTS : getLayoutsByCantidad(displayFilter)
+  const aspectRatio = ASPECT_RATIOS[bookOrientation]
+
+  const allFiltered = LAYOUTS.filter(
+    l => l.orientation === 'any' || l.orientation === bookOrientation
+  )
+  const layouts = displayFilter === 'all'
+    ? allFiltered
+    : allFiltered.filter(l => l.photoCount === displayFilter)
 
   return (
     <aside className="layout-panel">
@@ -126,7 +142,7 @@ export default function LayoutPanel({
                   e.dataTransfer.effectAllowed = 'copy'
                 }}
               >
-                <LayoutThumbnail layout={layout} />
+                <LayoutThumbnail layout={layout} aspectRatio={aspectRatio} />
               </button>
             ))}
           </div>
