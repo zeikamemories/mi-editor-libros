@@ -1043,7 +1043,7 @@ export default function EditorPage() {
     const pid = projectIdRef.current ?? 'local'
     localStorage.setItem(
       `zeika_project_${pid}`,
-      JSON.stringify({ spreadsData: spreadsData.current, totalSpreads }),
+      JSON.stringify({ spreadsData: spreadsData.current, totalSpreads, bookSizeId: bookSize.id }),
     )
   }, [saveCurrentSpread, totalSpreads])
 
@@ -1175,6 +1175,8 @@ export default function EditorPage() {
         spreadsData={previewSnapshot}
         totalSpreads={totalSpreads}
         initialSpread={currentSpread}
+        pageW={PAGE_W}
+        pageH={PAGE_H}
         onClose={handleClosePreview}
       />
     )}

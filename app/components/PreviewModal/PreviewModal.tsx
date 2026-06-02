@@ -8,7 +8,6 @@ import {
 } from 'lucide-react'
 import { exportPageAsJpg } from '../Canvas/fabricHelpers'
 import type { PageData } from '../Canvas/fabricHelpers'
-import { BOOK_SIZE } from '../../config/bookSize'
 import { useLang } from '../../context/LanguageContext'
 import './PreviewModal.css'
 
@@ -18,35 +17,27 @@ interface Props {
   spreadsData:   Record<number, SpreadData>
   totalSpreads:  number
   initialSpread: number
+  pageW:         number
+  pageH:         number
   onClose:       () => void
-}
-
-const PAGE_W = BOOK_SIZE.widthPx
-const PAGE_H = BOOK_SIZE.heightPx
-
-const EMPTY_PAGE: PageData = {
-  background: '#ffffff',
-  pageW: PAGE_W,
-  pageH: PAGE_H,
-  objects: [],
 }
 
 const TITLEBAR_H = 50
 const CONTROLS_H = 64
 
 // ── Gray "No editable" placeholder — matches the Canvas overlay style ─────────
-function renderNoEditPage(label: string): string {
+function renderNoEditPage(label: string, pageW: number, pageH: number): string {
   const canvas = document.createElement('canvas')
-  canvas.width  = PAGE_W
-  canvas.height = PAGE_H
+  canvas.width  = pageW
+  canvas.height = pageH
   const ctx = canvas.getContext('2d')!
   ctx.fillStyle = '#e8e8e8'
-  ctx.fillRect(0, 0, PAGE_W, PAGE_H)
+  ctx.fillRect(0, 0, pageW, pageH)
   ctx.fillStyle = '#666666'
-  ctx.font = `600 ${Math.round(PAGE_H * 0.055)}px Arial, sans-serif`
+  ctx.font = `600 ${Math.round(pageH * 0.055)}px Arial, sans-serif`
   ctx.textAlign = 'center'
   ctx.textBaseline = 'middle'
-  ctx.fillText(label, PAGE_W / 2, PAGE_H / 2)
+  ctx.fillText(label, pageW / 2, pageH / 2)
   return canvas.toDataURL('image/jpeg', 1)
 }
 
@@ -77,8 +68,11 @@ export default function PreviewModal({
   spreadsData,
   totalSpreads,
   initialSpread,
+  pageW,
+  pageH,
   onClose,
 }: Props) {
+  const EMPTY_PAGE: PageData = { background: '#ffffff', pageW, pageH, objects: [] }
   const { t } = useLang()
   const [scale,       setScale]       = useState(0.5)
   const [loading,     setLoading]     = useState(true)
@@ -100,7 +94,7 @@ export default function PreviewModal({
         window.innerHeight - TITLEBAR_H - CONTROLS_H - 32,
       )
       const maxW = window.innerWidth * 0.78
-      const s = Math.min(maxH / PAGE_H, maxW / (PAGE_W * 2))
+      const s = Math.min(maxH / pageH, maxW / (pageW * 2))
       setScale(Math.max(s, 0.15))
     }
     compute()
@@ -115,8 +109,8 @@ export default function PreviewModal({
     if (!$bookRef.current) return
     try {
       $bookRef.current.turn('size',
-        Math.round(PAGE_W * scale) * 2,
-        Math.round(PAGE_H * scale),
+        Math.round(pageW * scale) * 2,
+        Math.round(pageH * scale),
       )
     } catch {}
   }, [scale])
@@ -130,7 +124,7 @@ export default function PreviewModal({
     // Book order: Tapa → inner spreads → Contra
     // Inside (spread 1 left) and Outside (last spread right) are non-editable — rendered as gray placeholders
     const s0 = spreadsData[0]
-    tasks.push(exportPageAsJpg(s0?.right ?? EMPTY_PAGE, PAGE_W, PAGE_H, 1,   // Tapa
+    tasks.push(exportPageAsJpg(s0?.right ?? EMPTY_PAGE, pageW, pageH, 1,   // Tapa
       s0?.left  ? { data: s0.left,  fromSide: 'left'  } : undefined))
     for (let s = 1; s < totalSpreads; s++) {
       const data     = spreadsData[s]
@@ -139,13 +133,13 @@ export default function PreviewModal({
       const isInside  = s === 1
       const isOutside = s === totalSpreads - 1
       tasks.push(isInside
-        ? Promise.resolve(renderNoEditPage(t.noEditable))
-        : exportPageAsJpg(left,  PAGE_W, PAGE_H, 1, { data: right, fromSide: 'right' }))
+        ? Promise.resolve(renderNoEditPage(t.noEditable, pageW, pageH))
+        : exportPageAsJpg(left,  pageW, pageH, 1, { data: right, fromSide: 'right' }))
       tasks.push(isOutside
-        ? Promise.resolve(renderNoEditPage(t.noEditable))
-        : exportPageAsJpg(right, PAGE_W, PAGE_H, 1, { data: left,  fromSide: 'left'  }))
+        ? Promise.resolve(renderNoEditPage(t.noEditable, pageW, pageH))
+        : exportPageAsJpg(right, pageW, pageH, 1, { data: left,  fromSide: 'left'  }))
     }
-    tasks.push(exportPageAsJpg(s0?.left ?? EMPTY_PAGE, PAGE_W, PAGE_H, 1,    // Contra
+    tasks.push(exportPageAsJpg(s0?.left ?? EMPTY_PAGE, pageW, pageH, 1,    // Contra
       s0?.right ? { data: s0.right, fromSide: 'right' } : undefined))
 
     Promise.all(tasks).then(images => {
@@ -161,8 +155,8 @@ export default function PreviewModal({
 
     const el = flipbookEl.current
     const s  = scaleRef.current
-    const w  = Math.round(PAGE_W * s)
-    const h  = Math.round(PAGE_H * s)
+    const w  = Math.round(pageW * s)
+    const h  = Math.round(pageH * s)
 
     // Build page DOM manually so React never interferes with turn.js internals
     el.innerHTML = ''
@@ -246,8 +240,8 @@ export default function PreviewModal({
     return () => window.removeEventListener('wheel', onWheel)
   }, [go])
 
-  const canvasW   = Math.round(PAGE_W * scale)
-  const canvasH   = Math.round(PAGE_H * scale)
+  const canvasW   = Math.round(pageW * scale)
+  const canvasH   = Math.round(pageH * scale)
   const isFirst = currentPage <= 1
   const isLast  = currentPage >= totalSpreads * 2
 

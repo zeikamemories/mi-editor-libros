@@ -4,12 +4,14 @@ import { useEffect, useState } from 'react'
 import { useParams, useRouter } from 'next/navigation'
 import dynamic from 'next/dynamic'
 import type { PageData } from '../../components/Canvas/fabricHelpers'
+import { getBookSize } from '../../config/bookSize'
 
 type SpreadData = { left: PageData; right: PageData }
 
 interface SavedProject {
   spreadsData:  Record<number, SpreadData>
   totalSpreads: number
+  bookSizeId?:  string
 }
 
 const PreviewModal = dynamic(
@@ -69,11 +71,15 @@ export default function PreviewPage() {
     )
   }
 
+  const size = getBookSize(project.bookSizeId ?? 'vertical')
+
   return (
     <PreviewModal
       spreadsData={project.spreadsData}
       totalSpreads={project.totalSpreads}
       initialSpread={0}
+      pageW={size.widthPx}
+      pageH={size.heightPx}
       onClose={() => router.back()}
     />
   )
