@@ -19,7 +19,7 @@ export default function Navbar() {
       <header className="navbar">
         <div className="navbar__inner">
           <a href="/" className="navbar__logo">
-            <Image src="/LogoZeika.png" alt="Zeika" width={48} height={48} />
+            <Image src="/LogoZeika.png" alt="Zeika" width={52} height={52} />
           </a>
 
           {/* Desktop links */}
@@ -47,7 +47,7 @@ export default function Navbar() {
         <div className="navbar__overlay">
           <div className="navbar__overlay-top">
             <a href="/" className="navbar__logo">
-              <Image src="/LogoZeika.png" alt="Zeika" width={48} height={48} />
+              <Image src="/LogoZeika.png" alt="Zeika" width={52} height={52} />
             </a>
             <button
               className="navbar__close"

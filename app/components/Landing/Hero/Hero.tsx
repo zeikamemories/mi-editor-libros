@@ -30,13 +30,15 @@ export default function Hero() {
           personalizados.
         </h1>
         <h1 className="hero__title hero__title--mobile">
-          Eternizamos<br />
-          momentos<br />
+          Eternizamos momentos<br />
           a través<br />
-          de fotolibros<br />
-          personalizados
+          de fotolibros personalizados
         </h1>
       </div>
+
+      <a href="/nuevo" className="hero__cta">
+        CONTAR MI HISTORIA
+      </a>
     </section>
   )
 }
