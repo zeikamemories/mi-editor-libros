@@ -15,6 +15,18 @@
   font-weight: 400;
 }
 
+.landing-separator {
+  border: none;
+  border-top: 1px solid #c0bfbc;
+  margin: 0 20px;
+}
+
+@media (min-width: 1024px) {
+  .landing-separator {
+    margin: 0 50px;
+  }
+}
+
 .landing-container {
   max-width: 1440px;
   margin: 0 auto;
