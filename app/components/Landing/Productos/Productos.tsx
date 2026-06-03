@@ -19,7 +19,7 @@ export default function Productos() {
   const [showCompare, setShowCompare] = useState(false)
 
   return (
-    <section className="productos">
+    <section className="productos" id="productos">
       <div className="productos__header">
         <p className="productos__label">Nuestros Productos</p>
         <button className="productos__comparar" onClick={() => setShowCompare(true)}>Comparar tamaños</button>

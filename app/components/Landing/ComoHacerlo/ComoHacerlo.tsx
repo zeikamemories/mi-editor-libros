@@ -45,7 +45,7 @@ const STEPS: Step[] = [
 
 export default function ComoHacerlo() {
   return (
-    <section className="como">
+    <section className="como" id="como-hacerlo">
       <p className="como__label">Cómo hacerlo</p>
 
       <div className="como__cards">
