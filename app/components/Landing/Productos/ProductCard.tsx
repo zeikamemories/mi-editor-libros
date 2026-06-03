@@ -10,7 +10,9 @@ export type ProductData = {
   dimensions: string
 }
 
-export default function ProductCard({ sizeId, name, price, dimensions }: ProductData) {
+type Props = ProductData & { onOpen?: () => void }
+
+export default function ProductCard({ sizeId, name, price, dimensions, onOpen }: Props) {
   const [hovered, setHovered] = useState(false)
 
   return (
@@ -20,7 +22,7 @@ export default function ProductCard({ sizeId, name, price, dimensions }: Product
       onMouseLeave={() => setHovered(false)}
     >
       {/* Image area */}
-      <div className="product-card__img-wrap">
+      <div className="product-card__img-wrap" onClick={onOpen} style={{ cursor: onOpen ? 'pointer' : 'default' }}>
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img
           src={`/fotos/${sizeId}.jpg`}
@@ -28,7 +30,7 @@ export default function ProductCard({ sizeId, name, price, dimensions }: Product
           className="product-card__img"
         />
         {hovered && (
-          <div className="product-card__overlay">
+          <div className="product-card__overlay" onClick={onOpen}>
             <span>Más información</span>
           </div>
         )}
@@ -43,8 +45,8 @@ export default function ProductCard({ sizeId, name, price, dimensions }: Product
         <span className="product-card__dims">{dimensions}</span>
       </div>
 
-      {/* Mobile-only button (always visible) */}
-      <button className="product-card__mobile-btn">Más información</button>
+      {/* Mobile-only button */}
+      <button className="product-card__mobile-btn" onClick={onOpen}>Más información</button>
     </article>
   )
 }

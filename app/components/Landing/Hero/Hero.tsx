@@ -23,7 +23,8 @@ export default function Hero() {
         <source src="/videos/Animacion-Hero.mp4" type="video/mp4" />
       </video>
 
-      <div className="hero__content">
+      {/* Single overlay — title at top, CTA at bottom via flex */}
+      <div className="hero__overlay">
         <h1 className="hero__title hero__title--desktop">
           Eternizamos momentos<br />
           a través de fotolibros<br />
@@ -34,11 +35,11 @@ export default function Hero() {
           a través<br />
           de fotolibros personalizados
         </h1>
-      </div>
 
-      <a href="/nuevo" className="hero__cta">
-        CONTAR MI HISTORIA
-      </a>
+        <a href="/nuevo" className="hero__cta">
+          CONTAR MI HISTORIA
+        </a>
+      </div>
     </section>
   )
 }

@@ -13,7 +13,7 @@
 .productos__header {
   display: flex;
   align-items: center;
-  justify-content: space-between;
+  justify-content: center;
   padding: 0 20px;
 }
 
@@ -72,18 +72,12 @@
   grid-column: 1 / -1;
 }
 
-/* Image area */
+/* Image area — height driven by per-card aspect ratio */
 .product-card__img-wrap {
   position: relative;
   width: 100%;
+  overflow: hidden;
 }
-
-/* Aspect ratios per card — matches Figma proportions */
-.product-card--chico    .product-card__img { aspect-ratio: 328 / 230; }
-.product-card--mediano  .product-card__img { aspect-ratio: 440 / 314; }
-.product-card--grande   .product-card__img { aspect-ratio: 552 / 400; }
-.product-card--vertical .product-card__img { aspect-ratio: 328 / 400; }
-.product-card--cuadrado .product-card__img { aspect-ratio: 327 / 318; }
 
 .product-card__img-placeholder {
   width: 100%;
@@ -93,16 +87,25 @@
 
 .product-card__img {
   width: 100%;
+  height: auto;
   display: block;
   object-fit: cover;
 }
+
+/* Per-card aspect ratios on mobile */
+.product-card--chico    .product-card__img { aspect-ratio: 328 / 230; }
+.product-card--mediano  .product-card__img { aspect-ratio: 440 / 314; }
+.product-card--grande   .product-card__img { aspect-ratio: 552 / 400; }
+.product-card--vertical .product-card__img { aspect-ratio: 328 / 400; }
+.product-card--cuadrado .product-card__img { aspect-ratio: 327 / 318; }
 
 .product-card__overlay {
   display: none;
 }
 
-/* Details */
+/* Details — flex:1 fills space between image and button, keeping buttons aligned */
 .product-card__details {
+  flex: 1;
   display: flex;
   flex-direction: column;
   padding: 10px 0;
@@ -116,9 +119,8 @@
 .product-card__name-price {
   display: flex;
   justify-content: space-between;
-  align-items: center;
+  align-items: flex-start;
   text-transform: uppercase;
-  white-space: nowrap;
   width: 100%;
 }
 
@@ -128,6 +130,9 @@
 
 .product-card__price {
   font-weight: 500;
+  white-space: nowrap;
+  flex-shrink: 0;
+  padding-left: 4px;
 }
 
 .product-card__dims {
@@ -158,8 +163,11 @@
   }
 
   .productos__header {
+    justify-content: space-between;
     padding: 0 50px;
   }
+
+  /* Aspect ratios are already set in base styles — no override needed on desktop */
 
   .productos__label {
     font-size: 22px;
@@ -188,13 +196,6 @@
   .product-card--grande   { flex: 0 0 calc(41.818% - 8.364px); width: calc(41.818% - 8.364px); }
   .product-card--vertical { flex: 0 0 328px; width: 328px; }
   .product-card--cuadrado { flex: 0 0 327px; width: 327px; }
-
-  /* Images scale with card width via aspect-ratio */
-  .product-card--chico    .product-card__img { aspect-ratio: 328 / 230; height: auto; }
-  .product-card--mediano  .product-card__img { aspect-ratio: 440 / 314; height: auto; }
-  .product-card--grande   .product-card__img { aspect-ratio: 552 / 400; height: auto; }
-  .product-card--vertical .product-card__img { aspect-ratio: 328 / 400; height: auto; }
-  .product-card--cuadrado .product-card__img { aspect-ratio: 327 / 318; height: auto; }
 
   /* Details: 14px, tracking 0.56px */
   .product-card__details {
