@@ -3,6 +3,7 @@
 import { useState } from 'react'
 import ProductCard, { type ProductData } from './ProductCard'
 import ProductModal from './ProductModal'
+import MobileProductModal from './MobileProductModal'
 import CompareSizesModal from './CompareSizesModal'
 import './Productos.css'
 
@@ -33,6 +34,9 @@ export default function Productos() {
 
       {selected && (
         <ProductModal product={selected} onClose={() => setSelected(null)} />
+      )}
+      {selected && (
+        <MobileProductModal product={selected} onClose={() => setSelected(null)} />
       )}
       {showCompare && (
         <CompareSizesModal onClose={() => setShowCompare(false)} />
