@@ -7,11 +7,11 @@ import './ProductModal.css'
 
 // 4 images per product — images 2-4 are placeholders until real ones are added
 const IMAGES: Record<string, string[]> = {
-  chico:    ['/fotos/chico.jpg',    '', '', ''],
-  mediano:  ['/fotos/mediano.jpg',  '', '', ''],
-  grande:   ['/fotos/grande.jpg',   '', '', ''],
-  vertical: ['/fotos/vertical.jpg', '', '', ''],
-  cuadrado: ['/fotos/cuadrado.jpg', '', '', ''],
+  chico:    ['/fotos/chico2.jpg',    '', '', ''],
+  mediano:  ['/fotos/mediano2.jpg',  '', '', ''],
+  grande:   ['/fotos/grande2.jpg',   '', '', ''],
+  vertical: ['/fotos/vertical2.jpg', '', '', ''],
+  cuadrado: ['/fotos/cuadrado2.jpg', '', '', ''],
 }
 
 const EXTRA_PRICE: Record<string, string> = {
