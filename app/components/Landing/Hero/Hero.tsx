@@ -36,7 +36,7 @@ export default function Hero() {
           de fotolibros personalizados
         </h1>
 
-        <a href="/nuevo" className="hero__cta">
+        <a href="/orden" className="hero__cta">
           CONTAR MI HISTORIA
         </a>
       </div>

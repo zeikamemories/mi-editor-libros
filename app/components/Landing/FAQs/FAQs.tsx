@@ -7,12 +7,12 @@ const FAQS = [
   {
     num: '[01]',
     q: '¿Cuánto tarda en estar listo?',
-    a: 'El diseño lo tenés listo en menos de 48 horas. Una vez aprobado, la producción tarda entre 2 y 3 días hábiles. Para el envío estimamos entre 2 y 7 días hábiles según el destino. Si preferís, también podés retirar tu libro directamente en la fábrica (Concepción Arenal 4501, Chacarita) una vez que esté impreso.',
+    a: 'Desde el momento en que confirmás el diseño, el libro se imprime en 3 días hábiles aproximadamente.  Para el envío estimamos entre 2 y 7 días hábiles según el destino. Si preferís, también podés retirar tu libro directamente en la fábrica (Concepción Arenal 4501, Chacarita) una vez que esté impreso.',
   },
   {
     num: '[02]',
     q: '¿Cuántas fotos entran?',
-    a: 'Nuestros libros tienen entre 12 y 14 páginas base dependiendo del tamaño, y recomendamos alrededor de 60 fotos para cubrirlas. Si querés contar más historia, podés agregar hasta 40 páginas extra.',
+    a: 'Nuestros libros tienen entre 12 y 14 páginas base dependiendo del tamaño, y recomendamos 60 fotos para cubrirlas. Se pueden agregar hasta 40 páginas.',
   },
   {
     num: '[03]',

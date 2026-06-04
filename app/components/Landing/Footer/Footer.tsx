@@ -35,8 +35,8 @@ export default function Footer() {
           <div className="footer__col">
             <p className="footer__col-title">Contacto</p>
             <div className="footer__col-items">
-              <a href="tel:+5411XXXXXXXX" className="footer__link">+54 11 XXXX XXXX</a>
-              <a href="mailto:hola@zeika.com.ar" className="footer__link">hola@zeika.com.ar</a>
+              <a href="tel:+5411XXXXXXXX" className="footer__link">+54 9 11 3352-1921</a>
+              <a href="mailto:zeika.memories@gmail.com" className="footer__link">zeika.memories@gmail.com</a>
             </div>
           </div>
         </div>
@@ -77,7 +77,7 @@ export default function Footer() {
         </div>
         {/* Legal strip — inside card */}
         <p className="footer__legal">
-          © 2025 Zeika. Todos los derechos reservados. Concepción Arenal 4501, Chacarita, Buenos Aires, Argentina.
+          © 2025 Zeika. Todos los derechos reservados. Buenos Aires, Argentina.
         </p>
       </div>
     </footer>
