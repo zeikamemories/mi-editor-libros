@@ -280,3 +280,64 @@ app/
 - Do NOT modify any file outside `app/components/Landing/`, `app/page.tsx`, and `public/`
 - Images: use local `/public/` files or Cloudinary URLs — never hardcode Figma asset URLs in production code (they expire after 7 days)
 - Before implementing any section, call `get_design_context` on its Figma node ID
+
+---
+
+## Onboarding / checkout flow (implemented 2026-06-04)
+
+### What was built
+Full customer purchase flow: landing CTA → login → 3-step onboarding → MercadoPago payment → confirmation.
+
+### File structure
+```
+app/
+  orden/
+    page.tsx          ← multi-step flow: login, step 1 (size), step 2 (details), step 3 (summary+pay)
+    orden.css         ← styles for the whole flow
+    confirmado/
+      page.tsx        ← post-payment confirmation page, updates order status in Supabase
+  api/
+    payment/
+      route.ts        ← server-side MercadoPago Checkout Pro preference creation
+  dashboard/
+    page.tsx          ← updated to read real orders from Supabase (was mock data)
+  lib/
+    supabase.ts       ← Supabase client (anon key)
+```
+
+### Supabase setup
+- Project: Zeika Memories (tpqfivhuqybctulqljcx.supabase.co)
+- Tables created: `profiles`, `orders`, `order_notes`
+- Trigger: `handle_new_user` — auto-creates a profile row when a new user signs up via Google
+- RLS policies on `orders`: users can insert/read own orders; authenticated users can read all (for dashboard)
+- RLS policies on `profiles`: users can manage their own profile
+- Google OAuth: enabled via Google Cloud Console (project: My First Project, OAuth client: Zeika Web)
+
+### Auth
+- Google OAuth only (email/password also available as fallback)
+- Supabase handles the OAuth flow
+- Redirect URL configured: http://localhost:3000/orden (dev), update for production
+- Google Cloud authorized redirect URI: https://tpqfivhuqybctulqljcx.supabase.co/auth/v1/callback
+
+### MercadoPago
+- SDK: `mercadopago` npm package (Checkout Pro)
+- Access token in `.env.local` as `MP_ACCESS_TOKEN`
+- Currently using TEST credentials (APP_USR-... format)
+- **IMPORTANT — before launch**: update `back_urls` in `app/api/payment/route.ts` from hardcoded `http://localhost:3000` to the real Vercel URL. Also update `MP_ACCESS_TOKEN` in Vercel env vars to the production token.
+- In sandbox, paying with the same account that owns the app shows "Una de las partes es de prueba" — this is expected, real customers won't see this.
+
+### Prices (in ARS, as of 2026-06-04)
+- Chico Horizontal 21×14,8 cm: $75,000
+- Mediano Horizontal 28×21,6 cm: $81,500
+- Grande Horizontal 41×29 cm: $100,000
+- Vertical 28×21,6 cm: $81,500
+- Cuadrado 29×29 cm: $97,000
+- Extra +10 págs: +$8,000 | +20 págs: +$15,000 | +30 págs: +$28,000
+- Textos varios: +$10,000
+- Client pays 50% upfront, 50% on design approval
+
+### What's pending
+- `/mis-proyectos` — client-facing project dashboard (see their orders, upload photos, view preview)
+- WhatsApp Business message on payment confirmation
+- Dashboard: update order status manually (assign designer, change status)
+- Production launch: update back_urls + MP token + Supabase redirect URLs in Vercel

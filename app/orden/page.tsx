@@ -5,7 +5,7 @@ import { supabase } from '../lib/supabase'
 import type { User } from '@supabase/supabase-js'
 import './orden.css'
 
-type Step = 'loading' | 'login' | 1 | 2 | 3 | 'confirmed'
+type Step = 'loading' | 'login' | 1 | 2 | 3
 type AuthMode = 'signup' | 'signin'
 
 const SIZES = [
@@ -80,7 +80,10 @@ export default function OrdenPage() {
   async function handleConfirm() {
     if (!user || !selectedSize) return
     setSaving(true)
-    await supabase.from('orders').insert({
+    setAuthError('')
+
+    // 1. Guardar pedido en Supabase
+    const { data: order, error: orderError } = await supabase.from('orders').insert({
       user_id:     user.id,
       book_name:   bookName || 'Sin título',
       size:        sizeId,
@@ -90,10 +93,37 @@ export default function OrdenPage() {
       price_total: totalPrice,
       price_paid:  payNow,
       status:      'pendiente_pago',
-    })
+    }).select().single()
+
+    if (orderError) {
+      console.error('Order insert error:', orderError)
+      setAuthError('Error al guardar el pedido: ' + orderError.message)
+      setSaving(false)
+      return
+    }
+
     await supabase.from('profiles').upsert({ id: user.id, whatsapp })
+
+    // 2. Crear preferencia en MercadoPago y redirigir
+    const res = await fetch('/api/payment', {
+      method:  'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body:    JSON.stringify({
+        orderId:  order.id,
+        bookName: bookName || 'Sin título',
+        amount:   payNow,
+      }),
+    })
+    const json = await res.json()
+    console.log('MP response:', json)
+
+    if (json.url) {
+      window.location.href = json.url
+      return
+    }
+
+    setAuthError('Error al conectar con MercadoPago. Intentá de nuevo.')
     setSaving(false)
-    setStep('confirmed')
   }
 
   if (step === 'loading') {
