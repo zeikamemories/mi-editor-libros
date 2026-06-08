@@ -6,7 +6,10 @@ const COOKIE     = 'zeika_access'
 export function middleware(req: NextRequest) {
   const { pathname, searchParams, origin } = req.nextUrl
 
-  // Always allow static files and API routes
+  // Skip middleware entirely in development
+  if (process.env.NODE_ENV === 'development') return NextResponse.next()
+
+  // Always allow static files, API routes, auth pages and Supabase callback
   if (
     pathname.startsWith('/_next') ||
     pathname.startsWith('/api') ||
@@ -20,6 +23,14 @@ export function middleware(req: NextRequest) {
     pathname.startsWith('/ilus') ||
     pathname.startsWith('/js') ||
     pathname === '/coming-soon' ||
+    pathname === '/login' ||
+    pathname === '/auth/callback' ||
+    pathname.startsWith('/dashboard') ||
+    pathname.startsWith('/editor') ||
+    pathname.startsWith('/nuevo') ||
+    pathname.startsWith('/mis-proyectos') ||
+    pathname.startsWith('/orden') ||
+    pathname.startsWith('/preview') ||
     pathname.match(/\.(png|jpg|jpeg|svg|ico|mp4|webp|gif)$/)
   ) {
     return NextResponse.next()
