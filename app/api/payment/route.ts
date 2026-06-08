@@ -33,8 +33,9 @@ export async function POST(req: NextRequest) {
     })
 
     return NextResponse.json({ url: result.init_point })
-  } catch (err) {
-    console.error('MP error:', err)
-    return NextResponse.json({ error: 'Error creando preferencia' }, { status: 500 })
+  } catch (err: unknown) {
+    const msg = err instanceof Error ? err.message : JSON.stringify(err)
+    console.error('MP error:', msg)
+    return NextResponse.json({ error: 'Error creando preferencia', detail: msg }, { status: 500 })
   }
 }
