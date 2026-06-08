@@ -6,6 +6,12 @@ import Image from 'next/image'
 import { supabase } from '../lib/supabase'
 import './login.css'
 
+const ADMIN_EMAILS = ['maikasacerdote@gmail.com', 'zeika.memories@gmail.com']
+
+function redirectDest(email: string | undefined | null) {
+  return email && ADMIN_EMAILS.includes(email) ? '/dashboard' : '/mis-proyectos'
+}
+
 function LoginContent() {
   const router       = useRouter()
   const searchParams = useSearchParams()
@@ -19,15 +25,22 @@ function LoginContent() {
   const [loading,  setLoading]  = useState(false)
 
   useEffect(() => {
+    // Handle both already-logged-in users and OAuth callback redirect
     supabase.auth.getSession().then(({ data: { session } }) => {
-      if (session?.user) router.replace('/mis-proyectos')
+      if (session?.user) router.replace(redirectDest(session.user.email))
     })
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+      if (event === 'SIGNED_IN' && session?.user) {
+        router.replace(redirectDest(session.user.email))
+      }
+    })
+    return () => subscription.unsubscribe()
   }, [router])
 
   async function handleGoogle() {
     await supabase.auth.signInWithOAuth({
       provider: 'google',
-      options: { redirectTo: window.location.origin + '/mis-proyectos' },
+      options: { redirectTo: window.location.origin + '/login' },
     })
   }
 
@@ -42,7 +55,8 @@ function LoginContent() {
       const { error: e } = await supabase.auth.signInWithPassword({ email, password })
       if (e) { setError('Email o contraseña incorrectos.'); setLoading(false); return }
     }
-    router.replace('/mis-proyectos')
+    const { data: { session } } = await supabase.auth.getSession()
+    router.replace(redirectDest(session?.user?.email))
   }
 
   return (
