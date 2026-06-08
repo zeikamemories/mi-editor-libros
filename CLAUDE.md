@@ -1,4 +1,5 @@
 @AGENTS.md
+@AGENTS-WEB.md
 # Zeika Builder — Project Context
 
 ## What this project is

@@ -3,7 +3,7 @@
 import { useState, useRef, useCallback, useEffect } from 'react'
 import Image from 'next/image'
 import Link from 'next/link'
-import { useRouter } from 'next/navigation'
+import { useRouter, useSearchParams } from 'next/navigation'
 import { Monitor } from 'lucide-react'
 import { supabase } from '../lib/supabase'
 import './nuevo.css'
@@ -299,11 +299,15 @@ function Step3({ photos, uploadingCount, onUpload, onDelete }: Step3Props) {
 // ── Main page ─────────────────────────────────────────────────────────────────
 
 export default function NuevoPage() {
-  const router = useRouter()
+  const router       = useRouter()
+  const searchParams = useSearchParams()
+
   const [step,         setStep]         = useState(1)
-  const [selectedSize, setSelectedSize] = useState<string | null>(null)
+  const [selectedSize, setSelectedSize] = useState<string | null>(
+    searchParams.get('size') ?? null
+  )
   const [details,      setDetails]      = useState<BookDetails>({
-    nombre:    '',
+    nombre:     searchParams.get('name') ?? '',
     disenadora: 'Maika',
     tapa:       'Tapa Dura',
     acabado:    'Laminado Mate',
@@ -345,13 +349,27 @@ export default function NuevoPage() {
     sessionStorage.setItem('zeika_photos', JSON.stringify(photos))
     sessionStorage.removeItem('zeika_project_id')
     try {
+      const linkedOrderId = searchParams.get('orderId') ?? null
       const { data, error } = await supabase
         .from('projects')
-        .insert({ name: details.nombre || 'Sin título', photos, spreads: {} })
+        .insert({
+          name:          details.nombre || 'Sin título',
+          photos,
+          spreads:       {},
+          book_size:     selectedSize ?? 'vertical',
+          total_spreads: 13,
+          ...(linkedOrderId ? { order_id: linkedOrderId } : {}),
+        })
         .select('id')
         .single()
       if (!error && data) {
         sessionStorage.setItem('zeika_project_id', data.id)
+        const linkedOrderId = searchParams.get('orderId')
+        if (linkedOrderId) {
+          sessionStorage.setItem('zeika_return_path', `/dashboard/pedidos/${linkedOrderId}`)
+        } else {
+          sessionStorage.setItem('zeika_return_path', '/dashboard')
+        }
       }
     } catch (err) {
       console.error('Error guardando proyecto:', err)

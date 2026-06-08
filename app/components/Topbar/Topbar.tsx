@@ -14,9 +14,10 @@ interface TopbarProps {
   projectId: string
   onShare?: () => void
   onTourOpen?: () => void
+  saveStatus?: 'saving' | 'saved' | 'idle'
 }
 
-export default function Topbar({ onPreview, onExportJpg, onExportPdf, isExporting, projectId, onShare, onTourOpen }: TopbarProps) {
+export default function Topbar({ onPreview, onExportJpg, onExportPdf, isExporting, projectId, onShare, onTourOpen, saveStatus }: TopbarProps) {
   const { lang, t, toggleLang } = useLang()
 
   // ── Export dropdown ────────────────────────────────────────────────────────
@@ -71,14 +72,25 @@ export default function Topbar({ onPreview, onExportJpg, onExportPdf, isExportin
     ? `${window.location.origin}/preview/${projectId}`
     : ''
 
+  const returnPath = typeof window !== 'undefined'
+    ? sessionStorage.getItem('zeika_return_path') ?? '/dashboard'
+    : '/dashboard'
+
   return (
     <div className="topbar">
+      <a href={returnPath} className="topbar-back" title="Volver">←</a>
       <Image
         src="/LogoZeika.png"
         alt="Zeika"
         width={44}
         height={44}
       />
+
+      {saveStatus && saveStatus !== 'idle' && (
+        <span className={`topbar-save-status topbar-save-status--${saveStatus}`}>
+          {saveStatus === 'saving' ? 'Guardando…' : 'Guardado ✓'}
+        </span>
+      )}
 
       <div className="topbar-spacer" />
 

@@ -59,7 +59,10 @@ export default function EditorPage() {
   // ── Project identity + DB load state ─────────────────────────────────────
   const projectIdRef             = useRef<string | null>(null)
   const [dbLoaded,  setDbLoaded] = useState(false)
+  const dbLoadedRef              = useRef(false)
   const supabaseSaveTimer        = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const [saveStatus, setSaveStatus] = useState<'idle' | 'saving' | 'saved'>('idle')
+  const saveStatusTimerRef       = useRef<ReturnType<typeof setTimeout> | null>(null)
 
   // ── Preview ────────────────────────────────────────────────────────────────
   const [previewOpen,     setPreviewOpen]     = useState(false)
@@ -73,6 +76,7 @@ export default function EditorPage() {
   // ── Book / navigation ──────────────────────────────────────────────────────
   const [currentSpread,       setCurrentSpread]       = useState(0)
   const [totalContentSpreads, setTotalContentSpreads] = useState(13)
+  const totalContentSpreadsRef = useRef(13)
   const totalSpreads = totalContentSpreads + 3
 
   // ── Layout panel ───────────────────────────────────────────────────────────
@@ -219,18 +223,32 @@ export default function EditorPage() {
       return
     }
     projectIdRef.current = id
-    supabase.from('projects').select('photos, spreads').eq('id', id).single()
+    supabase.from('projects').select('photos, spreads, total_spreads, order_id').eq('id', id).single()
       .then(({ data, error }) => {
         if (!error && data) {
           if (data.photos) setPhotos(data.photos as Photo[])
           if (data.spreads) spreadsData.current = data.spreads as Record<number, SpreadSnapshot>
+          if (typeof data.total_spreads === 'number') setTotalContentSpreads(data.total_spreads)
+          if (data.order_id) sessionStorage.setItem('zeika_return_path', `/dashboard/pedidos/${data.order_id}`)
         }
+        dbLoadedRef.current = true
         setDbLoaded(true)
       })
   }, []) // eslint-disable-line react-hooks/exhaustive-deps
 
-  // ── Keep photosRef current so callbacks can read the latest array ─────────
+  // ── Keep photosRef and totalContentSpreadsRef current ────────────────────
   useEffect(() => { photosRef.current = photos }, [photos])
+  useEffect(() => { totalContentSpreadsRef.current = totalContentSpreads }, [totalContentSpreads])
+
+  // ── Save total_spreads to Supabase when spread count changes ─────────────
+  // canvas onChange doesn't fire when spreads are added/removed, so we need this.
+  useEffect(() => {
+    if (!projectIdRef.current || !dbLoadedRef.current) return
+    supabase.from('projects').update({
+      total_spreads: totalContentSpreads,
+      spreads:       spreadsData.current,
+    }).eq('id', projectIdRef.current)
+  }, [totalContentSpreads]) // eslint-disable-line react-hooks/exhaustive-deps
 
   // ── Recompute used photos by scanning all saved spreads ───────────────────
   // Runs after every saveCurrentSpread so filters stay accurate even when
@@ -269,6 +287,15 @@ export default function EditorPage() {
       const leftUrl  = lc.toDataURL(opts)
       const rightUrl = rc.toDataURL(opts)
       setThumbnails((prev) => ({ ...prev, [spreadIndex]: { left: leftUrl, right: rightUrl } }))
+
+      // Save cover thumbnail (tapa spread) to Supabase for dashboard preview
+      if (spreadIndex === 0 && projectIdRef.current) {
+        const coverOpts = { format: 'jpeg' as const, quality: 0.8, multiplier: 0.25 }
+        const coverL = lc.toDataURL(coverOpts)
+        const coverR = rc.toDataURL(coverOpts)
+        supabase.from('projects').update({ cover_thumbnail: { left: coverL, right: coverR } })
+          .eq('id', projectIdRef.current)
+      }
     } catch (_) { /* canvas not ready */ }
   }, [])
 
@@ -349,15 +376,21 @@ export default function EditorPage() {
 
     // Debounced Supabase save — 2 s after last change
     if (projectIdRef.current) {
+      setSaveStatus('idle')
       if (supabaseSaveTimer.current) clearTimeout(supabaseSaveTimer.current)
-      supabaseSaveTimer.current = setTimeout(() => {
-        supabase.from('projects').update({
-          spreads: spreadsData.current,
-          photos:  photosRef.current,
+      supabaseSaveTimer.current = setTimeout(async () => {
+        setSaveStatus('saving')
+        await supabase.from('projects').update({
+          spreads:       spreadsData.current,
+          photos:        photosRef.current,
+          total_spreads: totalContentSpreadsRef.current,
         }).eq('id', projectIdRef.current!)
+        setSaveStatus('saved')
+        if (saveStatusTimerRef.current) clearTimeout(saveStatusTimerRef.current)
+        saveStatusTimerRef.current = setTimeout(() => setSaveStatus('idle'), 2000)
       }, 2000)
     }
-  }, [pushHistory, captureThumbnail, recomputeUsedPhotos])
+  }, [pushHistory, captureThumbnail, recomputeUsedPhotos]) // eslint-disable-line react-hooks/exhaustive-deps
 
   // ── Canvas ready: restore saved state, then wire change listeners ───────────
   const handleCanvasReady = useCallback(
@@ -385,8 +418,11 @@ export default function EditorPage() {
       }
 
       pushHistory()
+
+      // Capture initial thumbnail after canvas finishes rendering
+      setTimeout(() => captureThumbnail(currentSpreadRef.current), 600)
     },
-    [saveCurrentSpread, pushHistory],
+    [saveCurrentSpread, pushHistory, captureThumbnail],
   )
 
   // ── Active page change (fired by Canvas on mousedown) ─────────────────────
@@ -1061,7 +1097,7 @@ export default function EditorPage() {
     <LanguageProvider>
     <>
     <div className="editor-root">
-      <Topbar onPreview={handleOpenPreview} onExportJpg={handleExportJpg} onExportPdf={handleExportPdf} isExporting={isExporting} projectId={projectIdRef.current ?? ''} onShare={handleShare} onTourOpen={() => setTourOpen(true)} />
+      <Topbar onPreview={handleOpenPreview} onExportJpg={handleExportJpg} onExportPdf={handleExportPdf} isExporting={isExporting} projectId={projectIdRef.current ?? ''} onShare={handleShare} onTourOpen={() => setTourOpen(true)} saveStatus={saveStatus} />
 
       <div className="editor-body">
         <PhotoPanel

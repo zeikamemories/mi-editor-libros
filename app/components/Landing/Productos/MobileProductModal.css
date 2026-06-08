@@ -1,0 +1,350 @@
+/* Mobile only — hidden on desktop */
+.mpm {
+  position: fixed;
+  inset: 0;
+  background: white;
+  z-index: 400;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+@media (min-width: 1024px) {
+  .mpm {
+    display: none;
+  }
+}
+
+/* ── Scrollable area ── */
+.mpm__scroll {
+  flex: 1;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+/* ── Close button ── */
+.mpm__close {
+  position: absolute;
+  top: 12px;
+  right: 15px;
+  width: 40px;
+  height: 40px;
+  background: none;
+  border: none;
+  font-size: 28px;
+  cursor: pointer;
+  color: var(--color-black);
+  z-index: 10;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+}
+
+/* ── Image carousel ── */
+.mpm__carousel {
+  position: relative;
+  height: 380px;
+  width: 100%;
+}
+
+.mpm__images {
+  display: flex;
+  height: 100%;
+  overflow-x: scroll;
+  scroll-snap-type: x mandatory;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;
+}
+
+.mpm__images::-webkit-scrollbar {
+  display: none;
+}
+
+.mpm__image {
+  flex-shrink: 0;
+  width: 100vw;
+  height: 100%;
+  object-fit: cover;
+  scroll-snap-align: start;
+  border-right: 3px solid white;
+}
+
+.mpm__image--placeholder {
+  background: #e0dedd;
+}
+
+.mpm__dots {
+  position: absolute;
+  bottom: 10px;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  gap: 6px;
+}
+
+.mpm__dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.4);
+  border: none;
+  transition: background 0.2s;
+}
+
+.mpm__dot--active {
+  background: white;
+}
+
+/* ── Details ── */
+.mpm__details {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  padding: 20px;
+}
+
+.mpm__naming {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.mpm__name {
+  font-family: "Times New Roman", Times, serif;
+  font-weight: 400;
+  font-size: 35px;
+  line-height: 0.95;
+  letter-spacing: -0.7px;
+  color: var(--color-black);
+  text-transform: capitalize;
+  margin: 0;
+}
+
+.mpm__dims {
+  font-family: "forma-djr-display", sans-serif;
+  font-weight: 400;
+  font-size: 14px;
+  letter-spacing: 0.56px;
+  color: var(--color-black);
+  white-space: nowrap;
+  flex-shrink: 0;
+  padding-bottom: 3px;
+}
+
+/* Comparar button */
+.mpm__comparar {
+  width: 100%;
+  border: 1px solid var(--color-black);
+  background: white;
+  padding: 10px;
+  font-family: "forma-djr-display", sans-serif;
+  font-weight: 500;
+  font-size: 12px;
+  letter-spacing: 0.48px;
+  text-decoration: underline;
+  cursor: pointer;
+  color: var(--color-black);
+}
+
+/* Pricing */
+.mpm__pricing {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.mpm__price-base {
+  font-family: "forma-djr-display", sans-serif;
+  font-weight: 700;
+  font-size: 14px;
+  letter-spacing: 0.56px;
+  text-transform: uppercase;
+  color: var(--color-black);
+  margin: 0;
+}
+
+.mpm__price-note {
+  font-family: "forma-djr-display", sans-serif;
+  font-weight: 400;
+  font-size: 12px;
+  letter-spacing: 0.48px;
+  color: #9e9e9e;
+  margin: 0;
+}
+
+.mpm__price-extra {
+  font-family: "forma-djr-display", sans-serif;
+  font-weight: 700;
+  font-size: 12px;
+  letter-spacing: 0.48px;
+  text-transform: uppercase;
+  color: var(--color-black);
+  margin: 0;
+}
+
+/* CTA */
+.mpm__cta {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  background: var(--color-blue);
+  color: white;
+  font-family: "forma-djr-display", sans-serif;
+  font-weight: 600;
+  font-size: 12px;
+  letter-spacing: 0.48px;
+  text-transform: uppercase;
+  text-decoration: none;
+  padding: 10px;
+}
+
+/* Product details */
+.mpm__product-details {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  font-family: "forma-djr-display", sans-serif;
+  font-weight: 400;
+  font-size: 12px;
+  letter-spacing: 0.48px;
+}
+
+.mpm__details-label {
+  color: var(--color-black);
+  margin: 0;
+}
+
+.mpm__details-list {
+  margin: 0;
+  padding-left: 18px;
+  color: var(--color-black);
+}
+
+.mpm__details-list li {
+  line-height: normal;
+  margin-bottom: 4px;
+}
+
+/* ── Comparar overlay ── */
+.mpm__comp-backdrop {
+  position: absolute;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.2);
+  backdrop-filter: blur(2px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 20;
+}
+
+.mpm__comp-panel {
+  background: white;
+  width: 354px;
+  max-width: calc(100vw - 20px);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 20px;
+  padding-bottom: 20px;
+}
+
+.mpm__comp-header {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  padding: 10px 20px;
+  width: 100%;
+}
+
+.mpm__comp-close {
+  width: 48px;
+  height: 48px;
+  background: none;
+  border: none;
+  font-size: 28px;
+  cursor: pointer;
+  color: var(--color-black);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+}
+
+/* Size diagram */
+.mpm__comp-canvas-wrap {
+  width: 100%;
+  display: flex;
+  justify-content: center;
+  padding: 0 20px;
+}
+
+.mpm__comp-canvas {
+  position: relative;
+  width: 314px;
+  height: 228px;
+}
+
+.mpm__comp-rect {
+  position: absolute;
+  top: 0;
+  left: 0;
+  background: rgba(25, 25, 25, 0.1);
+  border: none;
+}
+
+.mpm__comp-rect--active {
+  background: rgba(255, 255, 255, 0.6);
+  border: 0.8px solid var(--color-black);
+  z-index: 1;
+}
+
+.mpm__comp-dim {
+  position: absolute;
+  font-family: "forma-djr-display", sans-serif;
+  font-weight: 500;
+  font-size: 10px;
+  letter-spacing: 0.4px;
+  color: var(--color-black);
+  white-space: nowrap;
+  z-index: 2;
+}
+
+.mpm__comp-dim--w {
+  transform: translateX(-50%);
+}
+
+.mpm__comp-dim--h {
+  transform: translateY(-50%) rotate(90deg);
+  transform-origin: left center;
+}
+
+/* Tab pills */
+.mpm__comp-tabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  padding: 0 10px;
+  width: 100%;
+  justify-content: flex-start;
+}
+
+.mpm__comp-tab {
+  background: #d4d4d4;
+  border: 0.5px solid transparent;
+  padding: 8px 10px;
+  font-family: "forma-djr-display", sans-serif;
+  font-weight: 600;
+  font-size: 12px;
+  letter-spacing: 0.48px;
+  color: var(--color-black);
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.mpm__comp-tab--active {
+  background: white;
+  border-color: var(--color-black);
+}

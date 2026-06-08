@@ -1,0 +1,40 @@
+.landing-page {
+  font-family: forma-djr-display, sans-serif;
+  font-weight: 500;
+  letter-spacing: 0.04em;
+  background: var(--color-cream);
+  color: var(--color-black);
+}
+
+.landing-page h1,
+.landing-page h2,
+.landing-page h3,
+.landing-page h4 {
+  font-family: "Times New Roman", Times, serif;
+  letter-spacing: -0.02em;
+  font-weight: 400;
+}
+
+.landing-separator {
+  border: none;
+  border-top: 1px solid #c0bfbc;
+  margin: 0 20px;
+}
+
+@media (min-width: 1024px) {
+  .landing-separator {
+    margin: 0 50px;
+  }
+}
+
+.landing-container {
+  max-width: 1440px;
+  margin: 0 auto;
+  padding: 0 20px;
+}
+
+@media (min-width: 1024px) {
+  .landing-container {
+    padding: 0 50px;
+  }
+}

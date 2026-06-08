@@ -1,0 +1,109 @@
+/* ── Mobile ── */
+.hero {
+  position: relative;
+  width: 100%;
+  height: calc(100dvh - 65px);
+  min-height: 500px;
+  overflow: hidden;
+  background: var(--color-black);
+}
+
+.hero__video {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.hero__video--desktop {
+  display: none;
+}
+
+/* Overlay: flex column — title pushed to lower portion matching Figma top: 447px */
+.hero__overlay {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  padding: 0 20px 100px;
+  z-index: 1;
+}
+
+.hero__title {
+  font-family: "Times New Roman", Times, serif;
+  font-weight: 400;
+  letter-spacing: -0.02em;
+  color: var(--color-white);
+  margin: 0;
+}
+
+.hero__title--mobile {
+  font-size: 50px;
+  line-height: 0.9;
+}
+
+.hero__title--desktop {
+  display: none;
+}
+
+/* CTA button — fixed so it stays visible while scrolling */
+.hero__cta {
+  position: fixed;
+  bottom: 20px;
+  left: 20px;
+  right: 20px;
+  z-index: 200;
+  display: block;
+  background: var(--color-blue);
+  color: var(--color-white);
+  font-family: "forma-djr-display", sans-serif;
+  font-weight: 600;
+  font-size: 16px;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  text-decoration: none;
+  text-align: center;
+  padding: 10px 15px;
+  box-shadow: 0px 4px 7.5px rgba(0, 0, 0, 0.1);
+}
+
+/* ── Desktop ── */
+@media (min-width: 1024px) {
+  .hero {
+    height: calc(100dvh - 88px);
+  }
+
+  .hero__video--mobile {
+    display: none;
+  }
+
+  .hero__video--desktop {
+    display: block;
+  }
+
+  .hero__overlay {
+    justify-content: flex-start;
+    padding: 80px 50px 50px;
+  }
+
+  .hero__title--mobile {
+    display: none;
+  }
+
+  .hero__title--desktop {
+    display: block;
+    font-size: 80px;
+    line-height: 0.95;
+    max-width: 800px;
+  }
+
+  .hero__cta {
+    bottom: 50px;
+    right: 50px;
+    left: auto;
+    width: 340px;
+    padding: 10px 8px;
+  }
+}

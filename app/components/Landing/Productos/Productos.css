@@ -1,0 +1,230 @@
+/* ─── Section ────────────────────────────────────────────────────────────── */
+
+.productos {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  width: 100%;
+  padding: 40px 0;
+  background: #FAF8F4;
+}
+
+/* ─── Header ─────────────────────────────────────────────────────────────── */
+
+.productos__header {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 20px;
+}
+
+.productos__label {
+  font-family: "forma-djr-display", sans-serif;
+  font-weight: 600;
+  font-size: 16px;
+  line-height: normal;
+  letter-spacing: 0.64px;
+  text-transform: uppercase;
+  color: var(--color-black);
+  margin: 0;
+}
+
+.productos__comparar {
+  display: none;
+  background: white;
+  border: 0.5px solid var(--color-black);
+  padding: 10px 30px;
+  font-family: "forma-djr-display", sans-serif;
+  font-weight: 400;
+  font-size: 16px;
+  letter-spacing: 0.64px;
+  text-decoration: underline;
+  text-underline-position: from-font;
+  cursor: pointer;
+  color: var(--color-black);
+  white-space: nowrap;
+}
+
+/* ─── Mobile grid ────────────────────────────────────────────────────────── */
+
+.productos__grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 30px 10px;
+  padding: 0 20px;
+}
+
+/* ─── Product card (shared) ──────────────────────────────────────────────── */
+
+.product-card {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  width: 100%;
+  background: none;
+  border: none;
+  padding: 0;
+  cursor: pointer;
+  text-align: left;
+}
+
+/* Grande spans full width on mobile */
+.product-card--grande {
+  grid-column: 1 / -1;
+}
+
+/* Image area — height driven by per-card aspect ratio */
+.product-card__img-wrap {
+  position: relative;
+  width: 100%;
+  overflow: hidden;
+}
+
+.product-card__img-placeholder {
+  width: 100%;
+  background: #e0dedd;
+  display: block;
+}
+
+.product-card__img {
+  width: 100%;
+  height: auto;
+  display: block;
+  object-fit: cover;
+}
+
+/* Per-card aspect ratios on mobile */
+.product-card--chico    .product-card__img { aspect-ratio: 328 / 230; }
+.product-card--mediano  .product-card__img { aspect-ratio: 440 / 314; }
+.product-card--grande   .product-card__img { aspect-ratio: 552 / 400; }
+.product-card--vertical .product-card__img { aspect-ratio: 328 / 400; }
+.product-card--cuadrado .product-card__img { aspect-ratio: 327 / 318; }
+
+.product-card__overlay {
+  display: none;
+}
+
+/* Details — flex:1 fills space between image and button, keeping buttons aligned */
+.product-card__details {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  padding: 10px 0;
+  font-family: "forma-djr-display", sans-serif;
+  font-size: 12px;
+  line-height: normal;
+  letter-spacing: 0.48px;
+  color: var(--color-black);
+}
+
+.product-card__name-price {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  text-transform: uppercase;
+  width: 100%;
+}
+
+.product-card__name {
+  font-weight: 600;
+}
+
+.product-card__price {
+  font-weight: 500;
+  white-space: nowrap;
+  flex-shrink: 0;
+  padding-left: 4px;
+}
+
+.product-card__dims {
+  font-weight: 500;
+  text-transform: none;
+}
+
+/* Mobile button — always visible */
+.product-card__mobile-btn {
+  width: 100%;
+  background: white;
+  border: 1px solid var(--color-black);
+  padding: 10px;
+  font-family: "forma-djr-display", sans-serif;
+  font-weight: 600;
+  font-size: 12px;
+  letter-spacing: 0.48px;
+  cursor: pointer;
+  color: var(--color-black);
+  margin-top: 10px;
+}
+
+/* ─── Desktop ────────────────────────────────────────────────────────────── */
+
+@media (min-width: 1024px) {
+  .productos {
+    padding: 60px 0;
+  }
+
+  .productos__header {
+    justify-content: space-between;
+    padding: 0 50px;
+  }
+
+  /* Aspect ratios are already set in base styles — no override needed on desktop */
+
+  .productos__label {
+    font-size: 22px;
+    letter-spacing: 0.88px;
+  }
+
+  .productos__comparar {
+    display: block;
+  }
+
+  /* Desktop flex layout — px-50px matches header */
+  .productos__grid {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    padding: 0 50px;
+    align-items: flex-start;
+  }
+
+  /*
+   * Row 1: proportional — fills container edge-to-edge so Grande aligns with Comparar button
+   * Row 2: fixed pixel widths — intentionally leave empty space on the right (per Figma)
+   */
+  .product-card--chico    { flex: 0 0 calc(24.848% - 4.970px); width: calc(24.848% - 4.970px); }
+  .product-card--mediano  { flex: 0 0 calc(33.333% - 6.667px); width: calc(33.333% - 6.667px); }
+  .product-card--grande   { flex: 0 0 calc(41.818% - 8.364px); width: calc(41.818% - 8.364px); }
+  .product-card--vertical { flex: 0 0 328px; width: 328px; }
+  .product-card--cuadrado { flex: 0 0 327px; width: 327px; }
+
+  /* Details: 14px, tracking 0.56px */
+  .product-card__details {
+    font-size: 14px;
+    letter-spacing: 0.56px;
+  }
+
+  /* Hover overlay */
+  .product-card__overlay {
+    display: flex;
+    position: absolute;
+    bottom: 20px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: white;
+    padding: 10px 30px;
+    align-items: center;
+    justify-content: center;
+    white-space: nowrap;
+    font-family: "forma-djr-display", sans-serif;
+    font-weight: 600;
+    font-size: 14px;
+    letter-spacing: 0.56px;
+    color: var(--color-black);
+  }
+
+  /* Hide mobile button */
+  .product-card__mobile-btn {
+    display: none;
+  }
+}
