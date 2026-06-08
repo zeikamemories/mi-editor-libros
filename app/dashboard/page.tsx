@@ -66,12 +66,6 @@ export default function DashboardPage() {
   const [viewMode, setViewMode]     = useState<'list' | 'grid'>('list')
   const [projectMap, setProjectMap] = useState<Record<string, { cover_thumbnail: { left: string; right: string } | null }>>({})
 
-  async function deleteOrder(id: string, bookName: string) {
-    if (!window.confirm(`¿Eliminar el pedido "${bookName}"? Esta acción no se puede deshacer.`)) return
-    await supabase.from('orders').delete().eq('id', id)
-    setOrders(prev => prev.filter(o => o.id !== id))
-  }
-
   const [authChecked, setAuthChecked] = useState(false)
 
   useEffect(() => {
@@ -85,9 +79,8 @@ export default function DashboardPage() {
     })
   }, [router])
 
-  if (!authChecked) return <div className="dashboard-loading"><div className="dashboard-spinner" /></div>
-
   useEffect(() => {
+    if (!authChecked) return
     async function fetchOrders() {
       const [{ data, error }, { data: projects }] = await Promise.all([
         supabase.from('orders').select('*, profiles(full_name)').order('created_at', { ascending: false }),
@@ -118,7 +111,15 @@ export default function DashboardPage() {
       setLoading(false)
     }
     fetchOrders()
-  }, [])
+  }, [authChecked])
+
+  async function deleteOrder(id: string, bookName: string) {
+    if (!window.confirm(`¿Eliminar el pedido "${bookName}"? Esta acción no se puede deshacer.`)) return
+    await supabase.from('orders').delete().eq('id', id)
+    setOrders(prev => prev.filter(o => o.id !== id))
+  }
+
+  if (!authChecked) return <div className="dashboard-loading"><div className="dashboard-spinner" /></div>
 
   const filtered = orders.filter(o => {
     const allowed = STATUS_TAB[activeTab]
