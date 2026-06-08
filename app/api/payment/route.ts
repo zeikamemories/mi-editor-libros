@@ -27,7 +27,6 @@ export async function POST(req: NextRequest) {
           failure: failureUrl ?? `${base}/orden/confirmado?order_id=${orderId}&status=failure`,
           pending: `${base}/orden/confirmado?order_id=${orderId}&status=pending`,
         },
-        auto_return: 'approved',
         external_reference: orderId,
       },
     })
