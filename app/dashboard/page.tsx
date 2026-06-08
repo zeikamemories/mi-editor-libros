@@ -72,14 +72,20 @@ export default function DashboardPage() {
     setOrders(prev => prev.filter(o => o.id !== id))
   }
 
+  const [authChecked, setAuthChecked] = useState(false)
+
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
       const email = session?.user?.email
       if (!email || !ADMIN_EMAILS.includes(email)) {
-        router.replace('/')
+        router.replace('/login')
+      } else {
+        setAuthChecked(true)
       }
     })
   }, [router])
+
+  if (!authChecked) return <div className="dashboard-loading"><div className="dashboard-spinner" /></div>
 
   useEffect(() => {
     async function fetchOrders() {
