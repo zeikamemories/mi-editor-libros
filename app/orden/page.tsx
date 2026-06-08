@@ -5,7 +5,7 @@ import { supabase } from '../lib/supabase'
 import type { User } from '@supabase/supabase-js'
 import './orden.css'
 
-type Step = 'loading' | 'login' | 1 | 2 | 3
+type Step = 'loading' | 'login' | 1 | 2 | 3 | 'confirmed'
 type AuthMode = 'signup' | 'signin'
 
 const SIZES = [
