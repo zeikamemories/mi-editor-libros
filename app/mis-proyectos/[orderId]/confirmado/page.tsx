@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useState, Suspense } from 'react'
 import { useSearchParams, useParams } from 'next/navigation'
 import Link from 'next/link'
 import { supabase } from '../../../lib/supabase'
@@ -35,7 +35,7 @@ function fmtDate(iso: string) {
   return new Date(iso).toLocaleDateString('es-AR', { day: '2-digit', month: '2-digit', year: 'numeric' })
 }
 
-export default function ConfirmadoSegundoPagoPage() {
+function ConfirmadoSegundoPagoContent() {
   const params      = useParams()
   const searchParams = useSearchParams()
   const orderId     = params.orderId as string
@@ -130,4 +130,8 @@ export default function ConfirmadoSegundoPagoPage() {
       </Link>
     </div>
   )
+}
+
+export default function ConfirmadoSegundoPagoPage() {
+  return <Suspense><ConfirmadoSegundoPagoContent /></Suspense>
 }

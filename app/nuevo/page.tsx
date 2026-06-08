@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useRef, useCallback, useEffect } from 'react'
+import { useState, useRef, useCallback, useEffect, Suspense } from 'react'
 import Image from 'next/image'
 import Link from 'next/link'
 import { useRouter, useSearchParams } from 'next/navigation'
@@ -298,7 +298,7 @@ function Step3({ photos, uploadingCount, onUpload, onDelete }: Step3Props) {
 
 // ── Main page ─────────────────────────────────────────────────────────────────
 
-export default function NuevoPage() {
+function NuevoContent() {
   const router       = useRouter()
   const searchParams = useSearchParams()
 
@@ -410,4 +410,8 @@ export default function NuevoPage() {
       />
     </div>
   )
+}
+
+export default function NuevoPage() {
+  return <Suspense><NuevoContent /></Suspense>
 }

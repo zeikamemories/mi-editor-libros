@@ -1,10 +1,10 @@
 'use client'
-import { useEffect, useState } from 'react'
+import { useEffect, useState, Suspense } from 'react'
 import { useSearchParams } from 'next/navigation'
 import { supabase } from '../../lib/supabase'
 import '../orden.css'
 
-export default function ConfirmadoPage() {
+function ConfirmadoContent() {
   const params  = useSearchParams()
   const orderId = params.get('order_id')
   const status  = params.get('status') // null = success, 'failure', 'pending'
@@ -85,4 +85,8 @@ export default function ConfirmadoPage() {
       </div>
     </div>
   )
+}
+
+export default function ConfirmadoPage() {
+  return <Suspense><ConfirmadoContent /></Suspense>
 }
