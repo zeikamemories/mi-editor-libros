@@ -7,7 +7,8 @@ const client = new MercadoPagoConfig({
 
 export async function POST(req: NextRequest) {
   try {
-    const { orderId, bookName, amount } = await req.json()
+    const { orderId, bookName, amount, successUrl, failureUrl } = await req.json()
+    const base = process.env.NEXT_PUBLIC_SITE_URL ?? 'http://localhost:3000'
 
     const preference = new Preference(client)
     const result = await preference.create({
@@ -22,10 +23,11 @@ export async function POST(req: NextRequest) {
           },
         ],
         back_urls: {
-          success: `http://localhost:3000/orden/confirmado?order_id=${orderId}`,
-          failure: `http://localhost:3000/orden/confirmado?order_id=${orderId}&status=failure`,
-          pending: `http://localhost:3000/orden/confirmado?order_id=${orderId}&status=pending`,
+          success: successUrl ?? `${base}/orden/confirmado?order_id=${orderId}`,
+          failure: failureUrl ?? `${base}/orden/confirmado?order_id=${orderId}&status=failure`,
+          pending: `${base}/orden/confirmado?order_id=${orderId}&status=pending`,
         },
+        auto_return: 'approved',
         external_reference: orderId,
       },
     })

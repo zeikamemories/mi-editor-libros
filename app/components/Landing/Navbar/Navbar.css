@@ -127,22 +127,60 @@
   filter: brightness(0);
 }
 
+/* ── Mobile auth ── */
+.navbar__auth { display: none; }
+
+.navbar__overlay-divider {
+  border: none;
+  border-top: 1px solid var(--color-border);
+  margin: 0;
+}
+
+.navbar__overlay-auth {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.navbar__overlay-auth-link {
+  font-family: "Times New Roman", Times, serif;
+  font-size: 42px;
+  font-weight: 400;
+  letter-spacing: -0.02em;
+  color: var(--color-blue);
+  text-decoration: none;
+  line-height: 1.15;
+  background: none;
+  border: none;
+  padding: 0;
+  cursor: pointer;
+  text-align: left;
+}
+
+.navbar__overlay-auth-btn {
+  display: block;
+}
+
 /* ── Desktop ── */
 @media (min-width: 1024px) {
   .navbar__inner {
-    padding: 0.9rem 50px 0.9rem 8px;
+    padding: 0.9rem 20px 0.9rem 4px;
+    position: relative;
   }
 
+  /* Nav links absolutely centered in the bar */
   .navbar__links {
     display: flex;
     gap: 30px;
     align-items: center;
+    position: absolute;
+    left: 50%;
+    transform: translateX(-50%);
   }
 
   .navbar__link {
     font-family: "forma-djr-display", sans-serif;
     font-weight: 600;
-    font-style: normal;
     font-size: 18px;
     color: var(--color-black);
     text-decoration: none;
@@ -150,11 +188,37 @@
     transition: opacity 0.2s;
   }
 
-  .navbar__link:hover {
-    opacity: 0.5;
+  .navbar__link:hover { opacity: 0.5; }
+
+  .navbar__hamburger { display: none; }
+
+  .navbar__auth {
+    display: flex;
+    align-items: center;
+    gap: 30px;
+    margin-left: auto;
   }
 
-  .navbar__hamburger {
-    display: none;
+  /* Same style as nav links, just blue */
+  .navbar__auth-link {
+    font-family: "forma-djr-display", sans-serif;
+    font-weight: 600;
+    font-size: 18px;
+    color: var(--color-blue);
+    text-decoration: none;
+    letter-spacing: 0.04em;
+    transition: opacity 0.2s;
+    background: none;
+    border: none;
+    cursor: pointer;
+    padding: 0;
+  }
+
+  .navbar__auth-link:hover { opacity: 0.5; }
+  .navbar__auth-link--btn {
+    font-family: "forma-djr-display", sans-serif;
+    font-size: 18px;
+    font-weight: 600;
+    letter-spacing: 0.04em;
   }
 }

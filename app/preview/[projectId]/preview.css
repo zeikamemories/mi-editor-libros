@@ -1,0 +1,280 @@
+.preview-loading,
+.preview-notfound {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+  background: var(--color-cream);
+  font-family: "forma-djr-display", sans-serif;
+  font-size: 14px;
+  color: #666;
+}
+
+.preview-notfound button {
+  background: var(--color-black);
+  color: #fff;
+  border: none;
+  border-radius: 8px;
+  padding: 10px 20px;
+  cursor: pointer;
+  font-family: "forma-djr-display", sans-serif;
+  font-size: 13px;
+}
+
+.preview-spinner {
+  width: 32px;
+  height: 32px;
+  border: 2px solid rgba(25,25,25,0.15);
+  border-top-color: var(--color-black);
+  border-radius: 50%;
+  animation: prev-spin 0.7s linear infinite;
+}
+
+@keyframes prev-spin { to { transform: rotate(360deg); } }
+
+/* ── Annotate layout ─────────────────────────────────────────────────────── */
+
+.preview-annotate-root {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+  background: #1a1a1a;
+}
+
+@media (min-width: 900px) {
+  .preview-annotate-root {
+    flex-direction: row;
+  }
+}
+
+.preview-book-wrap {
+  flex: 1;
+  position: relative;
+  min-height: 60vh;
+}
+
+@media (min-width: 900px) {
+  .preview-book-wrap {
+    min-height: 100vh;
+  }
+}
+
+/* Drawing canvas overlaid on the book */
+.preview-draw-canvas {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  cursor: crosshair;
+  z-index: 50;
+  touch-action: none;
+}
+
+/* ── Toolbar ─────────────────────────────────────────────────────────────── */
+
+.preview-toolbar {
+  width: 100%;
+  background: #fff;
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  border-top: 1px solid var(--color-border);
+}
+
+@media (min-width: 900px) {
+  .preview-toolbar {
+    width: 320px;
+    flex-shrink: 0;
+    border-top: none;
+    border-left: 1px solid var(--color-border);
+    overflow-y: auto;
+  }
+}
+
+.preview-toolbar-top {
+  padding: 16px 20px;
+  border-bottom: 1px solid var(--color-border);
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.preview-toolbar-title {
+  font-family: "forma-djr-display", sans-serif;
+  font-size: 11px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: #888;
+}
+
+.preview-toolbar-modes {
+  display: flex;
+  gap: 8px;
+}
+
+.preview-mode-btn {
+  flex: 1;
+  padding: 10px 12px;
+  background: #f5f5f5;
+  border: 1.5px solid transparent;
+  border-radius: 8px;
+  font-family: "forma-djr-display", sans-serif;
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background 0.15s, border-color 0.15s;
+}
+
+.preview-mode-btn--active {
+  background: #fff;
+  border-color: var(--color-black);
+}
+
+/* ── Comment panel ───────────────────────────────────────────────────────── */
+
+.preview-comment-panel {
+  padding: 16px 20px;
+  border-bottom: 1px solid var(--color-border);
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.preview-comment-input {
+  width: 100%;
+  padding: 10px 12px;
+  border: 1px solid var(--color-border);
+  border-radius: 8px;
+  font-family: "forma-djr-display", sans-serif;
+  font-size: 13px;
+  resize: vertical;
+  min-height: 80px;
+  background: #fff;
+  outline: none;
+  box-sizing: border-box;
+}
+
+.preview-comment-input:focus { border-color: var(--color-black); }
+
+.preview-save-btn {
+  width: 100%;
+  padding: 11px;
+  background: var(--color-black);
+  color: #fff;
+  border: none;
+  border-radius: 8px;
+  font-family: "forma-djr-display", sans-serif;
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+}
+
+.preview-save-btn:disabled { opacity: 0.4; cursor: default; }
+
+/* ── Draw panel ──────────────────────────────────────────────────────────── */
+
+.preview-draw-panel {
+  padding: 16px 20px;
+  border-bottom: 1px solid var(--color-border);
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.preview-color-row {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.preview-color-dot {
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  border: 2px solid transparent;
+  cursor: pointer;
+  padding: 0;
+}
+
+.preview-color-dot--active {
+  border-color: var(--color-black);
+  transform: scale(1.2);
+}
+
+.preview-size-row {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.preview-size-btn {
+  width: 36px;
+  height: 36px;
+  background: #f5f5f5;
+  border: 1.5px solid transparent;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+}
+
+.preview-size-btn--active { border-color: var(--color-black); }
+
+.preview-draw-actions {
+  display: flex;
+  gap: 8px;
+}
+
+.preview-clear-btn {
+  flex: 1;
+  padding: 10px;
+  background: #fff;
+  border: 1px solid var(--color-border);
+  border-radius: 8px;
+  font-family: "forma-djr-display", sans-serif;
+  font-size: 13px;
+  cursor: pointer;
+}
+
+/* ── Comments list ───────────────────────────────────────────────────────── */
+
+.preview-comments-list {
+  padding: 16px 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.preview-comments-label {
+  font-family: "forma-djr-display", sans-serif;
+  font-size: 10px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: #888;
+}
+
+.preview-comment-item {
+  background: #f8f8f6;
+  border-radius: 8px;
+  padding: 10px 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.preview-comment-text {
+  font-family: "forma-djr-display", sans-serif;
+  font-size: 13px;
+  color: var(--color-black);
+  margin: 0;
+  line-height: 1.5;
+}
+
+.preview-comment-date {
+  font-family: "forma-djr-display", sans-serif;
+  font-size: 10px;
+  color: #aaa;
+}

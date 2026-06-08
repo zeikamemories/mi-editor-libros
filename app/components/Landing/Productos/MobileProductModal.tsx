@@ -117,7 +117,7 @@ export default function MobileProductModal({ product, onClose }: Props) {
           </div>
 
           {/* CTA */}
-          <a href="/nuevo" className="mpm__cta">CONTAR MI HISTORIA</a>
+          <a href="/orden" className="mpm__cta">CONTAR MI HISTORIA</a>
 
           {/* Details bullets */}
           <div className="mpm__product-details">

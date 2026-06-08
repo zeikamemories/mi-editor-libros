@@ -337,7 +337,91 @@ app/
 - Client pays 50% upfront, 50% on design approval
 
 ### What's pending
-- `/mis-proyectos` — client-facing project dashboard (see their orders, upload photos, view preview)
-- WhatsApp Business message on payment confirmation
-- Dashboard: update order status manually (assign designer, change status)
-- Production launch: update back_urls + MP token + Supabase redirect URLs in Vercel
+- WhatsApp Business notifications (deferred — decision: start with manual wa.me link, later add API)
+- Andreani shipping cost (deferred — decision: "a calcular", client pays base price, shipping billed separately)
+- Production launch: update `NEXT_PUBLIC_SITE_URL` + `MP_ACCESS_TOKEN` (production) in Vercel env vars; update Supabase redirect URLs to Vercel domain
+
+---
+
+## Client portal, dashboard v2 & editor improvements (implemented 2026-06-08)
+
+### New Supabase columns & tables (SQL already run)
+```sql
+-- orders table additions:
+preview_url, tracking_number, copies, delivery_type, delivery_address,
+drive_link, docs_link, reference_images (jsonb), change_requests_used,
+second_price_paid, status_dates (jsonb), estimated_design_date, estimated_delivery_date
+
+-- projects table additions:
+order_id (uuid FK → orders.id), cover_thumbnail (jsonb {left, right})
+
+-- New table: preview_annotations
+(id, project_id, user_id, type: 'comment'|'drawing', page_number, content, created_at)
+```
+
+### Status flow (orders.status)
+```
+pendiente_pago → confirmado → material_recibido → en_diseno → preview_listo → en_produccion → en_camino → entregado
+```
+- `confirmado`: auto-set when first payment confirmed (orden/confirmado)
+- `material_recibido`: auto-set when client saves drive_link in mis-proyectos
+- `preview_listo`: auto-set when designer saves preview_url in dashboard pedido
+- `en_camino`: auto-set when designer saves tracking_number in dashboard pedido
+- `en_produccion`: auto-set when client pays second 50%
+
+### Dashboard tab mapping
+```
+TODOS: all | NUEVOS: pendiente_pago, confirmado | EN PROCESO: material_recibido, en_diseno, preview_listo
+EN PRODUCCIÓN: en_produccion, en_camino | FINALIZADOS: entregado
+```
+
+### New file structure
+```
+app/
+  login/
+    page.tsx + login.css        ← standalone auth page (Google OAuth + email), redirects to /mis-proyectos
+  mis-proyectos/
+    page.tsx                    ← client list: orders with status badges, progress dots, action links
+    mis-proyectos.css           ← shared CSS for all mis-proyectos pages
+    [orderId]/
+      page.tsx                  ← project detail: acordeones (detalles, estado, material, preview)
+      pagar/page.tsx            ← second payment: copies counter + delivery + MercadoPago
+      confirmado/page.tsx       ← post-second-payment confirmation, sets status to en_produccion
+  dashboard/
+    page.tsx                    ← updated: list/grid toggle, 5 tabs, delete button, auto-load project thumbnails
+    pedidos/[orderId]/
+      page.tsx + pedido.css     ← 2-column admin order detail: left=info/status/preview/tracking, right=project thumbnail+ENTRAR/NUEVO+
+```
+
+### Key behaviors
+- **Auto-create project on purchase**: `orden/confirmado` creates a `projects` row linked to the order (name, book_size, order_id)
+- **NUEVO+ button** in pedido detail: navigates to `/nuevo?size=X&name=Y&orderId=Z` — pre-fills the internal onboarding
+- **ENTRAR button**: sets sessionStorage (zeika_project_id, zeika_book_size, zeika_return_path) and opens `/editor`
+- **← back arrow** in editor topbar: reads `zeika_return_path` from sessionStorage, goes back to the specific pedido
+- **Cover thumbnail**: editor saves `cover_thumbnail {left, right}` to projects table when spread 0 changes (also on initial load after 600ms)
+- **Preview annotations**: `/preview/[projectId]` loads from Supabase (with localStorage fallback), has draw mode (canvas overlay) + comment mode (text per page), saved to `preview_annotations` table
+
+### Navbar auth (landing)
+- Desktop: "Registrarse" + "Iniciar Sesión" links (blue, same font as nav links) on the right
+- Mobile: in hamburger overlay footer, same links in Times New Roman 42px blue
+- When logged in: "Mi cuenta" → /mis-proyectos, "Cerrar sesión" → signOut()
+- All landing CTAs ("CONTAR MI HISTORIA") point to `/orden`, NOT `/nuevo` (which is internal only)
+
+### MercadoPago second payment
+- `/mis-proyectos/[orderId]/pagar` computes: `copies × unit_price × (copies≥3 ? 0.8 : 1) - first_payment`
+- Calls `/api/payment` with custom `successUrl` and `failureUrl` params
+- After approval: redirects to `/mis-proyectos/[orderId]/confirmado` which sets status to `en_produccion`
+- Delivery: Andreani (address required, cost "a calcular") or pickup at Concepción Arenal 4501
+
+### Editor Supabase saving (updated 2026-06-08)
+- Saves `spreads`, `photos`, `total_spreads` debounced 2s after last change
+- Also saves `total_spreads` immediately when spread count changes (add/delete spread)
+- Saves `cover_thumbnail` when spread 0 is captured
+- Shows "Guardando…" / "Guardado ✓" indicator in topbar
+- `zeika_return_path` in sessionStorage controls where ← arrow goes
+
+### Prices updated (ARS, as of 2026-06-08)
+Same as before plus:
+- 3+ copies: 20% discount on second payment
+- Change rounds: 3 included, +$5,000 per extra round
+- Second payment = 50% remaining (copies × price × discount − first_payment)

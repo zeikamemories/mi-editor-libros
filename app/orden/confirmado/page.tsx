@@ -12,12 +12,37 @@ export default function ConfirmadoPage() {
 
   useEffect(() => {
     if (!orderId || status === 'failure') { setDone(true); return }
-    // Actualizar estado del pedido en Supabase
-    supabase
-      .from('orders')
-      .update({ status: status === 'pending' ? 'pendiente_pago' : 'en_diseno' })
-      .eq('id', orderId)
-      .then(() => setDone(true))
+
+    async function confirm() {
+      const newStatus = status === 'pending' ? 'pendiente_pago' : 'confirmado'
+
+      // Fetch order data + update status
+      const [{ data: orderData }] = await Promise.all([
+        supabase.from('orders').select('book_name, size').eq('id', orderId!).single(),
+        supabase.from('orders').update({
+          status:       newStatus,
+          status_dates: { confirmado: new Date().toISOString() },
+        }).eq('id', orderId!),
+      ])
+
+      // Auto-create project linked to this order (only on successful payment)
+      if (newStatus === 'confirmado' && orderData) {
+        const { data: existing } = await supabase
+          .from('projects').select('id').eq('order_id', orderId!).maybeSingle()
+        if (!existing) {
+          await supabase.from('projects').insert({
+            name:          orderData.book_name ?? 'Sin título',
+            book_size:     orderData.size ?? 'vertical',
+            total_spreads: 13,
+            photos:        [],
+            spreads:       {},
+            order_id:      orderId,
+          })
+        }
+      }
+      setDone(true)
+    }
+    confirm()
   }, [orderId, status])
 
   if (!done) {

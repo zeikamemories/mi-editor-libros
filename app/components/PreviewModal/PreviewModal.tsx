@@ -14,12 +14,13 @@ import './PreviewModal.css'
 type SpreadData = { left: PageData; right: PageData }
 
 interface Props {
-  spreadsData:   Record<number, SpreadData>
-  totalSpreads:  number
-  initialSpread: number
-  pageW:         number
-  pageH:         number
-  onClose:       () => void
+  spreadsData:    Record<number, SpreadData>
+  totalSpreads:   number
+  initialSpread:  number
+  pageW:          number
+  pageH:          number
+  onClose:        () => void
+  onPageChange?:  (page: number) => void
 }
 
 const TITLEBAR_H = 50
@@ -71,6 +72,7 @@ export default function PreviewModal({
   pageW,
   pageH,
   onClose,
+  onPageChange,
 }: Props) {
   const EMPTY_PAGE: PageData = { background: '#ffffff', pageW, pageH, objects: [] }
   const { t } = useLang()
@@ -189,6 +191,7 @@ export default function PreviewModal({
 
       $book.bind('turned', (_e: any, page: number) => {
         setCurrentPage(page)
+        onPageChange?.(page)
       })
 
       $bookRef.current = $book

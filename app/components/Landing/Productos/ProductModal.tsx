@@ -134,7 +134,7 @@ export default function ProductModal({ product, onClose }: Props) {
             </div>
           </div>
 
-          <a href="/nuevo" className="pm__cta">CONTAR MI HISTORIA</a>
+          <a href="/orden" className="pm__cta">CONTAR MI HISTORIA</a>
         </div>
       </div>
     </div>
