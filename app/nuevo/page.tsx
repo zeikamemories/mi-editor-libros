@@ -344,32 +344,54 @@ function NuevoContent() {
       return
     }
     setCreating(true)
-    // Save size and photos immediately so the editor has them even if Supabase fails
     sessionStorage.setItem('zeika_book_size', selectedSize ?? 'vertical')
     sessionStorage.setItem('zeika_photos', JSON.stringify(photos))
     sessionStorage.removeItem('zeika_project_id')
+    const linkedOrderId = searchParams.get('orderId') ?? null
     try {
-      const linkedOrderId = searchParams.get('orderId') ?? null
-      const { data, error } = await supabase
-        .from('projects')
-        .insert({
-          name:          details.nombre || 'Sin título',
-          photos,
-          spreads:       {},
-          book_size:     selectedSize ?? 'vertical',
-          total_spreads: 13,
-          ...(linkedOrderId ? { order_id: linkedOrderId } : {}),
-        })
-        .select('id')
-        .single()
-      if (!error && data) {
-        sessionStorage.setItem('zeika_project_id', data.id)
-        const linkedOrderId = searchParams.get('orderId')
-        if (linkedOrderId) {
-          sessionStorage.setItem('zeika_return_path', `/dashboard/pedidos/${linkedOrderId}`)
-        } else {
-          sessionStorage.setItem('zeika_return_path', '/dashboard')
+      let projectId: string | null = null
+
+      // If linked to an order, check if a project already exists for it
+      if (linkedOrderId) {
+        const { data: existing } = await supabase
+          .from('projects').select('id').eq('order_id', linkedOrderId).maybeSingle()
+        if (existing?.id) {
+          // Update the existing project with new photos/details instead of creating a duplicate
+          await supabase.from('projects').update({
+            name:      details.nombre || 'Sin título',
+            photos,
+            book_size: selectedSize ?? 'vertical',
+          }).eq('id', existing.id)
+          projectId = existing.id
         }
+      }
+
+      if (!projectId) {
+        const { data, error } = await supabase
+          .from('projects')
+          .insert({
+            name:          details.nombre || 'Sin título',
+            photos,
+            spreads:       {},
+            book_size:     selectedSize ?? 'vertical',
+            total_spreads: 13,
+            ...(linkedOrderId ? { order_id: linkedOrderId } : {}),
+          })
+          .select('id')
+          .single()
+        if (error) {
+          console.error('Supabase project insert error:', error.message, error.code)
+        } else if (data) {
+          projectId = data.id
+        }
+      }
+
+      if (projectId) {
+        sessionStorage.setItem('zeika_project_id', projectId)
+        sessionStorage.setItem(
+          'zeika_return_path',
+          linkedOrderId ? `/dashboard/pedidos/${linkedOrderId}` : '/dashboard'
+        )
       }
     } catch (err) {
       console.error('Error guardando proyecto:', err)
