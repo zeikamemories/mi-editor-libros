@@ -211,7 +211,9 @@ export default function EditorPage() {
 
   // ── Load project from Supabase on mount ──────────────────────────────────
   useEffect(() => {
-    const id = sessionStorage.getItem('zeika_project_id')
+    // pid in URL survives page refresh; sessionStorage is the fallback for legacy flows
+    const id = new URLSearchParams(window.location.search).get('pid')
+      ?? sessionStorage.getItem('zeika_project_id')
     if (!id) {
       // No DB project — load photos passed from /nuevo via sessionStorage
       const raw = sessionStorage.getItem('zeika_photos')

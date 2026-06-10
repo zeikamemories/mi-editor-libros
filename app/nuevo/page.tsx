@@ -374,7 +374,8 @@ function NuevoContent() {
     } catch (err) {
       console.error('Error guardando proyecto:', err)
     }
-    router.push('/editor')
+    const newProjectId = sessionStorage.getItem('zeika_project_id')
+    router.push(newProjectId ? `/editor?pid=${newProjectId}` : '/editor')
   }
 
   const handleCancel = () => {

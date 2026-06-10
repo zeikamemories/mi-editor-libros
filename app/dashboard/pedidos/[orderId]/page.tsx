@@ -189,7 +189,7 @@ export default function PedidoAdminPage() {
     sessionStorage.setItem('zeika_project_id', project.id)
     sessionStorage.setItem('zeika_book_size', order?.size ?? 'vertical')
     sessionStorage.setItem('zeika_return_path', `/dashboard/pedidos/${orderId}`)
-    router.push('/editor')
+    router.push(`/editor?pid=${project.id}`)
   }
 
   async function sendAdminNote() {
