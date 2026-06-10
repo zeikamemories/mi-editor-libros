@@ -1,5 +1,6 @@
 import type { Metadata } from 'next'
 import './globals.css'
+import { LanguageProvider } from './context/LanguageContext'
 
 export const metadata: Metadata = {
   title: 'Zeika',
@@ -20,7 +21,7 @@ export default function RootLayout({
         <link rel="stylesheet" href="https://use.typekit.net/ddt8web.css" />
         <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Meow+Script&display=swap" />
       </head>
-      <body>{children}</body>
+      <body><LanguageProvider>{children}</LanguageProvider></body>
     </html>
   )
 }
