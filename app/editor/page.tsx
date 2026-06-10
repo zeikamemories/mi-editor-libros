@@ -446,6 +446,32 @@ export default function EditorPage() {
     })
   }, [savePhotosToSupabase])
 
+  // ── Back navigation: flush save + cover thumbnail before leaving ─────────
+  const handleBack = useCallback(async () => {
+    if (supabaseSaveTimer.current) {
+      clearTimeout(supabaseSaveTimer.current)
+      supabaseSaveTimer.current = null
+    }
+    if (projectIdRef.current) {
+      setSaveStatus('saving')
+      const updateData: Record<string, unknown> = {
+        spreads:       spreadsData.current,
+        photos:        photosRef.current,
+        total_spreads: totalContentSpreadsRef.current,
+      }
+      const lc = fabricLeft.current
+      const rc = fabricRight.current
+      if (lc && rc) {
+        const opts = { format: 'jpeg' as const, quality: 0.8, multiplier: 0.25 }
+        updateData.cover_thumbnail = { left: lc.toDataURL(opts), right: rc.toDataURL(opts) }
+      }
+      await supabase.from('projects').update(updateData).eq('id', projectIdRef.current)
+      setSaveStatus('saved')
+    }
+    const path = sessionStorage.getItem('zeika_return_path') ?? '/dashboard'
+    window.location.href = path
+  }, []) // eslint-disable-line react-hooks/exhaustive-deps
+
   // ── Photo delete (from panel) ──────────────────────────────────────────────
   const handlePhotoDelete = useCallback((photoId: string) => {
     setPhotos((prev) => {
@@ -1097,7 +1123,7 @@ export default function EditorPage() {
     <LanguageProvider>
     <>
     <div className="editor-root">
-      <Topbar onPreview={handleOpenPreview} onExportJpg={handleExportJpg} onExportPdf={handleExportPdf} isExporting={isExporting} projectId={projectIdRef.current ?? ''} onShare={handleShare} onTourOpen={() => setTourOpen(true)} saveStatus={saveStatus} />
+      <Topbar onPreview={handleOpenPreview} onExportJpg={handleExportJpg} onExportPdf={handleExportPdf} isExporting={isExporting} projectId={projectIdRef.current ?? ''} onShare={handleShare} onTourOpen={() => setTourOpen(true)} saveStatus={saveStatus} onBack={handleBack} />
 
       <div className="editor-body">
         <PhotoPanel

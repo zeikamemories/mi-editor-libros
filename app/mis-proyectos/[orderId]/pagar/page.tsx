@@ -50,7 +50,7 @@ export default function PagarPage() {
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
       if (!session?.user) { router.replace('/orden'); return }
-      supabase.from('orders').select('id, book_name, size, price_total, price_paid')
+      supabase.from('orders').select('id, book_name, size, price_total, price_paid, status')
         .eq('id', orderId).eq('user_id', session.user.id).single()
         .then(({ data }) => {
           if (!data || !['preview_listo'].includes((data as any).status ?? '')) {

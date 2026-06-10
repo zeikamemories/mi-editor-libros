@@ -15,9 +15,10 @@ interface TopbarProps {
   onShare?: () => void
   onTourOpen?: () => void
   saveStatus?: 'saving' | 'saved' | 'idle'
+  onBack?: () => void
 }
 
-export default function Topbar({ onPreview, onExportJpg, onExportPdf, isExporting, projectId, onShare, onTourOpen, saveStatus }: TopbarProps) {
+export default function Topbar({ onPreview, onExportJpg, onExportPdf, isExporting, projectId, onShare, onTourOpen, saveStatus, onBack }: TopbarProps) {
   const { lang, t, toggleLang } = useLang()
 
   // ── Export dropdown ────────────────────────────────────────────────────────
@@ -78,7 +79,7 @@ export default function Topbar({ onPreview, onExportJpg, onExportPdf, isExportin
 
   return (
     <div className="topbar">
-      <a href={returnPath} className="topbar-back" title="Volver">←</a>
+      <button className="topbar-back" title="Volver" onClick={onBack ?? (() => { window.location.href = returnPath })}>←</button>
       <Image
         src="/LogoZeika.png"
         alt="Zeika"
