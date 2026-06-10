@@ -461,11 +461,15 @@ export default function EditorPage() {
         photos:        photosRef.current,
         total_spreads: totalContentSpreadsRef.current,
       }
-      const lc = fabricLeft.current
-      const rc = fabricRight.current
-      if (lc && rc) {
-        const opts = { format: 'jpeg' as const, quality: 0.8, multiplier: 0.25 }
-        updateData.cover_thumbnail = { left: lc.toDataURL(opts), right: rc.toDataURL(opts) }
+      // Only capture cover thumbnail when on spread 0 (Back/Cover)
+      // Otherwise keep whatever was saved when the designer last edited spread 0
+      if (currentSpreadRef.current === 0) {
+        const lc = fabricLeft.current
+        const rc = fabricRight.current
+        if (lc && rc) {
+          const opts = { format: 'jpeg' as const, quality: 0.8, multiplier: 0.25 }
+          updateData.cover_thumbnail = { left: lc.toDataURL(opts), right: rc.toDataURL(opts) }
+        }
       }
       await supabase.from('projects').update(updateData).eq('id', projectIdRef.current)
       setSaveStatus('saved')
