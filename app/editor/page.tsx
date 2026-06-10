@@ -421,10 +421,13 @@ export default function EditorPage() {
 
       pushHistory()
 
-      // Capture initial thumbnail after canvas finishes rendering
-      setTimeout(() => captureThumbnail(currentSpreadRef.current), 600)
+      // Capture initial thumbnail for current spread, then render all others from saved data
+      setTimeout(() => {
+        captureThumbnail(currentSpreadRef.current)
+        regenerateThumbnails(currentSpreadRef.current, totalContentSpreadsRef.current + 3)
+      }, 600)
     },
-    [saveCurrentSpread, pushHistory, captureThumbnail],
+    [saveCurrentSpread, pushHistory, captureThumbnail, regenerateThumbnails],
   )
 
   // ── Active page change (fired by Canvas on mousedown) ─────────────────────
