@@ -13,8 +13,9 @@ export default function Intro() {
       </p>
 
       <div className="intro__gif-wrap">
-        {/* Replace src with /gif-name.gif once downloaded from Figma */}
         <div className="intro__gif-placeholder" aria-hidden="true" />
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img src="/videos/Desktop-Moments.gif" alt="" className="intro__gif" />
       </div>
 
       <p className="intro__heading intro__heading--right">
