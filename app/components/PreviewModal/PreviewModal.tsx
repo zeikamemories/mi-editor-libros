@@ -100,7 +100,8 @@ export default function PreviewModal({
   const [savingComment, setSavingComment] = useState(false)
   const [drawColor,     setDrawColor]     = useState(DRAW_COLORS[0])
   const [drawSize,      setDrawSize]      = useState(3)
-  const [isDrawing,     setIsDrawing]     = useState(false)
+  const isDrawingRef   = useRef(false)
+  const [savingDrawing, setSavingDrawing] = useState(false)
   const drawCanvasRef  = useRef<HTMLCanvasElement>(null)
   const lastDrawPos    = useRef<{ x: number; y: number } | null>(null)
 
@@ -280,7 +281,7 @@ export default function PreviewModal({
     e.currentTarget.setPointerCapture(e.pointerId)
     const pos = getDrawPos(e)
     lastDrawPos.current = pos
-    setIsDrawing(true)
+    isDrawingRef.current = true
     const ctx = drawCanvasRef.current!.getContext('2d')!
     ctx.beginPath()
     ctx.arc(pos.x, pos.y, drawSize / 2, 0, Math.PI * 2)
@@ -289,7 +290,7 @@ export default function PreviewModal({
   }
 
   function onDrawMove(e: React.PointerEvent<HTMLCanvasElement>) {
-    if (!isDrawing || !lastDrawPos.current) return
+    if (!isDrawingRef.current || !lastDrawPos.current) return
     const pos = getDrawPos(e)
     const ctx = drawCanvasRef.current!.getContext('2d')!
     ctx.beginPath()
@@ -304,7 +305,7 @@ export default function PreviewModal({
   }
 
   function onDrawEnd() {
-    setIsDrawing(false)
+    isDrawingRef.current = false
     lastDrawPos.current = null
   }
 
@@ -328,8 +329,16 @@ export default function PreviewModal({
 
   async function handleSaveDrawing() {
     if (!drawCanvasRef.current || !onDrawingSave) return
-    const dataUrl = drawCanvasRef.current.toDataURL('image/png')
+    setSavingDrawing(true)
+    // Use JPEG at 0.85 quality — much smaller than PNG, opaque white background
+    const temp = document.createElement('canvas')
+    temp.width  = drawCanvasRef.current.width
+    temp.height = drawCanvasRef.current.height
+    const ctx = temp.getContext('2d')!
+    ctx.drawImage(drawCanvasRef.current, 0, 0)
+    const dataUrl = temp.toDataURL('image/jpeg', 0.85)
     const ann = await onDrawingSave(dataUrl, currentPage)
+    setSavingDrawing(false)
     if (ann) {
       setAnnotations(prev => [...prev, ann])
       clearDrawCanvas()
@@ -470,8 +479,10 @@ export default function PreviewModal({
                 ))}
               </div>
               <div className="preview-draw-actions">
-                <button className="preview-clear-btn" onClick={clearDrawCanvas}>Limpiar</button>
-                <button className="preview-save-btn" onClick={handleSaveDrawing}>Guardar dibujo</button>
+                <button className="preview-clear-btn" onClick={clearDrawCanvas} disabled={savingDrawing}>Limpiar</button>
+                <button className="preview-save-btn" onClick={handleSaveDrawing} disabled={savingDrawing}>
+                  {savingDrawing ? 'Guardando...' : 'Guardar dibujo'}
+                </button>
               </div>
             </div>
           )}

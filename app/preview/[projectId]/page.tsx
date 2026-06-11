@@ -77,13 +77,14 @@ export default function PreviewPage() {
   }
 
   async function handleDrawingSave(dataUrl: string, page: number): Promise<Annotation | null> {
-    const { data } = await supabase.from('preview_annotations').insert({
+    const { data, error } = await supabase.from('preview_annotations').insert({
       project_id:  projectId,
       user_id:     userId,
       type:        'drawing',
       page_number: page,
       content:     dataUrl,
     }).select().single()
+    if (error) console.error('Drawing save failed:', error.message, error.code)
     return data as Annotation | null
   }
 
