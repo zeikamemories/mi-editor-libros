@@ -408,6 +408,7 @@ export default function PreviewModal({
                 onPointerDown={onDrawStart}
                 onPointerMove={onDrawMove}
                 onPointerUp={onDrawEnd}
+                onPointerCancel={onDrawEnd}
               />
             )}
           </div>

@@ -83,7 +83,7 @@
   position: absolute;
   inset: 0;
   cursor: crosshair;
-  z-index: 5;
+  z-index: 1000;
   touch-action: none;
 }
 
