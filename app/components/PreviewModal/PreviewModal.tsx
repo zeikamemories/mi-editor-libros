@@ -13,6 +13,14 @@ import './PreviewModal.css'
 
 type SpreadData = { left: PageData; right: PageData }
 
+export interface Annotation {
+  id: string
+  type: 'comment' | 'drawing'
+  page_number: number
+  content: string
+  created_at: string
+}
+
 interface Props {
   spreadsData:    Record<number, SpreadData>
   totalSpreads:   number
@@ -21,12 +29,16 @@ interface Props {
   pageH:          number
   onClose:        () => void
   onPageChange?:  (page: number) => void
+  // Annotation props — optional, only used on preview/[projectId] page
+  annotations?:    Annotation[]
+  onCommentSave?:  (text: string, page: number) => Promise<Annotation | null>
+  onDrawingSave?:  (dataUrl: string, page: number) => Promise<Annotation | null>
 }
 
-const TITLEBAR_H = 50
-const CONTROLS_H = 64
+const TITLEBAR_H  = 50
+const CONTROLS_H  = 64
+const DRAW_COLORS = ['#e74c3c', '#2980b9', '#27ae60', '#f39c12', '#191919']
 
-// ── Gray "No editable" placeholder — matches the Canvas overlay style ─────────
 function renderNoEditPage(label: string, pageW: number, pageH: number): string {
   const canvas = document.createElement('canvas')
   canvas.width  = pageW
@@ -42,7 +54,6 @@ function renderNoEditPage(label: string, pageW: number, pageH: number): string {
   return canvas.toDataURL('image/jpeg', 1)
 }
 
-// ── Module-level turn.js loader (runs once per browser session) ──────────────
 let _turnLoaded = false
 const _turnQueue: Array<() => void> = []
 
@@ -66,27 +77,42 @@ function ensureTurnJs(cb: () => void) {
 }
 
 export default function PreviewModal({
-  spreadsData,
-  totalSpreads,
-  initialSpread,
-  pageW,
-  pageH,
-  onClose,
-  onPageChange,
+  spreadsData, totalSpreads, initialSpread, pageW, pageH, onClose, onPageChange,
+  annotations: initialAnnotations, onCommentSave, onDrawingSave,
 }: Props) {
   const EMPTY_PAGE: PageData = { background: '#ffffff', pageW, pageH, objects: [] }
   const { t } = useLang()
-  const [scale,       setScale]       = useState(0.5)
-  const [loading,     setLoading]     = useState(true)
-  const [pageImages,  setPageImages]  = useState<string[]>([])
-  // Map editor's initialSpread to the re-ordered turn.js page number:
-  // spread 0 (Tapa/Contra) → page 1 (Tapa), spread s>0 → page s*2
+  const [scale,      setScale]      = useState(0.5)
+  const [loading,    setLoading]    = useState(true)
+  const [pageImages, setPageImages] = useState<string[]>([])
   const initialPage = initialSpread === 0 ? 1 : initialSpread * 2
   const [currentPage, setCurrentPage] = useState(initialPage)
 
   const flipbookEl = useRef<HTMLDivElement>(null)
   const $bookRef   = useRef<any>(null)
   const scaleRef   = useRef(scale)
+
+  // ── Annotation state ───────────────────────────────────────────────────────
+  const hasAnnotations                    = Boolean(onCommentSave)
+  const [annotMode,     setAnnotMode]     = useState<'view' | 'comment' | 'draw'>('view')
+  const [annotations,   setAnnotations]   = useState<Annotation[]>(initialAnnotations ?? [])
+  const [commentText,   setCommentText]   = useState('')
+  const [savingComment, setSavingComment] = useState(false)
+  const [drawColor,     setDrawColor]     = useState(DRAW_COLORS[0])
+  const [drawSize,      setDrawSize]      = useState(3)
+  const [isDrawing,     setIsDrawing]     = useState(false)
+  const drawCanvasRef  = useRef<HTMLCanvasElement>(null)
+  const lastDrawPos    = useRef<{ x: number; y: number } | null>(null)
+
+  useEffect(() => {
+    if (initialAnnotations) setAnnotations(initialAnnotations)
+  }, [initialAnnotations])
+
+  // Clear drawing canvas when page changes
+  useEffect(() => {
+    const c = drawCanvasRef.current
+    if (c) c.getContext('2d')!.clearRect(0, 0, c.width, c.height)
+  }, [currentPage])
 
   // ── Scale ──────────────────────────────────────────────────────────────────
   useEffect(() => {
@@ -106,7 +132,6 @@ export default function PreviewModal({
 
   useEffect(() => { scaleRef.current = scale }, [scale])
 
-  // Resize turn.js book when scale changes
   useEffect(() => {
     if (!$bookRef.current) return
     try {
@@ -117,21 +142,19 @@ export default function PreviewModal({
     } catch {}
   }, [scale])
 
-  // ── Pre-render all pages to JPEG data URLs ────────────────────────────────
+  // ── Pre-render pages ───────────────────────────────────────────────────────
   useEffect(() => {
     let cancelled = false
     setLoading(true)
 
     const tasks: Promise<string>[] = []
-    // Book order: Tapa → inner spreads → Contra
-    // Inside (spread 1 left) and Outside (last spread right) are non-editable — rendered as gray placeholders
     const s0 = spreadsData[0]
-    tasks.push(exportPageAsJpg(s0?.right ?? EMPTY_PAGE, pageW, pageH, 1,   // Tapa
+    tasks.push(exportPageAsJpg(s0?.right ?? EMPTY_PAGE, pageW, pageH, 1,
       s0?.left  ? { data: s0.left,  fromSide: 'left'  } : undefined))
     for (let s = 1; s < totalSpreads; s++) {
-      const data     = spreadsData[s]
-      const left     = data?.left  ?? EMPTY_PAGE
-      const right    = data?.right ?? EMPTY_PAGE
+      const data      = spreadsData[s]
+      const left      = data?.left  ?? EMPTY_PAGE
+      const right     = data?.right ?? EMPTY_PAGE
       const isInside  = s === 1
       const isOutside = s === totalSpreads - 1
       tasks.push(isInside
@@ -141,7 +164,7 @@ export default function PreviewModal({
         ? Promise.resolve(renderNoEditPage(t.noEditable, pageW, pageH))
         : exportPageAsJpg(right, pageW, pageH, 1, { data: left,  fromSide: 'left'  }))
     }
-    tasks.push(exportPageAsJpg(s0?.left ?? EMPTY_PAGE, pageW, pageH, 1,    // Contra
+    tasks.push(exportPageAsJpg(s0?.left ?? EMPTY_PAGE, pageW, pageH, 1,
       s0?.right ? { data: s0.right, fromSide: 'right' } : undefined))
 
     Promise.all(tasks).then(images => {
@@ -151,7 +174,7 @@ export default function PreviewModal({
     return () => { cancelled = true }
   }, [spreadsData, totalSpreads])
 
-  // ── Init turn.js once all images are ready ────────────────────────────────
+  // ── Init turn.js ───────────────────────────────────────────────────────────
   useEffect(() => {
     if (loading || pageImages.length === 0 || !flipbookEl.current) return
 
@@ -160,7 +183,6 @@ export default function PreviewModal({
     const w  = Math.round(pageW * s)
     const h  = Math.round(pageH * s)
 
-    // Build page DOM manually so React never interferes with turn.js internals
     el.innerHTML = ''
     pageImages.forEach((src, i) => {
       const page = document.createElement('div')
@@ -235,22 +257,97 @@ export default function PreviewModal({
   // ── Mouse wheel ────────────────────────────────────────────────────────────
   useEffect(() => {
     const onWheel = (e: WheelEvent) => {
+      if (annotMode === 'draw') return // don't navigate while drawing
       e.preventDefault()
       if (e.deltaY > 0) go(1)
       else if (e.deltaY < 0) go(-1)
     }
     window.addEventListener('wheel', onWheel, { passive: false })
     return () => window.removeEventListener('wheel', onWheel)
-  }, [go])
+  }, [go, annotMode])
 
-  const canvasW   = Math.round(pageW * scale)
-  const canvasH   = Math.round(pageH * scale)
+  // ── Drawing handlers ───────────────────────────────────────────────────────
+  function getDrawPos(e: React.PointerEvent<HTMLCanvasElement>) {
+    const canvas = drawCanvasRef.current!
+    const rect   = canvas.getBoundingClientRect()
+    return {
+      x: (e.clientX - rect.left) * (canvas.width / rect.width),
+      y: (e.clientY - rect.top)  * (canvas.height / rect.height),
+    }
+  }
+
+  function onDrawStart(e: React.PointerEvent<HTMLCanvasElement>) {
+    e.currentTarget.setPointerCapture(e.pointerId)
+    const pos = getDrawPos(e)
+    lastDrawPos.current = pos
+    setIsDrawing(true)
+    const ctx = drawCanvasRef.current!.getContext('2d')!
+    ctx.beginPath()
+    ctx.arc(pos.x, pos.y, drawSize / 2, 0, Math.PI * 2)
+    ctx.fillStyle = drawColor
+    ctx.fill()
+  }
+
+  function onDrawMove(e: React.PointerEvent<HTMLCanvasElement>) {
+    if (!isDrawing || !lastDrawPos.current) return
+    const pos = getDrawPos(e)
+    const ctx = drawCanvasRef.current!.getContext('2d')!
+    ctx.beginPath()
+    ctx.moveTo(lastDrawPos.current.x, lastDrawPos.current.y)
+    ctx.lineTo(pos.x, pos.y)
+    ctx.strokeStyle = drawColor
+    ctx.lineWidth   = drawSize
+    ctx.lineCap     = 'round'
+    ctx.lineJoin    = 'round'
+    ctx.stroke()
+    lastDrawPos.current = pos
+  }
+
+  function onDrawEnd() {
+    setIsDrawing(false)
+    lastDrawPos.current = null
+  }
+
+  function clearDrawCanvas() {
+    const c = drawCanvasRef.current
+    if (!c) return
+    c.getContext('2d')!.clearRect(0, 0, c.width, c.height)
+  }
+
+  async function handleSaveComment() {
+    if (!commentText.trim() || !onCommentSave) return
+    setSavingComment(true)
+    const ann = await onCommentSave(commentText.trim(), currentPage)
+    if (ann) {
+      setAnnotations(prev => [...prev, ann])
+      setCommentText('')
+      setAnnotMode('view')
+    }
+    setSavingComment(false)
+  }
+
+  async function handleSaveDrawing() {
+    if (!drawCanvasRef.current || !onDrawingSave) return
+    const dataUrl = drawCanvasRef.current.toDataURL('image/png')
+    const ann = await onDrawingSave(dataUrl, currentPage)
+    if (ann) {
+      setAnnotations(prev => [...prev, ann])
+      clearDrawCanvas()
+      setAnnotMode('view')
+    }
+  }
+
+  const pageComments = annotations.filter(a => a.page_number === currentPage && a.type === 'comment')
+
+  // ── Sizes ──────────────────────────────────────────────────────────────────
+  const canvasW = Math.round(pageW * scale)
+  const canvasH = Math.round(pageH * scale)
   const isFirst = currentPage <= 1
   const isLast  = currentPage >= totalSpreads * 2
 
   const pageLabel = (() => {
-    if (currentPage <= 1)                  return t.cover
-    if (currentPage >= totalSpreads * 2)   return t.back
+    if (currentPage <= 1)                return t.cover
+    if (currentPage >= totalSpreads * 2) return t.back
     const spreadNum = Math.floor((currentPage - 1) / 2)
     return `${t.page} ${spreadNum * 2 + 1} — ${spreadNum * 2 + 2}`
   })()
@@ -262,11 +359,19 @@ export default function PreviewModal({
       <div className="preview-titlebar">
         <span className="preview-title">{t.preview2D}</span>
         <div className="preview-titlebar-actions">
-          <button className="preview-icon-btn" disabled>
+          <button
+            className={`preview-icon-btn${annotMode === 'comment' ? ' preview-icon-btn--active' : ''}`}
+            disabled={!hasAnnotations}
+            onClick={() => setAnnotMode(m => m === 'comment' ? 'view' : 'comment')}
+          >
             <MessageSquare size={18} strokeWidth={1.5} />
             <span>{t.comment}</span>
           </button>
-          <button className="preview-icon-btn" disabled>
+          <button
+            className={`preview-icon-btn${annotMode === 'draw' ? ' preview-icon-btn--active' : ''}`}
+            disabled={!hasAnnotations}
+            onClick={() => setAnnotMode(m => m === 'draw' ? 'view' : 'draw')}
+          >
             <Pencil size={18} strokeWidth={1.5} />
             <span>{t.draw}</span>
           </button>
@@ -283,44 +388,110 @@ export default function PreviewModal({
             style={{ width: canvasW * 2, height: canvasH }}
           >
             <div ref={flipbookEl} className="preview-flipbook" />
+
+            {/* Drawing canvas — only in draw mode */}
+            {annotMode === 'draw' && (
+              <canvas
+                ref={drawCanvasRef}
+                className="preview-draw-canvas"
+                width={canvasW * 2}
+                height={canvasH}
+                onPointerDown={onDrawStart}
+                onPointerMove={onDrawMove}
+                onPointerUp={onDrawEnd}
+              />
+            )}
           </div>
         )}
       </div>
 
+      {/* ── Annotation sidebar — comment or draw mode ── */}
+      {hasAnnotations && annotMode !== 'view' && (
+        <div className="preview-annot-sidebar">
+          {annotMode === 'comment' && (
+            <>
+              <div className="preview-annot-section">
+                <span className="preview-annot-label">Comentario — {pageLabel}</span>
+                <textarea
+                  className="preview-comment-input"
+                  placeholder="Escribí tu comentario sobre esta página..."
+                  value={commentText}
+                  onChange={e => setCommentText(e.target.value)}
+                  autoFocus
+                />
+                <button
+                  className="preview-save-btn"
+                  onClick={handleSaveComment}
+                  disabled={!commentText.trim() || savingComment}
+                >
+                  {savingComment ? 'Guardando...' : 'Guardar comentario'}
+                </button>
+              </div>
+
+              {pageComments.length > 0 && (
+                <div className="preview-annot-section">
+                  <span className="preview-annot-label">Comentarios en esta página</span>
+                  {pageComments.map(c => (
+                    <div key={c.id} className="preview-comment-item">
+                      <p className="preview-comment-text">{c.content}</p>
+                      <span className="preview-comment-date">
+                        {new Date(c.created_at).toLocaleDateString('es-AR')}
+                      </span>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </>
+          )}
+
+          {annotMode === 'draw' && (
+            <div className="preview-annot-section">
+              <span className="preview-annot-label">Dibujar — {pageLabel}</span>
+              <span className="preview-annot-hint">Dibujá directamente sobre el libro</span>
+              <div className="preview-color-row">
+                {DRAW_COLORS.map(c => (
+                  <button
+                    key={c}
+                    className={`preview-color-dot${drawColor === c ? ' preview-color-dot--active' : ''}`}
+                    style={{ background: c }}
+                    onClick={() => setDrawColor(c)}
+                  />
+                ))}
+              </div>
+              <div className="preview-size-row">
+                {[2, 4, 8].map(s => (
+                  <button
+                    key={s}
+                    className={`preview-size-btn${drawSize === s ? ' preview-size-btn--active' : ''}`}
+                    onClick={() => setDrawSize(s)}
+                  >
+                    <span style={{ width: s * 2.5, height: s * 2.5, borderRadius: '50%', background: drawColor, display: 'block' }} />
+                  </button>
+                ))}
+              </div>
+              <div className="preview-draw-actions">
+                <button className="preview-clear-btn" onClick={clearDrawCanvas}>Limpiar</button>
+                <button className="preview-save-btn" onClick={handleSaveDrawing}>Guardar dibujo</button>
+              </div>
+            </div>
+          )}
+        </div>
+      )}
+
       {/* ── Bottom controls ── */}
       <div className="preview-controls">
         <div className="preview-nav">
-          <button
-            className="preview-nav-btn"
-            onClick={goFirst}
-            disabled={isFirst}
-            title={t.firstPage}
-          >
+          <button className="preview-nav-btn" onClick={goFirst} disabled={isFirst} title={t.firstPage}>
             <ChevronsLeft size={15} strokeWidth={1.5} />
           </button>
-          <button
-            className="preview-nav-btn"
-            onClick={() => go(-1)}
-            disabled={isFirst}
-            title={t.prev}
-          >
+          <button className="preview-nav-btn" onClick={() => go(-1)} disabled={isFirst} title={t.prev}>
             <ChevronLeft size={15} strokeWidth={1.5} />
           </button>
           <span className="preview-page-label">{pageLabel}</span>
-          <button
-            className="preview-nav-btn"
-            onClick={() => go(1)}
-            disabled={isLast}
-            title={t.next}
-          >
+          <button className="preview-nav-btn" onClick={() => go(1)} disabled={isLast} title={t.next}>
             <ChevronRight size={15} strokeWidth={1.5} />
           </button>
-          <button
-            className="preview-nav-btn"
-            onClick={goLast}
-            disabled={isLast}
-            title={t.lastPage}
-          >
+          <button className="preview-nav-btn" onClick={goLast} disabled={isLast} title={t.lastPage}>
             <ChevronsRight size={15} strokeWidth={1.5} />
           </button>
         </div>
