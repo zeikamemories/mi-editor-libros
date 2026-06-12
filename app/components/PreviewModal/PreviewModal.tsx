@@ -100,14 +100,22 @@ export default function PreviewModal({
   const [savingComment, setSavingComment] = useState(false)
   const [drawColor,     setDrawColor]     = useState(DRAW_COLORS[0])
   const [drawSize,      setDrawSize]      = useState(3)
-  const isDrawingRef   = useRef(false)
-  const [savingDrawing, setSavingDrawing] = useState(false)
-  const drawCanvasRef  = useRef<HTMLCanvasElement>(null)
-  const lastDrawPos    = useRef<{ x: number; y: number } | null>(null)
+  const isDrawingRef    = useRef(false)
+  const [savingDrawing,  setSavingDrawing]  = useState(false)
+  const [drawSaveError,  setDrawSaveError]  = useState<string | null>(null)
+  const [strokeCount,    setStrokeCount]    = useState(0)
+  const drawCanvasRef   = useRef<HTMLCanvasElement>(null)
+  const lastDrawPos     = useRef<{ x: number; y: number } | null>(null)
 
   useEffect(() => {
     if (initialAnnotations) setAnnotations(initialAnnotations)
   }, [initialAnnotations])
+
+  // Reset stroke counter and errors when entering/leaving draw mode
+  useEffect(() => {
+    setStrokeCount(0)
+    setDrawSaveError(null)
+  }, [annotMode])
 
   // Clear drawing canvas when page changes
   useEffect(() => {
@@ -282,6 +290,7 @@ export default function PreviewModal({
     const pos = getDrawPos(e)
     lastDrawPos.current = pos
     isDrawingRef.current = true
+    setStrokeCount(n => n + 1)
     const ctx = drawCanvasRef.current!.getContext('2d')!
     ctx.beginPath()
     ctx.arc(pos.x, pos.y, drawSize / 2, 0, Math.PI * 2)
@@ -313,6 +322,7 @@ export default function PreviewModal({
     const c = drawCanvasRef.current
     if (!c) return
     c.getContext('2d')!.clearRect(0, 0, c.width, c.height)
+    setStrokeCount(0)
   }
 
   async function handleSaveComment() {
@@ -329,21 +339,29 @@ export default function PreviewModal({
 
   async function handleSaveDrawing() {
     if (!drawCanvasRef.current || !onDrawingSave) return
+    setDrawSaveError(null)
     setSavingDrawing(true)
-    // Use JPEG at 0.85 quality — much smaller than PNG, opaque white background
-    const temp = document.createElement('canvas')
-    temp.width  = drawCanvasRef.current.width
-    temp.height = drawCanvasRef.current.height
-    const ctx = temp.getContext('2d')!
-    ctx.drawImage(drawCanvasRef.current, 0, 0)
-    const dataUrl = temp.toDataURL('image/jpeg', 0.85)
-    const ann = await onDrawingSave(dataUrl, currentPage)
-    setSavingDrawing(false)
-    if (ann) {
-      setAnnotations(prev => [...prev, ann])
-      clearDrawCanvas()
-      setAnnotMode('view')
+    try {
+      const temp = document.createElement('canvas')
+      temp.width  = drawCanvasRef.current.width
+      temp.height = drawCanvasRef.current.height
+      const ctx = temp.getContext('2d')!
+      ctx.fillStyle = '#ffffff'
+      ctx.fillRect(0, 0, temp.width, temp.height)
+      ctx.drawImage(drawCanvasRef.current, 0, 0)
+      const dataUrl = temp.toDataURL('image/jpeg', 0.7)
+      const ann = await onDrawingSave(dataUrl, currentPage)
+      if (ann) {
+        setAnnotations(prev => [...prev, ann])
+        clearDrawCanvas()
+        setAnnotMode('view')
+      } else {
+        setDrawSaveError('No se pudo guardar. Revisá tu conexión.')
+      }
+    } catch (err: any) {
+      setDrawSaveError('Error: ' + (err?.message ?? 'desconocido'))
     }
+    setSavingDrawing(false)
   }
 
   const pageComments = annotations.filter(a => a.page_number === currentPage && a.type === 'comment')
@@ -457,7 +475,14 @@ export default function PreviewModal({
           {annotMode === 'draw' && (
             <div className="preview-annot-section">
               <span className="preview-annot-label">Dibujar — {pageLabel}</span>
-              <span className="preview-annot-hint">Dibujá directamente sobre el libro</span>
+              <span className="preview-annot-hint">
+                {strokeCount === 0
+                  ? 'Hacé click sobre el libro para dibujar'
+                  : `✓ ${strokeCount} trazo${strokeCount > 1 ? 's' : ''} — listo para guardar`}
+              </span>
+              {drawSaveError && (
+                <span className="preview-draw-error">{drawSaveError}</span>
+              )}
               <div className="preview-color-row">
                 {DRAW_COLORS.map(c => (
                   <button

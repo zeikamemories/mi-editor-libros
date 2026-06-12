@@ -125,6 +125,15 @@
   color: #aaa;
 }
 
+.preview-draw-error {
+  font-family: var(--font-body);
+  font-size: 12px;
+  color: #c0392b;
+  background: #fdecea;
+  border-radius: 4px;
+  padding: 6px 10px;
+}
+
 .preview-comment-input {
   width: 100%;
   padding: 10px 12px;
