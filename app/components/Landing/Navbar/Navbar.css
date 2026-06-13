@@ -23,8 +23,8 @@
 
 .navbar__logo img {
   display: block;
-  width: 52px;
-  height: 52px;
+  width: 60px;
+  height: 60px;
   object-fit: contain;
 }
 
@@ -164,7 +164,7 @@
 /* ── Desktop ── */
 @media (min-width: 1024px) {
   .navbar__inner {
-    padding: 0.9rem 50px;
+    padding: 0.9rem 24px;
     position: relative;
   }
 

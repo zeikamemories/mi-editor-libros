@@ -152,7 +152,7 @@ export default function MisProyectosPage() {
     <div className="mp-root">
       <header className="mp-header">
         <Link href="/" className="mp-header-logo">
-          <Image src="/LogoZeika.png" alt="Zeika" width={40} height={40} />
+          <Image src="/LogoZeika.png" alt="Zeika" width={60} height={60} />
         </Link>
         <span className="mp-header-title">Mis Proyectos</span>
         <UserAvatar name={userName} onSignOut={signOut} />
