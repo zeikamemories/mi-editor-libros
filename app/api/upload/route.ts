@@ -28,7 +28,8 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Formato no permitido' }, { status: 400 })
     }
 
-    const folder = (formData.get('folder') as string | null) ?? 'zeika/fotos'
+    const folder    = (formData.get('folder')  as string | null) ?? 'zeika/fotos'
+    const fmt       = (formData.get('format')  as string | null) ?? 'jpg'
     const bytes  = await file.arrayBuffer()
     const buffer = Buffer.from(bytes)
 
@@ -42,8 +43,8 @@ export async function POST(req: NextRequest) {
         {
           folder,
           resource_type:  'image',
-          format:         'jpg',
-          transformation: [{ format: 'jpg', quality: 'auto' }],
+          format:         fmt,
+          transformation: fmt === 'png' ? [] : [{ format: 'jpg', quality: 'auto' }],
         },
         (error, result) => {
           if (error || !result) {

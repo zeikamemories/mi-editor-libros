@@ -81,8 +81,9 @@ export default function PreviewPage() {
       // Upload drawing image to Cloudinary to avoid storing large base64 in Supabase
       const blob = await (await fetch(dataUrl)).blob()
       const form = new FormData()
-      form.append('file', blob, 'drawing.jpg')
+      form.append('file', blob, 'drawing.png')
       form.append('folder', 'zeika/anotaciones')
+      form.append('format', 'png')
 
       const uploadRes = await fetch('/api/upload', { method: 'POST', body: form })
       if (!uploadRes.ok) {

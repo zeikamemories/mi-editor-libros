@@ -342,14 +342,8 @@ export default function PreviewModal({
     setDrawSaveError(null)
     setSavingDrawing(true)
     try {
-      const temp = document.createElement('canvas')
-      temp.width  = drawCanvasRef.current.width
-      temp.height = drawCanvasRef.current.height
-      const ctx = temp.getContext('2d')!
-      ctx.fillStyle = '#ffffff'
-      ctx.fillRect(0, 0, temp.width, temp.height)
-      ctx.drawImage(drawCanvasRef.current, 0, 0)
-      const dataUrl = temp.toDataURL('image/jpeg', 0.7)
+      // PNG preserves transparency — only the drawn strokes are visible when overlaid
+      const dataUrl = drawCanvasRef.current.toDataURL('image/png')
       const ann = await onDrawingSave(dataUrl, currentPage)
       if (ann) {
         setAnnotations(prev => [...prev, ann])
@@ -364,7 +358,8 @@ export default function PreviewModal({
     setSavingDrawing(false)
   }
 
-  const pageComments = annotations.filter(a => a.page_number === currentPage && a.type === 'comment')
+  const pageComments  = annotations.filter(a => a.page_number === currentPage && a.type === 'comment')
+  const pageDrawings  = annotations.filter(a => a.page_number === currentPage && a.type === 'drawing')
 
   // ── Sizes ──────────────────────────────────────────────────────────────────
   const canvasW = Math.round(pageW * scale)
@@ -415,6 +410,17 @@ export default function PreviewModal({
             style={{ width: canvasW * 2, height: canvasH }}
           >
             <div ref={flipbookEl} className="preview-flipbook" />
+
+            {/* Saved drawing overlays — transparent PNGs over the book pages */}
+            {pageDrawings.map(d => (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img
+                key={d.id}
+                src={d.content}
+                alt=""
+                className="preview-drawing-overlay"
+              />
+            ))}
 
             {/* Drawing canvas — only in draw mode */}
             {annotMode === 'draw' && (

@@ -77,6 +77,18 @@
   white-space: nowrap;
 }
 
+/* ─── Saved drawing overlays (transparent PNG over book pages) ───────────────── */
+
+.preview-drawing-overlay {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: fill;
+  pointer-events: none;
+  z-index: 10;
+}
+
 /* ─── Drawing canvas inside book shell ───────────────────────────────────────── */
 
 .preview-draw-canvas {
