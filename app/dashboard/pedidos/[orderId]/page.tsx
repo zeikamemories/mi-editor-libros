@@ -58,8 +58,9 @@ interface Note {
   created_at: string
 }
 
-interface PreviewComment {
+interface PreviewAnnotation {
   id: string
+  type: 'comment' | 'drawing'
   page_number: number
   content: string
   created_at: string
@@ -81,7 +82,7 @@ export default function PedidoAdminPage() {
 
   const [order,    setOrder]    = useState<Order | null>(null)
   const [notes,           setNotes]           = useState<Note[]>([])
-  const [previewComments, setPreviewComments] = useState<PreviewComment[]>([])
+  const [previewAnnotations, setPreviewAnnotations] = useState<PreviewAnnotation[]>([])
   const [project,         setProject]         = useState<Project | null>(null)
   const [loading,  setLoading]  = useState(true)
   const [creatingProject, setCreatingProject] = useState(false)
@@ -131,11 +132,10 @@ export default function PedidoAdminPage() {
           setProject(p as Project)
           supabase
             .from('preview_annotations')
-            .select('id, page_number, content, created_at')
+            .select('id, type, page_number, content, created_at')
             .eq('project_id', (p as Project).id)
-            .eq('type', 'comment')
             .order('created_at')
-            .then(({ data: ann }) => setPreviewComments((ann ?? []) as PreviewComment[]))
+            .then(({ data: ann }) => setPreviewAnnotations((ann ?? []) as PreviewAnnotation[]))
         }
         setLoading(false)
       })
@@ -357,17 +357,24 @@ export default function PedidoAdminPage() {
           </div>
         )}
 
-        {/* ── Comentarios del cliente en el preview ───────────────── */}
-        {previewComments.length > 0 && (
+        {/* ── Comentarios y dibujos del cliente en el preview ──────── */}
+        {previewAnnotations.length > 0 && (
           <div className="pedido-card">
             <h3 className="pedido-card-title">
-              Comentarios del cliente en el preview
-              <span className="pedido-badge">{previewComments.length}</span>
+              Anotaciones del cliente en el preview
+              <span className="pedido-badge">{previewAnnotations.length}</span>
             </h3>
-            {previewComments.map(c => (
-              <div key={c.id} className="pedido-note pedido-note--change">
-                <span className="pedido-note-date">Página {c.page_number + 1} · {fmtDate(c.created_at)}</span>
-                <p className="pedido-note-content">{c.content}</p>
+            {previewAnnotations.map(a => (
+              <div key={a.id} className="pedido-note pedido-note--change">
+                <span className="pedido-note-date">
+                  {a.type === 'drawing' ? 'Dibujo' : 'Comentario'} · Página {a.page_number + 1} · {fmtDate(a.created_at)}
+                </span>
+                {a.type === 'drawing' ? (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img src={a.content} alt="Dibujo del cliente" className="pedido-annot-drawing" />
+                ) : (
+                  <p className="pedido-note-content">{a.content}</p>
+                )}
               </div>
             ))}
           </div>

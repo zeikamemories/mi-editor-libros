@@ -393,3 +393,11 @@
 }
 
 .pedido-textarea:focus { border-color: var(--color-black); }
+
+
+.pedido-annot-drawing {
+  width: 100%;
+  border-radius: 4px;
+  border: 1px solid var(--color-border);
+  margin-top: 4px;
+}

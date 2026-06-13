@@ -28,6 +28,7 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Formato no permitido' }, { status: 400 })
     }
 
+    const folder = (formData.get('folder') as string | null) ?? 'zeika/fotos'
     const bytes  = await file.arrayBuffer()
     const buffer = Buffer.from(bytes)
 
@@ -39,7 +40,7 @@ export async function POST(req: NextRequest) {
     }>((resolve, reject) => {
       cloudinary.uploader.upload_stream(
         {
-          folder:         'zeika/fotos',
+          folder,
           resource_type:  'image',
           format:         'jpg',
           transformation: [{ format: 'jpg', quality: 'auto' }],
