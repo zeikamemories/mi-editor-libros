@@ -58,6 +58,13 @@ interface Note {
   created_at: string
 }
 
+interface PreviewComment {
+  id: string
+  page_number: number
+  content: string
+  created_at: string
+}
+
 function fmt(n: number) { return '$' + n.toLocaleString('es-AR') }
 function fmtDate(iso: string | null) {
   if (!iso) return '—'
@@ -73,8 +80,9 @@ export default function PedidoAdminPage() {
   const orderId = params.orderId as string
 
   const [order,    setOrder]    = useState<Order | null>(null)
-  const [notes,    setNotes]    = useState<Note[]>([])
-  const [project,  setProject]  = useState<Project | null>(null)
+  const [notes,           setNotes]           = useState<Note[]>([])
+  const [previewComments, setPreviewComments] = useState<PreviewComment[]>([])
+  const [project,         setProject]         = useState<Project | null>(null)
   const [loading,  setLoading]  = useState(true)
   const [creatingProject, setCreatingProject] = useState(false)
 
@@ -119,7 +127,16 @@ export default function PedidoAdminPage() {
         setDesignDate(ord.estimated_design_date ?? '')
         setDeliveryDate(ord.estimated_delivery_date ?? '')
         setNotes((n ?? []) as Note[])
-        if (p) setProject(p as Project)
+        if (p) {
+          setProject(p as Project)
+          supabase
+            .from('preview_annotations')
+            .select('id, page_number, content, created_at')
+            .eq('project_id', (p as Project).id)
+            .eq('type', 'comment')
+            .order('created_at')
+            .then(({ data: ann }) => setPreviewComments((ann ?? []) as PreviewComment[]))
+        }
         setLoading(false)
       })
     })
@@ -335,6 +352,22 @@ export default function PedidoAdminPage() {
               <div key={n.id} className="pedido-note pedido-note--change">
                 <span className="pedido-note-date">{fmtDate(n.created_at)}</span>
                 <p className="pedido-note-content">{n.content}</p>
+              </div>
+            ))}
+          </div>
+        )}
+
+        {/* ── Comentarios del cliente en el preview ───────────────── */}
+        {previewComments.length > 0 && (
+          <div className="pedido-card">
+            <h3 className="pedido-card-title">
+              Comentarios del cliente en el preview
+              <span className="pedido-badge">{previewComments.length}</span>
+            </h3>
+            {previewComments.map(c => (
+              <div key={c.id} className="pedido-note pedido-note--change">
+                <span className="pedido-note-date">Página {c.page_number + 1} · {fmtDate(c.created_at)}</span>
+                <p className="pedido-note-content">{c.content}</p>
               </div>
             ))}
           </div>
