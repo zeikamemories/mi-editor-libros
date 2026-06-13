@@ -20,12 +20,12 @@ const VALORES = [
 ]
 
 const REVIEWS = [
-  { quote: '"Excelente todo!! El servicio, la calidad, tiempo y precio... muy bien hecho todo!! Recomiendo 100%"', name: 'Maika S.' },
-  { quote: '"Ameeee el libro! Son geniales!! Quedaron bárbaros, recuerdo para toda la vida!"',                     name: 'Maika S.' },
-  { quote: '"Estoy tan emocionada! Verlo me hizo recorrer momentos quizás ya olvidados... gracias más que enormes"', name: 'Maika S.' },
-  { quote: '"Excelente todo!! El servicio, la calidad, tiempo y precio... muy bien hecho todo!! Recomiendo 100%"', name: 'Maika S.' },
-  { quote: '"Ameeee el libro! Son geniales!! Quedaron bárbaros, recuerdo para toda la vida!"',                     name: 'Maika S.' },
-  { quote: '"Estoy tan emocionada! Verlo me hizo recorrer momentos quizás ya olvidados... gracias más que enormes"', name: 'Maika S.' },
+  { quote: '"Quedo hermoso la verdad, le va a encantar la sorpresa. Increíble la calidad de todo. Muchísimas gracias por todo"', name: 'Sofi L.' },
+  { quote: '"Hola!! Millón de gracias por el libro! Quedó bárbaro y mamá estaba feliz"',                                        name: 'Tere A.' },
+  { quote: '"Llego impecable el viernes y se lo deje sorpresa a las 00hs, le ENCANTO y a la familia y amigas también"',         name: 'Santiago G.' },
+  { quote: '"Ya tengo el fotolibro en mis manos y verlo me hizo recorrer momentos quizás ya olvidados... gracias más que enormes"', name: 'Lorena Q.' },
+  { quote: '"Mil gracias por todo tu laburo con los libros. Son geniales!!! Quedaron bárbaros!! Recuerdo alucinante!!"',        name: 'Isa M.' },
+  { quote: '"Excelente todo Maika. El servicio, la calidad, tiempo y precio"',                                                  name: 'Roberto G.' },
 ]
 
 function Stars() {
