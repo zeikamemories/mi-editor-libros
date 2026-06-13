@@ -9,7 +9,7 @@ type Step = 'loading' | 'login' | 1 | 2 | 3 | 'confirmed'
 type AuthMode = 'signup' | 'signin'
 
 const SIZES = [
-  { id: 'chico_h',   name: 'Chico Horizontal',  dims: '21 × 14,8 cm', pages: 14, price: 1,     img: '/chico.png',    col: 'half' },
+  { id: 'chico_h',   name: 'Chico Horizontal',  dims: '21 × 14,8 cm', pages: 14, price: 100,   img: '/chico.png',    col: 'half' },
   { id: 'mediano_h', name: 'Mediano Horizontal', dims: '28 × 21,6 cm', pages: 14, price: 81500,  img: '/mediano.png',  col: 'half' },
   { id: 'grande_h',  name: 'Grande Horizontal',  dims: '41 × 29 cm',   pages: 14, price: 100000, img: '/grande.png',   col: 'full' },
   { id: 'vertical',  name: 'Vertical',           dims: '28 × 21,6 cm', pages: 14, price: 81500,  img: '/vertical.png', col: 'half' },
