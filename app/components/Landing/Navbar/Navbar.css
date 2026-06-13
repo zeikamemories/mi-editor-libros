@@ -11,8 +11,8 @@
   align-items: center;
   justify-content: space-between;
   padding: 0.6rem 20px;
-  max-width: 1440px;
-  margin: 0 auto;
+  width: 100%;
+  box-sizing: border-box;
 }
 
 .navbar__logo {
@@ -164,7 +164,7 @@
 /* ── Desktop ── */
 @media (min-width: 1024px) {
   .navbar__inner {
-    padding: 0.9rem 20px 0.9rem 4px;
+    padding: 0.9rem 50px;
     position: relative;
   }
 
