@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import Image from 'next/image'
 import { supabase } from '../../../lib/supabase'
 import './Navbar.css'
@@ -13,24 +13,49 @@ const navLinks = [
 ]
 
 export default function Navbar() {
-  const [open,  setOpen]  = useState(false)
-  const [user,  setUser]  = useState<{ email: string } | null>(null)
+  const [open,      setOpen]      = useState(false)
+  const [user,      setUser]      = useState<{ name: string; initial: string } | null>(null)
+  const [dropOpen,  setDropOpen]  = useState(false)
+  const dropRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
-      setUser(session?.user ? { email: session.user.email ?? '' } : null)
+      if (session?.user) {
+        const meta  = session.user.user_metadata
+        const name  = meta?.full_name || meta?.name || session.user.email?.split('@')[0] || ''
+        setUser({ name, initial: name[0]?.toUpperCase() ?? '?' })
+      }
     })
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_e, session) => {
-      setUser(session?.user ? { email: session.user.email ?? '' } : null)
+      if (session?.user) {
+        const meta  = session.user.user_metadata
+        const name  = meta?.full_name || meta?.name || session.user.email?.split('@')[0] || ''
+        setUser({ name, initial: name[0]?.toUpperCase() ?? '?' })
+      } else {
+        setUser(null)
+      }
     })
     return () => subscription.unsubscribe()
   }, [])
 
+  // Close dropdown on outside click
+  useEffect(() => {
+    if (!dropOpen) return
+    function handleClick(e: MouseEvent) {
+      if (dropRef.current && !dropRef.current.contains(e.target as Node)) setDropOpen(false)
+    }
+    document.addEventListener('mousedown', handleClick)
+    return () => document.removeEventListener('mousedown', handleClick)
+  }, [dropOpen])
+
   async function signOut() {
     await supabase.auth.signOut()
     setUser(null)
+    setDropOpen(false)
     window.location.href = '/'
   }
+
+  const firstName = user?.name.split(' ')[0] ?? ''
 
   return (
     <>
@@ -50,12 +75,26 @@ export default function Navbar() {
           {/* Desktop auth */}
           <div className="navbar__auth">
             {user ? (
-              <>
-                <a href="/mis-proyectos" className="navbar__auth-link">Mi cuenta</a>
-                <button className="navbar__auth-link navbar__auth-link--btn" onClick={signOut}>
-                  Cerrar sesión
+              <div className="navbar__user" ref={dropRef}>
+                <button
+                  className="navbar__user-btn"
+                  onClick={() => setDropOpen(o => !o)}
+                  aria-label="Menú de usuario"
+                >
+                  <span className="navbar__user-name">{firstName.toUpperCase()}</span>
+                  <span className="navbar__avatar">{user.initial}</span>
                 </button>
-              </>
+                {dropOpen && (
+                  <div className="navbar__user-dropdown">
+                    <a href="/mis-proyectos" className="navbar__dropdown-item" onClick={() => setDropOpen(false)}>
+                      Mis proyectos
+                    </a>
+                    <button className="navbar__dropdown-item navbar__dropdown-item--btn" onClick={signOut}>
+                      Cerrar sesión
+                    </button>
+                  </div>
+                )}
+              </div>
             ) : (
               <>
                 <a href="/login?mode=signup" className="navbar__auth-link">Registrarse</a>
@@ -94,8 +133,12 @@ export default function Navbar() {
             <div className="navbar__overlay-auth">
               {user ? (
                 <>
-                  <a href="/mis-proyectos" className="navbar__overlay-auth-link" onClick={() => setOpen(false)}>Mi cuenta</a>
-                  <button className="navbar__overlay-auth-link navbar__overlay-auth-btn" onClick={signOut}>Cerrar sesión</button>
+                  <a href="/mis-proyectos" className="navbar__overlay-auth-link" onClick={() => setOpen(false)}>
+                    Mis proyectos
+                  </a>
+                  <button className="navbar__overlay-auth-link navbar__overlay-auth-btn" onClick={signOut}>
+                    Cerrar sesión
+                  </button>
                 </>
               ) : (
                 <>

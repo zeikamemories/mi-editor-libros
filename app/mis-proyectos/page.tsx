@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import Image from 'next/image'
@@ -81,22 +81,57 @@ function ProgressDots({ status }: { status: string }) {
   )
 }
 
-function UserAvatar({ email }: { email: string }) {
+function UserAvatar({ name, onSignOut }: { name: string; onSignOut: () => void }) {
+  const [open, setOpen] = useState(false)
+  const ref = useRef<HTMLDivElement>(null)
+  const initial = name ? name[0].toUpperCase() : '?'
+  const firstName = name ? name.split(' ')[0].toUpperCase() : ''
+
+  useEffect(() => {
+    if (!open) return
+    function handleClick(e: MouseEvent) {
+      if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false)
+    }
+    document.addEventListener('mousedown', handleClick)
+    return () => document.removeEventListener('mousedown', handleClick)
+  }, [open])
+
   return (
-    <div className="mp-avatar">{email[0].toUpperCase()}</div>
+    <div className="mp-user" ref={ref}>
+      <button className="mp-user-btn" onClick={() => setOpen(o => !o)} aria-label="Menú de usuario">
+        <span className="mp-user-name">{firstName}</span>
+        <div className="mp-avatar">{initial}</div>
+      </button>
+      {open && (
+        <div className="mp-user-dropdown">
+          <button
+            className="mp-user-dropdown-item"
+            onClick={() => { setOpen(false); onSignOut() }}
+          >
+            Cerrar sesión
+          </button>
+        </div>
+      )}
+    </div>
   )
 }
 
 export default function MisProyectosPage() {
   const router = useRouter()
-  const [orders, setOrders] = useState<Order[]>([])
-  const [loading, setLoading] = useState(true)
-  const [userEmail, setUserEmail] = useState('')
+  const [orders,   setOrders]   = useState<Order[]>([])
+  const [loading,  setLoading]  = useState(true)
+  const [userName, setUserName] = useState('')
+
+  async function signOut() {
+    await supabase.auth.signOut()
+    router.replace('/')
+  }
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
       if (!session?.user) { router.replace('/orden'); return }
-      setUserEmail(session.user.email ?? '')
+      const meta = session.user.user_metadata
+      setUserName(meta?.full_name || meta?.name || session.user.email?.split('@')[0] || '')
       supabase
         .from('orders')
         .select('id, book_name, size, status, price_total, created_at')
@@ -116,9 +151,11 @@ export default function MisProyectosPage() {
   return (
     <div className="mp-root">
       <header className="mp-header">
-        <Image src="/LogoZeika.png" alt="Zeika" width={40} height={40} />
+        <Link href="/" className="mp-header-logo">
+          <Image src="/LogoZeika.png" alt="Zeika" width={40} height={40} />
+        </Link>
         <span className="mp-header-title">Mis Proyectos</span>
-        <UserAvatar email={userEmail} />
+        <UserAvatar name={userName} onSignOut={signOut} />
       </header>
 
       <main className="mp-main">
