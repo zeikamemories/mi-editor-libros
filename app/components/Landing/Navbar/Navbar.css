@@ -10,7 +10,7 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 0.6rem 20px;
+  padding: 6px 20px;
   width: 100%;
   box-sizing: border-box;
 }
@@ -164,7 +164,7 @@
 /* ── Desktop ── */
 @media (min-width: 1024px) {
   .navbar__inner {
-    padding: 0.9rem 24px;
+    padding: 6px 24px;
     position: relative;
   }
 
