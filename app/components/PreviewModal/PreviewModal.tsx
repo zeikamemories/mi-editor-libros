@@ -225,9 +225,12 @@ export default function PreviewModal({
         page:         initialPage,
       })
 
-      $book.bind('turned', (_e: any, page: number) => {
+      $book.bind('turning', (_e: any, page: number) => {
         setCurrentPage(page)
         onPageChange?.(page)
+      })
+      $book.bind('turned', (_e: any, page: number) => {
+        setCurrentPage(page)
       })
 
       $bookRef.current = $book
