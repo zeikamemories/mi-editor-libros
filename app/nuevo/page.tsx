@@ -303,8 +303,13 @@ function NuevoContent() {
   const searchParams = useSearchParams()
 
   const [step,         setStep]         = useState(1)
+  const SIZE_MAP: Record<string, string> = {
+    chico_h: 'chico', mediano_h: 'mediano', grande_h: 'grande',
+    vertical: 'vertical', cuadrado: 'cuadrado',
+  }
+  const rawSize = searchParams.get('size') ?? null
   const [selectedSize, setSelectedSize] = useState<string | null>(
-    searchParams.get('size') ?? null
+    rawSize ? (SIZE_MAP[rawSize] ?? rawSize) : null
   )
   const [details,      setDetails]      = useState<BookDetails>({
     nombre:     searchParams.get('name') ?? '',

@@ -186,8 +186,13 @@ export default function PedidoAdminPage() {
 
   function openEditor() {
     if (!project) return
+    const SIZE_MAP: Record<string, string> = {
+      chico_h: 'chico', mediano_h: 'mediano', grande_h: 'grande',
+      vertical: 'vertical', cuadrado: 'cuadrado',
+    }
+    const bookSizeId = SIZE_MAP[order?.size ?? ''] ?? 'vertical'
     sessionStorage.setItem('zeika_project_id', project.id)
-    sessionStorage.setItem('zeika_book_size', order?.size ?? 'vertical')
+    sessionStorage.setItem('zeika_book_size', bookSizeId)
     sessionStorage.setItem('zeika_return_path', `/dashboard/pedidos/${orderId}`)
     router.push(`/editor?pid=${project.id}`)
   }
