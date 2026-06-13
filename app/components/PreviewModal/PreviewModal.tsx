@@ -106,6 +106,9 @@ export default function PreviewModal({
   const [strokeCount,    setStrokeCount]    = useState(0)
   const drawCanvasRef   = useRef<HTMLCanvasElement>(null)
   const lastDrawPos     = useRef<{ x: number; y: number } | null>(null)
+  // Track strokes as vector data for SVG export (no image conversion needed)
+  const strokesRef = useRef<Array<{ color: string; size: number; points: Array<{ x: number; y: number }> }>>([])
+  const currentStrokeRef = useRef<{ color: string; size: number; points: Array<{ x: number; y: number }> } | null>(null)
 
   useEffect(() => {
     if (initialAnnotations) setAnnotations(initialAnnotations)
@@ -117,10 +120,12 @@ export default function PreviewModal({
     setDrawSaveError(null)
   }, [annotMode])
 
-  // Clear drawing canvas when page changes
+  // Clear drawing canvas + strokes when page changes
   useEffect(() => {
     const c = drawCanvasRef.current
     if (c) c.getContext('2d')!.clearRect(0, 0, c.width, c.height)
+    strokesRef.current = []
+    currentStrokeRef.current = null
   }, [currentPage])
 
   // ── Scale ──────────────────────────────────────────────────────────────────
@@ -288,8 +293,10 @@ export default function PreviewModal({
   function onDrawStart(e: React.PointerEvent<HTMLCanvasElement>) {
     e.currentTarget.setPointerCapture(e.pointerId)
     const pos = getDrawPos(e)
-    lastDrawPos.current = pos
+    lastDrawPos.current  = pos
     isDrawingRef.current = true
+    // Start tracking this stroke as vector data
+    currentStrokeRef.current = { color: drawColor, size: drawSize, points: [pos] }
     setStrokeCount(n => n + 1)
     const ctx = drawCanvasRef.current!.getContext('2d')!
     ctx.beginPath()
@@ -301,6 +308,7 @@ export default function PreviewModal({
   function onDrawMove(e: React.PointerEvent<HTMLCanvasElement>) {
     if (!isDrawingRef.current || !lastDrawPos.current) return
     const pos = getDrawPos(e)
+    currentStrokeRef.current?.points.push(pos)
     const ctx = drawCanvasRef.current!.getContext('2d')!
     ctx.beginPath()
     ctx.moveTo(lastDrawPos.current.x, lastDrawPos.current.y)
@@ -315,13 +323,19 @@ export default function PreviewModal({
 
   function onDrawEnd() {
     isDrawingRef.current = false
-    lastDrawPos.current = null
+    lastDrawPos.current  = null
+    if (currentStrokeRef.current && currentStrokeRef.current.points.length > 0) {
+      strokesRef.current.push(currentStrokeRef.current)
+      currentStrokeRef.current = null
+    }
   }
 
   function clearDrawCanvas() {
     const c = drawCanvasRef.current
     if (!c) return
     c.getContext('2d')!.clearRect(0, 0, c.width, c.height)
+    strokesRef.current       = []
+    currentStrokeRef.current = null
     setStrokeCount(0)
   }
 
@@ -338,13 +352,24 @@ export default function PreviewModal({
   }
 
   async function handleSaveDrawing() {
-    if (!drawCanvasRef.current || !onDrawingSave) return
+    if (!drawCanvasRef.current || !onDrawingSave || strokesRef.current.length === 0) return
     setDrawSaveError(null)
     setSavingDrawing(true)
     try {
-      // PNG preserves transparency — only the drawn strokes are visible when overlaid
-      const dataUrl = drawCanvasRef.current.toDataURL('image/png')
-      const ann = await onDrawingSave(dataUrl, currentPage)
+      // Build SVG from vector strokes — transparent background, no Cloudinary needed
+      const w = drawCanvasRef.current.width
+      const h = drawCanvasRef.current.height
+      const paths = strokesRef.current.map(s => {
+        if (s.points.length === 0) return ''
+        const pts = s.points
+        const d = pts.length === 1
+          ? `M${pts[0].x},${pts[0].y} l0.1,0.1`
+          : `M${pts[0].x},${pts[0].y} ` + pts.slice(1).map(p => `L${p.x},${p.y}`).join(' ')
+        return `<path d="${d}" stroke="${s.color}" stroke-width="${s.size}" fill="none" stroke-linecap="round" stroke-linejoin="round"/>`
+      }).join('')
+      const svg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${w} ${h}" preserveAspectRatio="none">${paths}</svg>`
+
+      const ann = await onDrawingSave(svg, currentPage)
       if (ann) {
         setAnnotations(prev => [...prev, ann])
         clearDrawCanvas()
@@ -411,16 +436,22 @@ export default function PreviewModal({
           >
             <div ref={flipbookEl} className="preview-flipbook" />
 
-            {/* Saved drawing overlays — transparent PNGs over the book pages */}
-            {pageDrawings.map(d => (
-              // eslint-disable-next-line @next/next/no-img-element
-              <img
-                key={d.id}
-                src={d.content}
-                alt=""
-                className="preview-drawing-overlay"
-              />
-            ))}
+            {/* Saved drawing overlays — SVG vector (transparent) over the book pages */}
+            {pageDrawings.map(d => {
+              const isSvg = d.content.trimStart().startsWith('<svg')
+              if (isSvg) {
+                const encoded = 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(d.content)
+                return (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img key={d.id} src={encoded} alt="" className="preview-drawing-overlay" />
+                )
+              }
+              // Legacy: Cloudinary image URL — use multiply to approximate transparency
+              return (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img key={d.id} src={d.content} alt="" className="preview-drawing-overlay preview-drawing-overlay--legacy" />
+              )
+            })}
 
             {/* Drawing canvas — only in draw mode */}
             {annotMode === 'draw' && (

@@ -76,35 +76,16 @@ export default function PreviewPage() {
     return data as Annotation | null
   }
 
-  async function handleDrawingSave(dataUrl: string, page: number): Promise<Annotation | null> {
-    try {
-      // Upload drawing image to Cloudinary to avoid storing large base64 in Supabase
-      const blob = await (await fetch(dataUrl)).blob()
-      const form = new FormData()
-      form.append('file', blob, 'drawing.png')
-      form.append('folder', 'zeika/anotaciones')
-      form.append('format', 'png')
-
-      const uploadRes = await fetch('/api/upload', { method: 'POST', body: form })
-      if (!uploadRes.ok) {
-        console.error('Drawing upload failed:', await uploadRes.text())
-        return null
-      }
-      const { url } = await uploadRes.json()
-
-      const { data, error } = await supabase.from('preview_annotations').insert({
-        project_id:  projectId,
-        user_id:     userId,
-        type:        'drawing',
-        page_number: page,
-        content:     url,
-      }).select().single()
-      if (error) console.error('Drawing annotation save failed:', error.message, error.code)
-      return data as Annotation | null
-    } catch (err) {
-      console.error('handleDrawingSave error:', err)
-      return null
-    }
+  async function handleDrawingSave(svgContent: string, page: number): Promise<Annotation | null> {
+    const { data, error } = await supabase.from('preview_annotations').insert({
+      project_id:  projectId,
+      user_id:     userId,
+      type:        'drawing',
+      page_number: page,
+      content:     svgContent,  // SVG string — small, transparent, no Cloudinary needed
+    }).select().single()
+    if (error) console.error('Drawing save failed:', error.message, error.code)
+    return data as Annotation | null
   }
 
   if (notFound) return (

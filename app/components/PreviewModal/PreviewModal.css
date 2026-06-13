@@ -77,7 +77,7 @@
   white-space: nowrap;
 }
 
-/* ─── Saved drawing overlays (transparent PNG over book pages) ───────────────── */
+/* ─── Saved drawing overlays (SVG vector over book pages) ────────────────────── */
 
 .preview-drawing-overlay {
   position: absolute;
@@ -87,6 +87,11 @@
   object-fit: fill;
   pointer-events: none;
   z-index: 10;
+}
+
+/* Legacy raster drawings — multiply blend makes white transparent */
+.preview-drawing-overlay--legacy {
+  mix-blend-mode: multiply;
 }
 
 /* ─── Drawing canvas inside book shell ───────────────────────────────────────── */
