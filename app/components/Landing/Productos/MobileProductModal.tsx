@@ -12,15 +12,25 @@ const IMAGES: Record<string, string[]> = {
   cuadrado: ['/fotos/cuadrado2.jpg', '', '', ''],
 }
 
-const EXTRA_PRICE: Record<string, string> = {
-  chico:    '$2.500',
-  mediano:  '$3.000',
-  grande:   '$4.000',
-  vertical: '$3.000',
-  cuadrado: '$3.500',
+const PRICES_BY_PAGES: Record<string, [number, number, number]> = {
+  chico:    [82700,  104300, 118700],
+  mediano:  [94700,  116700, 138700],
+  grande:   [128800, 164800, 200800],
+  vertical: [94700,  116700, 138700],
+  cuadrado: [125800, 161800, 197800],
 }
 
-// Mini size comparison for mobile overlay
+const PAGE_OPTIONS_SMALL = [
+  { photos: '20-100',  pages: 20 },
+  { photos: '101-180', pages: 30 },
+  { photos: '180-240', pages: 40 },
+]
+const PAGE_OPTIONS_LARGE = [
+  { photos: '20-160',  pages: 20 },
+  { photos: '161-240', pages: 30 },
+  { photos: '241-350', pages: 40 },
+]
+
 const BOOK_DIMS: Record<string, [number, number]> = {
   chico:    [21,   14.8],
   mediano:  [28,   21.6],
@@ -29,26 +39,53 @@ const BOOK_DIMS: Record<string, [number, number]> = {
   cuadrado: [29,   29  ],
 }
 const BOOK_LABELS: Record<string, string> = {
-  chico:    'Chico horizontal',
-  mediano:  'Mediano horizontal',
-  grande:   'Grande horizontal',
+  chico:    'Chico H',
+  mediano:  'Mediano H',
+  grande:   'Grande H',
   vertical: 'Vertical',
   cuadrado: 'Cuadrado',
 }
 const ORDER = ['chico', 'mediano', 'grande', 'vertical', 'cuadrado']
-// Scale: maps Grande H to ~314×228px canvas
 const SCALE_X = 314 / 41
 const SCALE_Y = 228 / 29
+
+function fmt(n: number) {
+  return '$' + n.toLocaleString('es-AR')
+}
 
 type Props = { product: ProductData; onClose: () => void }
 
 export default function MobileProductModal({ product, onClose }: Props) {
-  const [showComp, setShowComp]   = useState(false)
-  const [compSize, setCompSize]   = useState(product.sizeId)
-  const [activeSlide, setActiveSlide] = useState(0)
-  const scrollRef = useRef<HTMLDivElement>(null)
+  const [showComp,        setShowComp]        = useState(false)
+  const [compSize,        setCompSize]        = useState(product.sizeId)
+  const [activeSlide,     setActiveSlide]     = useState(0)
+  const [pageIdx,         setPageIdx]         = useState(0)
+  const [textExtra,       setTextExtra]       = useState(false)
+  const [cp,              setCp]              = useState('')
+  const [shippingPrice,   setShippingPrice]   = useState<number | null>(null)
+  const [shippingLoading, setShippingLoading] = useState(false)
+  const [shippingError,   setShippingError]   = useState<string | null>(null)
 
-  const images = IMAGES[product.sizeId] ?? ['', '', '', '']
+  const scrollRef   = useRef<HTMLDivElement>(null)
+  const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+
+  const isLarge     = ['grande', 'cuadrado'].includes(product.sizeId)
+  const pageOptions = isLarge ? PAGE_OPTIONS_LARGE : PAGE_OPTIONS_SMALL
+  const prices      = PRICES_BY_PAGES[product.sizeId] ?? [0, 0, 0]
+  const basePrice   = prices[pageIdx] + (textExtra ? 10000 : 0)
+  const images      = IMAGES[product.sizeId] ?? ['', '', '', '']
+
+  const [aw, ah]  = BOOK_DIMS[compSize]
+  const activePxW = Math.round(aw * SCALE_X)
+  const activePxH = Math.round(ah * SCALE_Y)
+
+  useEffect(() => {
+    setPageIdx(0)
+    setTextExtra(false)
+    setCp('')
+    setShippingPrice(null)
+    setShippingError(null)
+  }, [product.sizeId])
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => { if (e.key === 'Escape') onClose() }
@@ -63,21 +100,46 @@ export default function MobileProductModal({ product, onClose }: Props) {
   useEffect(() => {
     const el = scrollRef.current
     if (!el) return
-    const onScroll = () => {
-      const idx = Math.round(el.scrollLeft / el.clientWidth)
-      setActiveSlide(idx)
-    }
+    const onScroll = () => setActiveSlide(Math.round(el.scrollLeft / el.clientWidth))
     el.addEventListener('scroll', onScroll, { passive: true })
     return () => el.removeEventListener('scroll', onScroll)
   }, [])
 
-  const [aw, ah] = BOOK_DIMS[compSize]
-  const activePxW = Math.round(aw * SCALE_X)
-  const activePxH = Math.round(ah * SCALE_Y)
+  useEffect(() => {
+    if (debounceRef.current) clearTimeout(debounceRef.current)
+    const trimmed = cp.trim()
+    if (!/^\d{4}$/.test(trimmed)) {
+      setShippingPrice(null)
+      setShippingError(trimmed.length > 0 ? 'CP inválido' : null)
+      return
+    }
+    setShippingLoading(true)
+    setShippingError(null)
+    debounceRef.current = setTimeout(async () => {
+      try {
+        const res  = await fetch(`/api/shipping-quote?cp=${trimmed}`)
+        const data = await res.json()
+        if (!res.ok) {
+          setShippingError(data.error ?? 'No se pudo calcular')
+          setShippingPrice(null)
+        } else {
+          setShippingPrice(data.price as number)
+          setShippingError(null)
+        }
+      } catch {
+        setShippingError('No se pudo calcular')
+        setShippingPrice(null)
+      } finally {
+        setShippingLoading(false)
+      }
+    }, 600)
+    return () => { if (debounceRef.current) clearTimeout(debounceRef.current) }
+  }, [cp])
 
   return (
     <div className="mpm">
-      {/* Scrollable content */}
+
+      {/* Scrollable area */}
       <div className="mpm__scroll">
 
         {/* Image carousel */}
@@ -96,38 +158,99 @@ export default function MobileProductModal({ product, onClose }: Props) {
           </div>
         </div>
 
-        {/* Details */}
-        <div className="mpm__details">
-          {/* Name + dims */}
-          <div className="mpm__naming">
+        {/* Content */}
+        <div className="mpm__content">
+
+          {/* Name + price */}
+          <div className="mpm__header-row">
             <h2 className="mpm__name">{product.name}</h2>
-            <span className="mpm__dims">{product.dimensions}</span>
+            <span className="mpm__price">{fmt(basePrice)}</span>
           </div>
 
-          {/* Comparar button */}
-          <button className="mpm__comparar" onClick={() => { setShowComp(true); setCompSize(product.sizeId) }}>
+          {/* Comparar */}
+          <button
+            className="mpm__comparar"
+            onClick={() => { setShowComp(true); setCompSize(product.sizeId) }}
+          >
             Comparar con otros tamaños
           </button>
 
-          {/* Pricing */}
-          <div className="mpm__pricing">
-            <p className="mpm__price-base">PRECIO BASE: {product.price}</p>
-            <p className="mpm__price-note">*El precio base incluye 24 carillas</p>
-            <p className="mpm__price-extra">PRECIO POR CADA PÁGINA EXTRA: {EXTRA_PRICE[product.sizeId]}</p>
+          {/* Page options */}
+          <div className="mpm__section">
+            <p className="mpm__section-label">CANTIDAD DE FOTOS A SUBIR</p>
+            <div className="mpm__cards">
+              {pageOptions.map((opt, i) => (
+                <button
+                  key={i}
+                  className={`mpm__card${pageIdx === i ? ' mpm__card--selected' : ''}`}
+                  onClick={() => setPageIdx(i)}
+                >
+                  <span className="mpm__card-top">{opt.photos} fotos</span>
+                  <span className="mpm__card-bot">{opt.pages} páginas</span>
+                </button>
+              ))}
+            </div>
+            <p className="mpm__section-note">
+              La cantidad de fotos es una recomendación ya que calculamos 3 fotos por carilla pero se puede adaptar a lo que buscás.
+            </p>
           </div>
 
-          {/* CTA */}
-          <a href="/orden" className="mpm__cta">CONTAR MI HISTORIA</a>
+          {/* Text options */}
+          <div className="mpm__section">
+            <p className="mpm__section-label">TEXTOS</p>
+            <div className="mpm__cards">
+              <button
+                className={`mpm__card${!textExtra ? ' mpm__card--selected' : ''}`}
+                onClick={() => setTextExtra(false)}
+              >
+                <span className="mpm__card-top">1 texto</span>
+                <span className="mpm__card-bot">Incluído</span>
+              </button>
+              <button
+                className={`mpm__card${textExtra ? ' mpm__card--selected' : ''}`}
+                onClick={() => setTextExtra(true)}
+              >
+                <span className="mpm__card-top">Textos varios</span>
+                <span className="mpm__card-bot">+$10.000</span>
+              </button>
+              {/* empty third slot to match card width */}
+              <div />
+            </div>
+          </div>
 
-          {/* Details bullets */}
-          <div className="mpm__product-details">
-            <p className="mpm__details-label">Detalles del producto:</p>
+          {/* Details */}
+          <div className="mpm__details">
+            <p className="mpm__details-label">DETALLES DEL PRODUCTO</p>
             <ul className="mpm__details-list">
-              <li>Tapas duras, papel mate de alta calidad</li>
-              <li>Impresión digital de alta definición, 24 carillas incluidas</li>
+              <li>Tapa dura laminada con polipropileno mate de alta resistencia. Interior impreso en papel de 170 gramos de la más alta calidad.</li>
+              <li>
+                El envío no está incluído en el precio. Calculá tu envío aprox:
+                <div className="mpm__cp-row">
+                  <input
+                    className="mpm__cp-input"
+                    placeholder="Código postal"
+                    value={cp}
+                    maxLength={4}
+                    onChange={e => setCp(e.target.value.replace(/\D/g, '').slice(0, 4))}
+                  />
+                  {shippingLoading && <span className="mpm__cp-status mpm__cp-status--loading">Calculando...</span>}
+                  {!shippingLoading && shippingPrice !== null && (
+                    <span className="mpm__cp-status mpm__cp-status--ok">{fmt(shippingPrice)}</span>
+                  )}
+                  {!shippingLoading && shippingError && (
+                    <span className="mpm__cp-status mpm__cp-status--error">{shippingError}</span>
+                  )}
+                </div>
+              </li>
             </ul>
           </div>
+
         </div>
+      </div>
+
+      {/* CTA — fixed at bottom */}
+      <div className="mpm__cta-bar">
+        <a href="/orden" className="mpm__cta">CONTAR MI HISTORIA</a>
       </div>
 
       {/* Close button */}
@@ -140,8 +263,6 @@ export default function MobileProductModal({ product, onClose }: Props) {
             <div className="mpm__comp-header">
               <button className="mpm__comp-close" onClick={() => setShowComp(false)}>×</button>
             </div>
-
-            {/* Size diagram */}
             <div className="mpm__comp-canvas-wrap">
               <div className="mpm__comp-canvas">
                 {ORDER.map(id => {
@@ -162,8 +283,6 @@ export default function MobileProductModal({ product, onClose }: Props) {
                 </span>
               </div>
             </div>
-
-            {/* Tab pills */}
             <div className="mpm__comp-tabs">
               {ORDER.map(id => (
                 <button

@@ -4,25 +4,25 @@
   inset: 0;
   background: white;
   z-index: 400;
-  overflow: hidden;
   display: flex;
   flex-direction: column;
+  overflow: hidden;
 }
 
 @media (min-width: 1024px) {
-  .mpm {
-    display: none;
-  }
+  .mpm { display: none; }
 }
 
-/* ── Scrollable area ── */
+/* ── Scrollable area ────────────────────────────────────────────────────────── */
+
 .mpm__scroll {
   flex: 1;
   overflow-y: auto;
   -webkit-overflow-scrolling: touch;
 }
 
-/* ── Close button ── */
+/* ── Close button ───────────────────────────────────────────────────────────── */
+
 .mpm__close {
   position: absolute;
   top: 12px;
@@ -41,7 +41,8 @@
   padding: 0;
 }
 
-/* ── Image carousel ── */
+/* ── Image carousel ─────────────────────────────────────────────────────────── */
+
 .mpm__carousel {
   position: relative;
   height: 380px;
@@ -57,9 +58,7 @@
   scrollbar-width: none;
 }
 
-.mpm__images::-webkit-scrollbar {
-  display: none;
-}
+.mpm__images::-webkit-scrollbar { display: none; }
 
 .mpm__image {
   flex-shrink: 0;
@@ -67,16 +66,13 @@
   height: 100%;
   object-fit: cover;
   scroll-snap-align: start;
-  border-right: 3px solid white;
 }
 
-.mpm__image--placeholder {
-  background: #e0dedd;
-}
+.mpm__image--placeholder { background: #e0dedd; }
 
 .mpm__dots {
   position: absolute;
-  bottom: 10px;
+  bottom: 12px;
   left: 50%;
   transform: translateX(-50%);
   display: flex;
@@ -88,103 +84,218 @@
   height: 8px;
   border-radius: 50%;
   background: rgba(255, 255, 255, 0.4);
-  border: none;
   transition: background 0.2s;
 }
 
-.mpm__dot--active {
-  background: white;
-}
+.mpm__dot--active { background: white; }
 
-/* ── Details ── */
-.mpm__details {
+/* ── Content area ───────────────────────────────────────────────────────────── */
+
+.mpm__content {
   display: flex;
   flex-direction: column;
-  gap: 20px;
-  padding: 20px;
+  gap: 22px;
+  padding: 22px 20px 32px;
 }
 
-.mpm__naming {
+/* ── Header: name + price ───────────────────────────────────────────────────── */
+
+.mpm__header-row {
   display: flex;
   align-items: flex-end;
   justify-content: space-between;
-  gap: 10px;
+  gap: 12px;
 }
 
 .mpm__name {
   font-family: "Times New Roman", Times, serif;
   font-weight: 400;
-  font-size: 35px;
-  line-height: 0.95;
-  letter-spacing: -0.7px;
+  font-size: 38px;
+  line-height: 1.05;
+  letter-spacing: -0.76px;
   color: var(--color-black);
-  text-transform: capitalize;
+  margin: 0;
+  flex-shrink: 1;
+}
+
+.mpm__price {
+  font-family: "Times New Roman", Times, serif;
+  font-weight: 400;
+  font-size: 30px;
+  line-height: 1;
+  letter-spacing: -0.6px;
+  color: var(--color-blue);
+  white-space: nowrap;
+  flex-shrink: 0;
+  padding-bottom: 4px;
+}
+
+/* ── Comparar ───────────────────────────────────────────────────────────────── */
+
+.mpm__comparar {
+  background: none;
+  border: none;
+  padding: 0;
+  font-family: "forma-djr-display", sans-serif;
+  font-weight: 500;
+  font-size: 14px;
+  letter-spacing: 0.56px;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  cursor: pointer;
+  color: var(--color-black);
+  text-align: left;
+}
+
+/* ── Sections ───────────────────────────────────────────────────────────────── */
+
+.mpm__section {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.mpm__section-label {
+  font-family: "forma-djr-display", sans-serif;
+  font-weight: 700;
+  font-size: 12px;
+  letter-spacing: 0.52px;
+  text-transform: uppercase;
+  color: var(--color-black);
   margin: 0;
 }
 
-.mpm__dims {
-  font-family: "forma-djr-display", sans-serif;
-  font-weight: 400;
-  font-size: 14px;
-  letter-spacing: 0.56px;
-  color: var(--color-black);
-  white-space: nowrap;
-  flex-shrink: 0;
-  padding-bottom: 3px;
+/* 3-col grid for both page and text cards */
+.mpm__cards {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 6px;
 }
 
-/* Comparar button */
-.mpm__comparar {
-  width: 100%;
-  border: 1px solid var(--color-black);
+.mpm__card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 3px;
+  padding: 10px 4px;
+  border: 1px solid var(--color-border);
   background: white;
-  padding: 10px;
+  cursor: pointer;
+  transition: background 0.14s, border-color 0.14s;
+  text-align: center;
+}
+
+.mpm__card--selected {
+  background: #f0f0ef;
+  border: 2px solid var(--color-blue);
+}
+
+.mpm__card-top {
+  font-family: "forma-djr-display", sans-serif;
+  font-weight: 700;
+  font-size: 11px;
+  letter-spacing: 0.22px;
+  color: var(--color-black);
+}
+
+.mpm__card-bot {
+  font-family: "forma-djr-display", sans-serif;
+  font-weight: 500;
+  font-size: 11px;
+  letter-spacing: 0.44px;
+  color: #666;
+}
+
+.mpm__section-note {
   font-family: "forma-djr-display", sans-serif;
   font-weight: 500;
   font-size: 12px;
-  letter-spacing: 0.48px;
-  text-decoration: underline;
-  cursor: pointer;
-  color: var(--color-black);
+  letter-spacing: 0.4px;
+  color: #666;
+  margin: 0;
+  line-height: 1.5;
 }
 
-/* Pricing */
-.mpm__pricing {
+/* ── Details ────────────────────────────────────────────────────────────────── */
+
+.mpm__details {
   display: flex;
   flex-direction: column;
-  gap: 4px;
+  gap: 8px;
 }
 
-.mpm__price-base {
+.mpm__details-label {
   font-family: "forma-djr-display", sans-serif;
   font-weight: 700;
-  font-size: 14px;
-  letter-spacing: 0.56px;
+  font-size: 12px;
+  letter-spacing: 0.52px;
   text-transform: uppercase;
   color: var(--color-black);
   margin: 0;
 }
 
-.mpm__price-note {
-  font-family: "forma-djr-display", sans-serif;
-  font-weight: 400;
-  font-size: 12px;
-  letter-spacing: 0.48px;
-  color: #9e9e9e;
+.mpm__details-list {
   margin: 0;
+  padding-left: 0;
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  font-family: "forma-djr-display", sans-serif;
+  font-weight: 500;
+  font-size: 12px;
+  letter-spacing: 0.4px;
+  color: #666;
+  line-height: 1.5;
 }
 
-.mpm__price-extra {
-  font-family: "forma-djr-display", sans-serif;
-  font-weight: 700;
-  font-size: 12px;
-  letter-spacing: 0.48px;
-  text-transform: uppercase;
-  color: var(--color-black);
-  margin: 0;
+/* ── CP calculator ──────────────────────────────────────────────────────────── */
+
+.mpm__cp-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-top: 8px;
+  flex-wrap: wrap;
 }
 
-/* CTA */
+.mpm__cp-input {
+  width: 140px;
+  padding: 8px 10px;
+  border: 1px solid var(--color-border);
+  border-radius: 6px;
+  font-family: "forma-djr-display", sans-serif;
+  font-size: 13px;
+  letter-spacing: 0.08em;
+  outline: none;
+  background: #fafafa;
+  box-sizing: border-box;
+}
+
+.mpm__cp-input:focus {
+  border-color: var(--color-black);
+  background: white;
+}
+
+.mpm__cp-status {
+  font-family: "forma-djr-display", sans-serif;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.mpm__cp-status--loading { color: #999; }
+.mpm__cp-status--ok      { color: #2a7a4f; }
+.mpm__cp-status--error   { color: #b0312a; font-weight: 400; }
+
+/* ── CTA bar — fixed at bottom ──────────────────────────────────────────────── */
+
+.mpm__cta-bar {
+  flex-shrink: 0;
+  border-top: 1px solid var(--color-border);
+  background: white;
+}
+
 .mpm__cta {
   display: flex;
   align-items: center;
@@ -194,41 +305,15 @@
   color: white;
   font-family: "forma-djr-display", sans-serif;
   font-weight: 600;
-  font-size: 12px;
-  letter-spacing: 0.48px;
+  font-size: 14px;
+  letter-spacing: 0.56px;
   text-transform: uppercase;
   text-decoration: none;
-  padding: 10px;
+  padding: 16px;
 }
 
-/* Product details */
-.mpm__product-details {
-  display: flex;
-  flex-direction: column;
-  gap: 5px;
-  font-family: "forma-djr-display", sans-serif;
-  font-weight: 400;
-  font-size: 12px;
-  letter-spacing: 0.48px;
-}
+/* ── Comparar overlay ───────────────────────────────────────────────────────── */
 
-.mpm__details-label {
-  color: var(--color-black);
-  margin: 0;
-}
-
-.mpm__details-list {
-  margin: 0;
-  padding-left: 18px;
-  color: var(--color-black);
-}
-
-.mpm__details-list li {
-  line-height: normal;
-  margin-bottom: 4px;
-}
-
-/* ── Comparar overlay ── */
 .mpm__comp-backdrop {
   position: absolute;
   inset: 0;
@@ -273,7 +358,6 @@
   padding: 0;
 }
 
-/* Size diagram */
 .mpm__comp-canvas-wrap {
   width: 100%;
   display: flex;
@@ -312,16 +396,12 @@
   z-index: 2;
 }
 
-.mpm__comp-dim--w {
-  transform: translateX(-50%);
-}
-
+.mpm__comp-dim--w { transform: translateX(-50%); }
 .mpm__comp-dim--h {
   transform: translateY(-50%) rotate(90deg);
   transform-origin: left center;
 }
 
-/* Tab pills */
 .mpm__comp-tabs {
   display: flex;
   flex-wrap: wrap;
