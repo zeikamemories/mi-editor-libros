@@ -1,58 +1,104 @@
+/* ── Root ─────────────────────────────────────────────────────────────────── */
+
 .login-root {
   min-height: 100vh;
-  background: var(--color-cream);
+  background: var(--color-cream-dark);
+  display: flex;
+  flex-direction: column;
+}
+
+/* ── Header ───────────────────────────────────────────────────────────────── */
+
+.login-header {
+  display: flex;
+  align-items: center;
+  padding: 10px 20px;
+  background: white;
+  border-bottom: 1px solid var(--color-border);
+}
+
+.login-header-logo {
+  display: block;
+  line-height: 0;
+}
+
+/* ── Main ─────────────────────────────────────────────────────────────────── */
+
+.login-main {
+  flex: 1;
   display: flex;
   flex-direction: column;
   align-items: center;
-  padding: 40px 20px;
+  padding: 48px 20px 32px;
+  gap: 20px;
 }
 
-.login-logo {
-  display: block;
-  margin-bottom: 40px;
-}
-
-.login-card {
+/* Title + subtitle — full mobile width, wider on desktop */
+.login-heading {
   width: 100%;
-  max-width: 400px;
-  background: #fff;
-  border-radius: 16px;
-  border: 1px solid var(--color-border);
-  padding: 32px 28px;
+  max-width: 580px;
   display: flex;
   flex-direction: column;
-  gap: 18px;
+  gap: 12px;
 }
+
+/* Form elements — narrower column */
+.login-content {
+  width: 100%;
+  max-width: 580px;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+/* ── Title + subtitle ─────────────────────────────────────────────────────── */
 
 .login-title {
   font-family: "Times New Roman", Times, serif;
-  font-size: 28px;
+  font-size: 42px;
   font-weight: 400;
   letter-spacing: -0.02em;
-  margin: 0;
+  line-height: 1.1;
   color: var(--color-black);
   text-align: center;
+  margin: 0;
 }
+
+.login-subtitle {
+  font-family: "forma-djr-display", sans-serif;
+  font-size: 15px;
+  font-weight: 500;
+  letter-spacing: 0.3px;
+  color: var(--color-black);
+  text-align: center;
+  margin: 0;
+  white-space: pre-line;
+  line-height: 1.5;
+}
+
+/* ── Google button ────────────────────────────────────────────────────────── */
 
 .login-google-btn {
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 10px;
+  gap: 12px;
   width: 100%;
-  padding: 12px;
-  background: #fff;
-  border: 1px solid var(--color-border);
-  border-radius: 8px;
+  padding: 16px;
+  background: white;
+  border: 1px solid var(--color-black);
   font-family: "forma-djr-display", sans-serif;
   font-size: 14px;
-  font-weight: 500;
+  font-weight: 600;
+  letter-spacing: 0.56px;
   color: var(--color-black);
   cursor: pointer;
   transition: background 0.15s;
 }
 
-.login-google-btn:hover { background: #f5f5f5; }
+.login-google-btn:hover { background: #f8f8f6; }
+
+/* ── Divider ──────────────────────────────────────────────────────────────── */
 
 .login-divider {
   display: flex;
@@ -71,6 +117,8 @@
   background: var(--color-border);
 }
 
+/* ── Form ─────────────────────────────────────────────────────────────────── */
+
 .login-form {
   display: flex;
   flex-direction: column;
@@ -79,17 +127,20 @@
 
 .login-input {
   width: 100%;
-  padding: 12px 14px;
+  padding: 16px 14px;
   border: 1px solid var(--color-border);
-  border-radius: 8px;
+  background: white;
   font-family: "forma-djr-display", sans-serif;
-  font-size: 14px;
-  background: #fff;
+  font-size: 15px;
+  font-weight: 500;
+  color: var(--color-black);
   outline: none;
   box-sizing: border-box;
   transition: border-color 0.15s;
+  border-radius: 0;
 }
 
+.login-input::placeholder { color: var(--color-black); }
 .login-input:focus { border-color: var(--color-black); }
 
 .login-error {
@@ -101,37 +152,137 @@
 
 .login-submit-btn {
   width: 100%;
-  padding: 13px;
-  background: var(--color-black);
-  color: #fff;
+  padding: 16px;
+  background: var(--color-blue);
+  color: white;
   border: none;
-  border-radius: 8px;
   font-family: "forma-djr-display", sans-serif;
   font-size: 14px;
-  font-weight: 500;
-  letter-spacing: 0.04em;
+  font-weight: 600;
+  letter-spacing: 0.56px;
   cursor: pointer;
   transition: opacity 0.15s;
-  margin-top: 4px;
+  margin-top: 2px;
+  border-radius: 0;
 }
 
 .login-submit-btn:disabled { opacity: 0.4; cursor: default; }
+.login-submit-btn:not(:disabled):hover { opacity: 0.88; }
 
-.login-toggle {
+/* ── Toggle section ───────────────────────────────────────────────────────── */
+
+.login-toggle-section {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  margin-top: 12px;
+}
+
+.login-toggle-label {
   font-family: "forma-djr-display", sans-serif;
-  font-size: 13px;
-  color: #888;
-  text-align: center;
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--color-black);
   margin: 0;
+  letter-spacing: 0.3px;
 }
 
 .login-toggle-btn {
-  background: none;
-  border: none;
-  color: var(--color-blue);
+  width: 100%;
+  padding: 16px;
+  background: white;
+  border: 1px solid var(--color-black);
+  font-family: "forma-djr-display", sans-serif;
+  font-size: 14px;
+  font-weight: 600;
+  letter-spacing: 0.56px;
+  color: var(--color-black);
+  cursor: pointer;
+  transition: background 0.15s;
+  border-radius: 0;
+}
+
+.login-toggle-btn:hover { background: #f5f5f3; }
+
+/* ── Footer / WhatsApp note ───────────────────────────────────────────────── */
+
+.login-footer {
+  padding: 24px 20px 36px;
+  display: flex;
+  justify-content: center;
+}
+
+.login-whatsapp-note {
+  display: flex;
+  align-items: flex-start;
+  gap: 14px;
+  max-width: 580px;
+  width: 100%;
+}
+
+.login-wa-icon {
+  width: 52px;
+  height: 52px;
+  flex-shrink: 0;
+  border-radius: 10px;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.login-wa-icon svg {
+  width: 100%;
+  height: 100%;
+}
+
+.login-wa-text {
   font-family: "forma-djr-display", sans-serif;
   font-size: 13px;
-  cursor: pointer;
-  padding: 0;
-  text-decoration: underline;
+  font-weight: 400;
+  color: #888;
+  margin: 0;
+  line-height: 1.5;
+  letter-spacing: 0.26px;
+  padding-top: 4px;
+}
+
+/* ── Desktop ──────────────────────────────────────────────────────────────── */
+
+@media (min-width: 1024px) {
+  .login-header {
+    padding: 10px 50px;
+  }
+
+  .login-main {
+    padding: 80px 50px 40px;
+  }
+
+  .login-heading {
+    max-width: 720px;
+    text-align: center;
+  }
+
+  .login-title {
+    font-size: 52px;
+    text-align: center;
+  }
+
+  .login-subtitle {
+    text-align: center;
+  }
+
+  .login-content {
+    max-width: 480px;
+  }
+
+  .login-footer {
+    padding: 32px 50px 48px;
+    justify-content: center;
+  }
+
+  .login-whatsapp-note {
+    max-width: 480px;
+  }
 }
