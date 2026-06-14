@@ -250,7 +250,23 @@ export default function MobileProductModal({ product, onClose }: Props) {
 
       {/* CTA — fixed at bottom */}
       <div className="mpm__cta-bar">
-        <a href="/orden" className="mpm__cta">CONTAR MI HISTORIA</a>
+        <a
+          href="/orden"
+          className="mpm__cta"
+          onClick={() => {
+            const MAP: Record<string, string> = {
+              chico: 'chico_h', mediano: 'mediano_h', grande: 'grande_h',
+              vertical: 'vertical', cuadrado: 'cuadrado',
+            }
+            sessionStorage.setItem('zeika_product_selection', JSON.stringify({
+              sizeId: MAP[product.sizeId] ?? product.sizeId,
+              pageIdx,
+              textExtra,
+            }))
+          }}
+        >
+          CONTAR MI HISTORIA
+        </a>
       </div>
 
       {/* Close button */}

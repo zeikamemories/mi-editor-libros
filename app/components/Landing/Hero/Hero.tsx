@@ -1,3 +1,4 @@
+'use client'
 import './Hero.css'
 
 export default function Hero() {
@@ -36,7 +37,11 @@ export default function Hero() {
           de fotolibros personalizados
         </h1>
 
-        <a href="/orden" className="hero__cta">
+        <a
+          href="/orden"
+          className="hero__cta"
+          onClick={() => sessionStorage.removeItem('zeika_product_selection')}
+        >
           CONTAR MI HISTORIA
         </a>
       </div>

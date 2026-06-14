@@ -243,7 +243,23 @@ export default function ProductModal({ product, onClose }: Props) {
           </div>
 
           {/* CTA pinned at bottom */}
-          <a href="/orden" className="pm__cta">CONTAR MI HISTORIA</a>
+          <a
+            href="/orden"
+            className="pm__cta"
+            onClick={() => {
+              const MAP: Record<string, string> = {
+                chico: 'chico_h', mediano: 'mediano_h', grande: 'grande_h',
+                vertical: 'vertical', cuadrado: 'cuadrado',
+              }
+              sessionStorage.setItem('zeika_product_selection', JSON.stringify({
+                sizeId: MAP[product.sizeId] ?? product.sizeId,
+                pageIdx,
+                textExtra,
+              }))
+            }}
+          >
+            CONTAR MI HISTORIA
+          </a>
         </div>
       </div>
     </div>
