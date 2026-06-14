@@ -1048,6 +1048,16 @@
   color: #666;
 }
 
+.mp-delivery-price--known {
+  color: var(--color-black);
+  font-weight: 600;
+}
+
+.mp-delivery-price--free {
+  color: #2a7a4f;
+  font-weight: 600;
+}
+
 .mp-delivery-desc {
   font-family: "forma-djr-display", sans-serif;
   font-size: 12px;
@@ -1055,8 +1065,14 @@
   margin-top: 3px;
 }
 
-.mp-address-input {
+.mp-andreani-fields {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
   margin-top: 8px;
+}
+
+.mp-address-input {
   width: 100%;
   padding: 10px 12px;
   border: 1px solid var(--color-border);
@@ -1069,6 +1085,43 @@
 }
 
 .mp-address-input:focus { border-color: var(--color-black); }
+
+.mp-cp-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.mp-cp-input {
+  width: 140px;
+  flex-shrink: 0;
+  padding: 10px 12px;
+  border: 1px solid var(--color-border);
+  border-radius: 8px;
+  font-family: "forma-djr-display", sans-serif;
+  font-size: 13px;
+  background: #fff;
+  outline: none;
+  box-sizing: border-box;
+  letter-spacing: 0.08em;
+}
+
+.mp-cp-input:focus { border-color: var(--color-black); }
+
+.mp-cp-status {
+  font-family: "forma-djr-display", sans-serif;
+  font-size: 12px;
+  font-weight: 500;
+}
+
+.mp-cp-status--loading { color: #888; }
+.mp-cp-status--ok      { color: #2a7a4f; }
+.mp-cp-status--error   { color: #b0312a; }
+
+.mp-summary-muted {
+  color: #aaa;
+  font-style: italic;
+}
 
 .mp-summary-rows {
   display: flex;

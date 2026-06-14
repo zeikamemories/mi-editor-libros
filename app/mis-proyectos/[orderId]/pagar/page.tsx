@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { useRouter, useParams } from 'next/navigation'
 import Link from 'next/link'
 import { supabase } from '../../../lib/supabase'
@@ -15,7 +15,7 @@ interface Order {
 }
 
 const PRICES: Record<string, number> = {
-  chico_h:   100,
+  chico_h:   75000,
   mediano_h: 81500,
   grande_h:  100000,
   vertical:  81500,
@@ -31,7 +31,7 @@ const SIZE_NAMES: Record<string, string> = {
 }
 
 function fmt(n: number) {
-  return '$' + n.toLocaleString('es-AR')
+  return '$' + Math.round(n).toLocaleString('es-AR')
 }
 
 export default function PagarPage() {
@@ -43,9 +43,15 @@ export default function PagarPage() {
   const [loading, setLoading] = useState(true)
   const [paying,  setPaying]  = useState(false)
 
-  const [copies,        setCopies]        = useState(1)
-  const [deliveryType,  setDeliveryType]  = useState<'andreani' | 'pickup'>('andreani')
-  const [address,       setAddress]       = useState('')
+  const [copies,          setCopies]          = useState(1)
+  const [deliveryType,    setDeliveryType]    = useState<'andreani' | 'pickup'>('andreani')
+  const [address,         setAddress]         = useState('')
+  const [cp,              setCp]              = useState('')
+  const [shippingPrice,   setShippingPrice]   = useState<number | null>(null)
+  const [shippingLoading, setShippingLoading] = useState(false)
+  const [shippingError,   setShippingError]   = useState<string | null>(null)
+
+  const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
@@ -63,14 +69,60 @@ export default function PagarPage() {
     })
   }, [orderId, router])
 
+  // Debounce CP lookup — fires 600ms after user stops typing
+  useEffect(() => {
+    if (debounceRef.current) clearTimeout(debounceRef.current)
+
+    const trimmed = cp.trim()
+    if (!/^\d{4}$/.test(trimmed)) {
+      setShippingPrice(null)
+      setShippingError(trimmed.length > 0 ? 'El CP debe tener 4 dígitos' : null)
+      return
+    }
+
+    setShippingLoading(true)
+    setShippingError(null)
+
+    debounceRef.current = setTimeout(async () => {
+      try {
+        const res  = await fetch(`/api/shipping-quote?cp=${trimmed}`)
+        const data = await res.json()
+        if (!res.ok) {
+          setShippingError(data.error ?? 'No se pudo calcular el envío')
+          setShippingPrice(null)
+        } else {
+          setShippingPrice(data.price as number)
+          setShippingError(null)
+        }
+      } catch {
+        setShippingError('No se pudo calcular el envío')
+        setShippingPrice(null)
+      } finally {
+        setShippingLoading(false)
+      }
+    }, 600)
+
+    return () => {
+      if (debounceRef.current) clearTimeout(debounceRef.current)
+    }
+  }, [cp])
+
   if (loading || !order) return (
     <div className="mp-loading"><div className="mp-spinner" /></div>
   )
 
-  const unitPrice = PRICES[order.size] ?? order.price_total
-  const discount  = copies >= 3 ? 0.8 : 1
-  const subtotal  = copies * unitPrice * discount
-  const payNow    = Math.round(subtotal - order.price_paid)
+  const unitPrice     = PRICES[order.size] ?? order.price_total
+  const discount      = copies >= 3 ? 0.8 : 1
+  const subtotal      = copies * unitPrice * discount
+  const shippingTotal = deliveryType === 'andreani' ? (shippingPrice ?? 0) : 0
+  const payNow        = Math.round(subtotal - order.price_paid)
+  const payNowTotal   = payNow + shippingTotal
+
+  const shippingLabel = shippingLoading
+    ? 'Calculando...'
+    : shippingPrice !== null
+      ? fmt(shippingPrice)
+      : 'a calcular'
 
   async function handlePay() {
     if (deliveryType === 'andreani' && !address.trim()) return
@@ -79,7 +131,7 @@ export default function PagarPage() {
     await supabase.from('orders').update({
       copies,
       delivery_type:    deliveryType,
-      delivery_address: address,
+      delivery_address: `${address}${cp ? ` (CP ${cp})` : ''}`,
     }).eq('id', order!.id)
 
     const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? window.location.origin
@@ -89,7 +141,7 @@ export default function PagarPage() {
       body: JSON.stringify({
         orderId:    order!.id,
         bookName:   order!.book_name,
-        amount:     payNow,
+        amount:     payNowTotal,
         successUrl: `${siteUrl}/mis-proyectos/${order!.id}/confirmado`,
         failureUrl: `${siteUrl}/mis-proyectos/${order!.id}/pagar?error=1`,
       }),
@@ -121,7 +173,7 @@ export default function PagarPage() {
               <span className="mp-copies-num">{copies}</span>
               <button className="mp-copies-btn" onClick={() => setCopies(c => c + 1)}>+</button>
             </div>
-            <span className="mp-copies-price">{fmt(unitPrice * discount)} c/u · Total {fmt(subtotal * discount)}</span>
+            <span className="mp-copies-price">{fmt(unitPrice * discount)} c/u · Total {fmt(subtotal)}</span>
           </div>
           {copies >= 3 && (
             <div className="mp-discount-notice">A partir de 3 copias: 20% de descuento</div>
@@ -140,16 +192,36 @@ export default function PagarPage() {
             <div className="mp-delivery-info">
               <div className="mp-delivery-title">
                 Envío por Andreani
-                <span className="mp-delivery-price">a calcular</span>
+                <span className={`mp-delivery-price ${shippingPrice !== null ? 'mp-delivery-price--known' : ''}`}>
+                  {deliveryType === 'andreani' ? shippingLabel : 'a calcular'}
+                </span>
               </div>
               <div className="mp-delivery-desc">Todo el país y Uruguay · 2–7 días hábiles</div>
               {deliveryType === 'andreani' && (
-                <input
-                  className="mp-address-input"
-                  placeholder="Dirección de entrega"
-                  value={address}
-                  onChange={e => setAddress(e.target.value)}
-                />
+                <div className="mp-andreani-fields" onClick={e => e.stopPropagation()}>
+                  <input
+                    className="mp-address-input"
+                    placeholder="Dirección de entrega"
+                    value={address}
+                    onChange={e => setAddress(e.target.value)}
+                  />
+                  <div className="mp-cp-row">
+                    <input
+                      className="mp-cp-input"
+                      placeholder="Código postal (4 dígitos)"
+                      value={cp}
+                      maxLength={4}
+                      onChange={e => setCp(e.target.value.replace(/\D/g, '').slice(0, 4))}
+                    />
+                    {shippingLoading && <span className="mp-cp-status mp-cp-status--loading">Calculando...</span>}
+                    {!shippingLoading && shippingPrice !== null && (
+                      <span className="mp-cp-status mp-cp-status--ok">Envío: {fmt(shippingPrice)}</span>
+                    )}
+                    {!shippingLoading && shippingError && (
+                      <span className="mp-cp-status mp-cp-status--error">{shippingError}</span>
+                    )}
+                  </div>
+                </div>
               )}
             </div>
           </div>
@@ -162,7 +234,7 @@ export default function PagarPage() {
             <div className="mp-delivery-info">
               <div className="mp-delivery-title">
                 Retiro en fábrica
-                <span className="mp-delivery-price" style={{ color: '#2a7a4f' }}>Gratis</span>
+                <span className="mp-delivery-price mp-delivery-price--free">Gratis</span>
               </div>
               <div className="mp-delivery-desc">Concepción Arenal 4501, Chacarita · Lun–Vie 10–18 hs</div>
             </div>
@@ -182,14 +254,20 @@ export default function PagarPage() {
             </div>
             {deliveryType === 'andreani' && (
               <div className="mp-summary-row">
-                <span>Envío</span>
-                <span>a calcular</span>
+                <span>Envío Andreani</span>
+                <span className={shippingPrice !== null ? '' : 'mp-summary-muted'}>
+                  {shippingLoading ? 'Calculando...' : shippingPrice !== null ? fmt(shippingPrice) : 'ingresá tu CP'}
+                </span>
               </div>
             )}
             <hr className="mp-summary-divider" />
             <div className="mp-summary-total">
               <span>Pagás ahora</span>
-              <span>{fmt(payNow)}{deliveryType === 'andreani' ? ' + envío' : ''}</span>
+              <span>
+                {shippingPrice !== null || deliveryType === 'pickup'
+                  ? fmt(payNowTotal)
+                  : `${fmt(payNow)} + envío`}
+              </span>
             </div>
           </div>
         </div>
