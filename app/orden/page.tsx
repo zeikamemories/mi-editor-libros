@@ -366,7 +366,7 @@ export default function OrdenPage() {
         <>
           <div className="orden__scroll">
             <div className="orden__content">
-              <div className="orden__field">
+              <div className="orden__field orden__field--name">
                 <label className="orden__label">NOMBRE DEL LIBRO</label>
                 <input className="orden__input" placeholder="Ej: Verano Grecia 2024" value={bookName} onChange={e => setBookName(e.target.value)} />
               </div>
@@ -415,7 +415,7 @@ export default function OrdenPage() {
       {step === 3 && (
         <>
           <div className="orden__scroll">
-            <div className="orden__content">
+            <div className="orden__content orden__content--summary">
               <p className="orden__subtitle-center">Una vez abonado se crea una carpeta dentro de tu perfil donde podés cargás el material</p>
 
               <div className="orden__summary">

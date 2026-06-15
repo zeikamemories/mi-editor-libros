@@ -69,6 +69,18 @@
   box-shadow: 0px 4px 7.5px rgba(0, 0, 0, 0.1);
 }
 
+/* Full-width sticky state (on scroll) */
+.hero__cta {
+  transition: left 0.25s ease, right 0.25s ease, bottom 0.25s ease;
+}
+
+.hero__cta--full {
+  left: 0;
+  right: 0;
+  bottom: 0;
+  padding: 18px 15px;
+}
+
 /* ── Desktop ── */
 @media (min-width: 1024px) {
   .hero {
@@ -103,6 +115,14 @@
     bottom: 50px;
     right: 50px;
     left: auto;
+    width: 340px;
+    padding: 10px 8px;
+  }
+
+  .hero__cta--full {
+    left: auto;
+    right: 50px;
+    bottom: 50px;
     width: 340px;
     padding: 10px 8px;
   }

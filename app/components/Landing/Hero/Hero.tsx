@@ -1,7 +1,16 @@
 'use client'
+import { useState, useEffect } from 'react'
 import './Hero.css'
 
 export default function Hero() {
+  const [scrolled, setScrolled] = useState(false)
+
+  useEffect(() => {
+    const onScroll = () => setScrolled(window.scrollY > 5)
+    window.addEventListener('scroll', onScroll, { passive: true })
+    return () => window.removeEventListener('scroll', onScroll)
+  }, [])
+
   return (
     <section className="hero">
       <video
@@ -39,7 +48,7 @@ export default function Hero() {
 
         <a
           href="/orden"
-          className="hero__cta"
+          className={`hero__cta${scrolled ? ' hero__cta--full' : ''}`}
           onClick={() => sessionStorage.removeItem('zeika_product_selection')}
         >
           CONTAR MI HISTORIA

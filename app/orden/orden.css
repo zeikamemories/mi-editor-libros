@@ -491,8 +491,6 @@
   bottom: 0;
   left: 0;
   right: 0;
-  background: white;
-  border-top: 1px solid var(--color-border);
   display: flex;
   flex-direction: column;
   z-index: 50;
@@ -528,7 +526,6 @@
   margin: 0;
   text-align: center;
   padding: 8px 20px 12px;
-  background: white;
 }
 
 /* ── Login ────────────────────────────────────────────────────────────────── */
@@ -670,9 +667,28 @@
 @media (min-width: 1024px) {
   .orden__header { padding: 10px 50px; }
 
-  .orden__scroll { max-width: 600px; margin: 0 auto; width: 100%; }
+  .orden__scroll { max-width: 1200px; margin: 0 auto; width: 100%; }
 
-  .orden__content { padding: 40px 0 0; }
+  .orden__step-header { padding: 36px 50px 0; max-width: 1200px; margin: 0 auto; width: 100%; box-sizing: border-box; }
+
+  .orden__content { padding: 24px 50px 0; }
+
+  .orden__field--name { max-width: 480px; }
+
+  .orden__content--summary { max-width: 700px; margin-left: auto; margin-right: auto; }
+
+  /* Step 1 desktop: proportional to physical book width (cm) */
+  .orden__sizes-grid {
+    grid-template-columns: 21fr 28fr 41fr 22fr 29fr;
+  }
+
+  .orden__size-card--full {
+    grid-column: auto;
+  }
+
+  .orden__size-card--full .orden__size-img {
+    aspect-ratio: 440 / 314;
+  }
 
   .orden__login-content {
     padding: 60px 0 0;
@@ -682,12 +698,10 @@
 
   .orden__title { font-size: 42px; }
 
-  .orden__cta-bar { padding: 14px 0 20px; }
+  .orden__cta-bar { padding: 0; }
 
   .orden__cta-btn {
-    max-width: 600px;
-    margin: 0 auto;
-    display: block;
+    max-width: none;
   }
 
   .orden__wa-footer {
