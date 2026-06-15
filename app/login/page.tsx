@@ -9,6 +9,11 @@ import './login.css'
 const ADMIN_EMAILS = ['maikasacerdote@gmail.com', 'zeika.memories@gmail.com']
 
 function redirectDest(email: string | undefined | null) {
+  const afterLogin = sessionStorage.getItem('zeika_after_login')
+  if (afterLogin) {
+    sessionStorage.removeItem('zeika_after_login')
+    return afterLogin
+  }
   return email && ADMIN_EMAILS.includes(email) ? '/dashboard' : '/mis-proyectos'
 }
 

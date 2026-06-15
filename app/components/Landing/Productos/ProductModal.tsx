@@ -45,6 +45,7 @@ export default function ProductModal({ product, onClose }: Props) {
   const [compSize,        setCompSize]        = useState(product.sizeId)
   const [pageIdx,         setPageIdx]         = useState(0)
   const [textExtra,       setTextExtra]       = useState(false)
+  const [bookName,        setBookName]        = useState('')
   const [cp,              setCp]              = useState('')
   const [shippingPrice,   setShippingPrice]   = useState<number | null>(null)
   const [shippingLoading, setShippingLoading] = useState(false)
@@ -61,6 +62,7 @@ export default function ProductModal({ product, onClose }: Props) {
   useEffect(() => {
     setPageIdx(0)
     setTextExtra(false)
+    setBookName('')
     setCp('')
     setShippingPrice(null)
     setShippingError(null)
@@ -214,6 +216,17 @@ export default function ProductModal({ product, onClose }: Props) {
               </div>
             </div>
 
+            {/* Book name */}
+            <div className="pm__section">
+              <p className="pm__section-label">NOMBRE</p>
+              <input
+                className="pm__name-input"
+                placeholder="Ej: Verano Grecia 2024"
+                value={bookName}
+                onChange={e => setBookName(e.target.value)}
+              />
+            </div>
+
             {/* Details */}
             <div className="pm__details">
               <p className="pm__details-label">Detalles del producto:</p>
@@ -255,7 +268,9 @@ export default function ProductModal({ product, onClose }: Props) {
                 sizeId: MAP[product.sizeId] ?? product.sizeId,
                 pageIdx,
                 textExtra,
+                bookName,
               }))
+              sessionStorage.setItem('zeika_back_product', product.sizeId)
             }}
           >
             CONTAR MI HISTORIA

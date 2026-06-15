@@ -61,6 +61,7 @@ export default function MobileProductModal({ product, onClose }: Props) {
   const [activeSlide,     setActiveSlide]     = useState(0)
   const [pageIdx,         setPageIdx]         = useState(0)
   const [textExtra,       setTextExtra]       = useState(false)
+  const [bookName,        setBookName]        = useState('')
   const [cp,              setCp]              = useState('')
   const [shippingPrice,   setShippingPrice]   = useState<number | null>(null)
   const [shippingLoading, setShippingLoading] = useState(false)
@@ -167,6 +168,9 @@ export default function MobileProductModal({ product, onClose }: Props) {
             <span className="mpm__price">{fmt(basePrice)}</span>
           </div>
 
+          {/* Dimensions */}
+          <span className="mpm__dims">{product.dimensions}</span>
+
           {/* Comparar */}
           <button
             className="mpm__comparar"
@@ -218,6 +222,17 @@ export default function MobileProductModal({ product, onClose }: Props) {
             </div>
           </div>
 
+          {/* Book name */}
+          <div className="mpm__section">
+            <p className="mpm__section-label">NOMBRE</p>
+            <input
+              className="mpm__name-input"
+              placeholder="Ej: Verano Grecia 2024"
+              value={bookName}
+              onChange={e => setBookName(e.target.value)}
+            />
+          </div>
+
           {/* Details */}
           <div className="mpm__details">
             <p className="mpm__details-label">DETALLES DEL PRODUCTO</p>
@@ -262,7 +277,9 @@ export default function MobileProductModal({ product, onClose }: Props) {
               sizeId: MAP[product.sizeId] ?? product.sizeId,
               pageIdx,
               textExtra,
+              bookName,
             }))
+            sessionStorage.setItem('zeika_back_product', product.sizeId)
           }}
         >
           CONTAR MI HISTORIA

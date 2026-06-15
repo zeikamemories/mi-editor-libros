@@ -159,7 +159,6 @@
   align-items: center;
   justify-content: space-between;
   gap: 16px;
-  padding-right: 44px; /* avoid close button overlap */
 }
 
 .pm__name {
@@ -302,6 +301,23 @@
   line-height: 1.5;
 }
 
+.pm__name-input {
+  width: 100%;
+  padding: 12px 14px;
+  border: 1px solid var(--color-border);
+  font-family: "forma-djr-display", sans-serif;
+  font-size: 14px;
+  font-weight: 400;
+  letter-spacing: 0.28px;
+  color: var(--color-black);
+  outline: none;
+  box-sizing: border-box;
+  transition: border-color 0.15s;
+}
+
+.pm__name-input::placeholder { color: #bbb; }
+.pm__name-input:focus { border-color: var(--color-black); }
+
 /* ── Details bullets ─────────────────────────────────────────────────────── */
 
 .pm__details {
@@ -387,7 +403,8 @@
   letter-spacing: 0.64px;
   text-transform: uppercase;
   text-decoration: none;
-  padding: 18px 15px;
+  padding: 12px 15px;
+  margin: 0 30px 24px;
 }
 
 /* ── Size comparison panel ────────────────────────────────────────────────── */

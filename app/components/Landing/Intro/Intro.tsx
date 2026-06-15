@@ -14,7 +14,7 @@ export default function Intro() {
 
       <div className="intro__gif-wrap">
         {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img src="/videos/gif-moments-mobile.gif" alt="" className="intro__gif intro__gif--mobile" />
+        <img src="/videos/gif-moments-2.gif" alt="" className="intro__gif intro__gif--mobile" />
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img src="/videos/Desktop-Moments.gif" alt="" className="intro__gif intro__gif--desktop" />
       </div>
