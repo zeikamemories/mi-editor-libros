@@ -1,0 +1,289 @@
+/* ── Layout shell ─────────────────────────────────────────────────────────── */
+
+.tareas-root {
+  min-height: 100vh;
+  background: var(--color-white);
+  font-family: var(--font-body);
+}
+
+.tareas-topbar {
+  height: 50px;
+  background: #fefefe;
+  border-bottom: 1px solid #cfcfcf;
+  display: flex;
+  align-items: center;
+  padding: 0 16px;
+  gap: 16px;
+  position: sticky;
+  top: 0;
+  z-index: 100;
+}
+
+.tareas-back-link {
+  font-family: var(--font-body);
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--color-black);
+  text-decoration: none;
+  letter-spacing: 0.3px;
+}
+
+.tareas-back-link:hover {
+  opacity: 0.7;
+}
+
+.tareas-main {
+  max-width: 860px;
+  margin: 0 auto;
+  padding: 40px 24px 80px;
+}
+
+.tareas-title {
+  font-family: var(--font-display);
+  font-size: 32px;
+  font-weight: 400;
+  color: var(--color-black);
+  margin-bottom: 6px;
+}
+
+.tareas-subtitle {
+  font-family: var(--font-body);
+  font-size: 14px;
+  color: #888;
+  letter-spacing: 0.2px;
+  margin-bottom: 32px;
+}
+
+/* ── Week accordion ───────────────────────────────────────────────────────── */
+
+.tareas-week {
+  border: 1px solid var(--color-border);
+  margin-bottom: 14px;
+}
+
+.tareas-week-header {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 14px 16px;
+  background: #f9f9f9;
+  border: none;
+  cursor: pointer;
+  text-align: left;
+  font-family: var(--font-body);
+}
+
+.tareas-week-chevron {
+  flex-shrink: 0;
+  transition: transform 0.15s;
+  color: #888;
+}
+
+.tareas-week-header--collapsed .tareas-week-chevron {
+  transform: rotate(-90deg);
+}
+
+.tareas-week-label {
+  flex: 1;
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--color-black);
+  letter-spacing: 0.2px;
+}
+
+.tareas-week-count {
+  font-size: 13px;
+  color: #888;
+  letter-spacing: 0.2px;
+}
+
+.tareas-week-body {
+  display: flex;
+  flex-direction: column;
+}
+
+/* ── Task row ─────────────────────────────────────────────────────────────── */
+
+.tareas-row {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 10px;
+  padding: 10px 16px;
+  border-top: 1px solid var(--color-border);
+}
+
+.tareas-row--listo .tareas-title-text {
+  color: #aaa;
+  text-decoration: line-through;
+}
+
+/* ── Estado pill (mirrors .dash-badge) ───────────────────────────────────── */
+
+.tareas-pill {
+  display: inline-flex;
+  align-items: center;
+  flex-shrink: 0;
+  padding: 4px 10px;
+  font-family: var(--font-body);
+  font-size: 13px;
+  font-weight: 400;
+  letter-spacing: 0.25px;
+  white-space: nowrap;
+  border-radius: 15px;
+  cursor: pointer;
+  border: 0.75px solid transparent;
+}
+
+.tareas-pill--por-hacer  { background: #e5e5e5; border-color: #b0b0b0; color: #424242; }
+.tareas-pill--en-progreso { background: #e5edf8; border-color: #5f96e1; color: #255493; }
+.tareas-pill--listo      { background: #e3f3e8; border-color: #71a281; color: #3b644a; }
+
+/* ── Title (click to edit) ───────────────────────────────────────────────── */
+
+.tareas-title-text {
+  flex: 1;
+  min-width: 160px;
+  font-size: 14px;
+  color: var(--color-black);
+  letter-spacing: 0.2px;
+  cursor: text;
+}
+
+.tareas-title-input {
+  flex: 1;
+  min-width: 160px;
+  font-family: var(--font-body);
+  font-size: 14px;
+  letter-spacing: 0.2px;
+  border: none;
+  border-bottom: 1px solid var(--color-blue);
+  outline: none;
+  padding: 2px 0;
+  background: transparent;
+}
+
+/* ── Área tag (native select styled as a colored pill) ───────────────────── */
+
+.tareas-area-select {
+  flex-shrink: 0;
+  font-family: var(--font-body);
+  font-size: 12px;
+  font-weight: 500;
+  letter-spacing: 0.2px;
+  border-radius: 15px;
+  border: 0.75px solid transparent;
+  padding: 4px 8px;
+  cursor: pointer;
+  outline: none;
+}
+
+.tareas-area--fabrica     { background: #fde8db; border-color: #f97944; color: #7a2d0e; }
+.tareas-area--precios     { background: #fbf3d0; border-color: #d8b934; color: #6b5800; }
+.tareas-area--packaging   { background: #fbe1ee; border-color: #e070ad; color: #8a1457; }
+.tareas-area--influencers { background: #f0d6fa; border-color: #a719d3; color: #6b0099; }
+.tareas-area--testing     { background: #e5edf8; border-color: #5f96e1; color: #255493; }
+.tareas-area--procesos    { background: #ede2d4; border-color: #a9824f; color: #5c4321; }
+.tareas-area--arranque    { background: #e5e5e5; border-color: #b0b0b0; color: #424242; }
+
+/* ── Notes ────────────────────────────────────────────────────────────────── */
+
+.tareas-notes-toggle {
+  flex-shrink: 0;
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-size: 12px;
+  color: #888;
+  font-family: var(--font-body);
+  padding: 2px 4px;
+}
+
+.tareas-notes-input {
+  width: 100%;
+  margin-top: 8px;
+  padding: 8px 10px;
+  font-family: var(--font-body);
+  font-size: 13px;
+  letter-spacing: 0.2px;
+  border: 1px solid var(--color-border);
+  border-radius: 4px;
+  resize: vertical;
+  min-height: 50px;
+  outline: none;
+}
+
+/* ── Delete ───────────────────────────────────────────────────────────────── */
+
+.tareas-delete-btn {
+  flex-shrink: 0;
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: #ccc;
+  display: flex;
+  align-items: center;
+  padding: 4px;
+  border-radius: 4px;
+  transition: color 0.15s;
+}
+
+.tareas-delete-btn:hover {
+  color: #c0392b;
+}
+
+/* ── Add task ─────────────────────────────────────────────────────────────── */
+
+.tareas-add-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 16px;
+  border-top: 1px solid var(--color-border);
+  color: #aaa;
+}
+
+.tareas-add-input {
+  flex: 1;
+  border: none;
+  outline: none;
+  font-family: var(--font-body);
+  font-size: 14px;
+  letter-spacing: 0.2px;
+  background: transparent;
+}
+
+.tareas-add-input::placeholder {
+  color: #aaa;
+}
+
+/* ── Loading ──────────────────────────────────────────────────────────────── */
+
+.tareas-loading {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 100vh;
+}
+
+.tareas-spinner {
+  width: 32px;
+  height: 32px;
+  border: 3px solid #e0e0e0;
+  border-top-color: var(--color-blue);
+  border-radius: 50%;
+  animation: tareas-spin 0.8s linear infinite;
+}
+
+@keyframes tareas-spin {
+  to { transform: rotate(360deg); }
+}
+
+/* ── Desktop ──────────────────────────────────────────────────────────────── */
+
+@media (min-width: 768px) {
+  .tareas-main {
+    padding: 56px 24px 100px;
+  }
+}
