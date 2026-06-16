@@ -70,8 +70,8 @@
 .qs__founder-text {
   font-family: "forma-djr-display", sans-serif;
   font-weight: 600;
-  font-size: 14px;
-  line-height: 18px;
+  font-size: 16px;
+  line-height: 20px;
   letter-spacing: 0.56px;
   color: var(--color-black);
   margin: 0;
@@ -334,7 +334,7 @@
   }
 
   .qs__founder-text {
-    font-size: 16px;
+    font-size: 20px;
     line-height: 1.6;
     letter-spacing: 0.64px;
   }
