@@ -20,7 +20,7 @@ export default function Hero() {
         loop
         playsInline
       >
-        <source src="/videos/Animacion-Hero-Mobile.mp4" type="video/mp4" />
+        <source src="/videos/Hero-Mobile.mp4" type="video/mp4" />
       </video>
 
       <video
