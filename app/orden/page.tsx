@@ -140,13 +140,14 @@ export default function OrdenPage() {
         orderId:    order.id,
         bookName:   bookName.trim() || 'Sin título',
         amount:     payNow,
-        successUrl: `${siteUrl}/orden/confirmado?orderId=${order.id}`,
+        successUrl: `${siteUrl}/orden/confirmado?order_id=${order.id}`,
         failureUrl: `${siteUrl}/orden?error=1`,
       }),
     })
     const json = await res.json()
     if (json.url) {
       sessionStorage.removeItem('zeika_product_selection')
+      sessionStorage.setItem('zeika_pending_order_id', order.id)
       window.location.href = json.url
       return
     }

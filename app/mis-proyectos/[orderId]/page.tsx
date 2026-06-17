@@ -1,9 +1,9 @@
 'use client'
 
 import { useEffect, useRef, useState } from 'react'
-import { useRouter, useParams } from 'next/navigation'
-import Link from 'next/link'
+import { useRouter, useParams, useSearchParams } from 'next/navigation'
 import { supabase } from '../../lib/supabase'
+import Navbar from '../../components/Landing/Navbar/Navbar'
 import '../mis-proyectos.css'
 
 // ── Types ────────────────────────────────────────────────────────────────────
@@ -47,10 +47,10 @@ const SIZE_INFO: Record<string, { name: string; dims: string }> = {
   cuadrado:  { name: 'Cuadrado',           dims: '29 × 29 cm'   },
 }
 
-const STATUS_BADGE: Record<string, string> = {
+const STATUS_LABEL: Record<string, string> = {
   pendiente_pago:    'Pago pendiente',
-  confirmado:        'Confirmado',
-  material_recibido: 'Material recibido',
+  confirmado:        'Cargar material',
+  material_recibido: 'Material Cargado',
   en_diseno:         'En diseño',
   preview_listo:     'Preview listo',
   en_produccion:     'En producción',
@@ -66,7 +66,7 @@ const STEP_DONE: Record<string, number> = {
   preview_listo:     3,
   en_produccion:     4,
   en_camino:         5,
-  entregado:         6,
+  entregado:         7,
 }
 
 const TIMELINE_STEPS = [
@@ -75,6 +75,7 @@ const TIMELINE_STEPS = [
   { key: 'en_diseno',         label: 'En diseño'          },
   { key: 'preview_listo',     label: 'Preview disponible' },
   { key: 'en_produccion',     label: 'En producción'      },
+  { key: 'en_camino',         label: 'En camino'          },
   { key: 'entregado',         label: 'Entregado'          },
 ]
 
@@ -95,60 +96,99 @@ function orderNumber(id: string, date: string) {
 
 // ── Accordion ────────────────────────────────────────────────────────────────
 
-function Accordion({ title, children, open, onToggle }: {
-  title: string; children: React.ReactNode; open: boolean; onToggle: () => void
+function Accordion({ title, children, open, onToggle, extraClass }: {
+  title: string; children: React.ReactNode; open: boolean; onToggle: () => void; extraClass?: string
 }) {
   return (
-    <div className="mp-accordion">
-      <button className="mp-accordion-trigger" onClick={onToggle}>
-        {title}
-        <span className={`mp-accordion-arrow ${open ? 'mp-accordion-arrow--open' : ''}`}>↓</span>
+    <div className={`mpd-accordion${extraClass ? ` ${extraClass}` : ''}`}>
+      <button className={`mpd-accordion__trigger${open ? '' : ' mpd-accordion__trigger--closed'}`} onClick={onToggle}>
+        <span className="mpd-accordion__label">{title}</span>
+        <div className={`mpd-accordion__btn${open ? ' mpd-accordion__btn--open' : ''}`}>
+          <svg width="12" height="8" viewBox="0 0 12 8" fill="none">
+            <path d="M1 1.5L6 6.5L11 1.5" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+          </svg>
+        </div>
       </button>
-      {open && <div className="mp-accordion-body">{children}</div>}
+      {open && <div className="mpd-accordion__body">{children}</div>}
     </div>
   )
+}
+
+// ── Step circle icon ──────────────────────────────────────────────────────────
+
+function StepCircle({ state }: { state: 'done' | 'current' | 'pending' }) {
+  if (state === 'done') {
+    return (
+      <div className="mpd-step-circle mpd-step-circle--done">
+        <svg width="16" height="12" viewBox="0 0 16 12" fill="none">
+          <path d="M1.5 6L6 10.5L14.5 1.5" stroke="white" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"/>
+        </svg>
+      </div>
+    )
+  }
+  if (state === 'current') {
+    return <div className="mpd-step-circle mpd-step-circle--current" />
+  }
+  return <div className="mpd-step-circle mpd-step-circle--pending" />
+}
+
+// ── Round circle icon ─────────────────────────────────────────────────────────
+
+function RoundCircle({ state }: { state: 'done' | 'current' | 'free' }) {
+  if (state === 'done') {
+    return (
+      <div className="mpd-round-circle mpd-round-circle--done">
+        <svg width="14" height="10" viewBox="0 0 14 10" fill="none">
+          <path d="M1 5L5 9L13 1" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+        </svg>
+      </div>
+    )
+  }
+  if (state === 'current') {
+    return <div className="mpd-round-circle mpd-round-circle--current" />
+  }
+  return <div className="mpd-round-circle mpd-round-circle--free" />
 }
 
 // ── Page ─────────────────────────────────────────────────────────────────────
 
 export default function ProyectoPage() {
-  const router = useRouter()
-  const params = useParams()
-  const orderId = params.orderId as string
+  const router       = useRouter()
+  const params       = useParams()
+  const searchParams = useSearchParams()
+  const orderId      = params.orderId as string
 
-  const [order, setOrder]     = useState<Order | null>(null)
-  const [notes, setNotes]     = useState<Note[]>([])
-  const [userId, setUserId]   = useState('')
-  const [loading, setLoading] = useState(true)
+  const [order,    setOrder]    = useState<Order | null>(null)
+  const [notes,    setNotes]    = useState<Note[]>([])
+  const [userId,   setUserId]   = useState('')
+  const [loading,  setLoading]  = useState(true)
+  const [userName,  setUserName]  = useState('')
+  const [userEmail, setUserEmail] = useState('')
 
-  const [openSection, setOpenSection] = useState<string>('detalles')
+  const [openSection, setOpenSection] = useState<string>(searchParams.get('open') ?? '')
 
-  // Material form state
-  const [driveLink,  setDriveLink]  = useState('')
-  const [docsLink,   setDocsLink]   = useState('')
-  const [noteText,   setNoteText]   = useState('')
-  const [savingLink, setSavingLink] = useState<'drive'|'docs'|null>(null)
-  const [sendingNote, setSendingNote] = useState(false)
+  const [driveLink,         setDriveLink]         = useState('')
+  const [docsLink,          setDocsLink]          = useState('')
+  const [noteText,          setNoteText]          = useState('')
+  const [confirmingMaterial, setConfirmingMaterial] = useState(false)
 
-  // Reference images
   const refInputRef = useRef<HTMLInputElement>(null)
   const [uploadingRef, setUploadingRef] = useState(false)
 
-  // Change request
   const [showChangeInput, setShowChangeInput] = useState(false)
   const [changeText,      setChangeText]      = useState('')
   const [sendingChange,   setSendingChange]   = useState(false)
 
-  // Approval
   const [approved, setApproved] = useState(false)
-
-  // Tracking copy feedback
-  const [copied, setCopied] = useState(false)
+  const [copied,   setCopied]   = useState(false)
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
       if (!session?.user) { router.replace('/orden'); return }
       setUserId(session.user.id)
+      const meta = session.user.user_metadata
+      setUserName(meta?.full_name || meta?.name || session.user.email?.split('@')[0] || '')
+      setUserEmail(session.user.email ?? '')
 
       Promise.all([
         supabase.from('orders').select('*').eq('id', orderId).eq('user_id', session.user.id).single(),
@@ -164,30 +204,34 @@ export default function ProyectoPage() {
     })
   }, [orderId, router])
 
-  async function saveLink(field: 'drive_link' | 'docs_link', value: string) {
-    if (!order) return
-    setSavingLink(field === 'drive_link' ? 'drive' : 'docs')
-
-    // When client saves Drive link, auto-advance to material_recibido
-    const statusUpdate = field === 'drive_link' && value &&
-      ['confirmado', 'pendiente_pago'].includes(order.status)
-      ? { [field]: value, status: 'material_recibido', status_dates: { ...(order.status_dates ?? {}), material_recibido: new Date().toISOString() } }
-      : { [field]: value }
-
-    await supabase.from('orders').update(statusUpdate).eq('id', order.id)
-    setOrder(prev => prev ? { ...prev, ...statusUpdate } : prev)
-    setSavingLink(null)
+  async function saveLinkSilently(field: 'drive_link' | 'docs_link', value: string) {
+    if (!order || value === (order[field] ?? '')) return
+    await supabase.from('orders').update({ [field]: value }).eq('id', order.id)
+    setOrder(prev => prev ? { ...prev, [field]: value } : prev)
   }
 
-  async function sendNote() {
-    if (!noteText.trim() || !order) return
-    setSendingNote(true)
-    const { data } = await supabase.from('order_notes').insert({
-      order_id: order.id, user_id: userId, content: noteText.trim(), type: 'note',
-    }).select().single()
-    if (data) setNotes(prev => [...prev, data as Note])
-    setNoteText('')
-    setSendingNote(false)
+  async function confirmMaterial() {
+    if (!order) return
+    setConfirmingMaterial(true)
+
+    const updates: Record<string, unknown> = {
+      drive_link: driveLink,
+      docs_link:  docsLink,
+      status:     'material_recibido',
+      status_dates: { ...(order.status_dates ?? {}), material_recibido: new Date().toISOString() },
+    }
+    await supabase.from('orders').update(updates).eq('id', order.id)
+    setOrder(prev => prev ? { ...prev, ...updates } as Order : prev)
+
+    if (noteText.trim()) {
+      const { data } = await supabase.from('order_notes').insert({
+        order_id: order.id, user_id: userId, content: noteText.trim(), type: 'note',
+      }).select().single()
+      if (data) setNotes(prev => [...prev, data as Note])
+      setNoteText('')
+    }
+
+    setConfirmingMaterial(false)
   }
 
   async function uploadRefImage(file: File) {
@@ -235,301 +279,336 @@ export default function ProyectoPage() {
     <div className="mp-loading"><div className="mp-spinner" /></div>
   )
 
-  const sizeInfo  = SIZE_INFO[order.size] ?? { name: order.size, dims: '' }
-  const done      = STEP_DONE[order.status] ?? 0
-  const allDone   = order.status === 'entregado'
-  const statusDates = order.status_dates ?? {}
-  const totalPages = (order.pages_base ?? 14) + (order.extra_pages ?? 0)
-  const remaining = MAX_CHANGES - (order.change_requests_used ?? 0)
-  const canPreview = ['preview_listo','en_produccion','en_camino','entregado'].includes(order.status)
-  const canApprove = order.status === 'preview_listo'
+  const sizeInfo        = SIZE_INFO[order.size] ?? { name: order.size, dims: '' }
+  const done            = STEP_DONE[order.status] ?? 0
+  const allDone         = order.status === 'entregado'
+  const statusDates     = order.status_dates ?? {}
+  const totalPages      = (order.pages_base ?? 14) + (order.extra_pages ?? 0)
+  const canPreview      = ['preview_listo','en_produccion','en_camino','entregado'].includes(order.status)
+  const canApprove      = order.status === 'preview_listo'
   const afterProduction = ['en_produccion','en_camino','entregado'].includes(order.status)
+  const firstName       = userName.split(' ')[0]
+  const usedRounds      = order.change_requests_used ?? 0
 
   return (
-    <div className="mp-detail-root">
-      <header className="mp-detail-header">
-        <Link href="/mis-proyectos" className="mp-detail-back">←</Link>
-        <span className="mp-detail-header-title">Mis Proyectos</span>
-        <div className="mp-avatar">{userId[0]?.toUpperCase() ?? 'U'}</div>
-      </header>
+    <div className="mpd-root">
+      <Navbar hideLinks />
 
-      <div className="mp-detail-main">
-        <h1 className="mp-detail-title">{order.book_name}</h1>
-        <div className="mp-detail-meta">
-          <span className={`mp-badge mp-badge--${order.status}`}>
-            {STATUS_BADGE[order.status] ?? order.status}
-          </span>
-          <span className="mp-detail-order-num">{orderNumber(order.id, order.created_at)}</span>
+      {/* User strip */}
+      <div className="mp-user-strip">
+        <div className="mp-user-strip__initial">{firstName[0]?.toUpperCase() ?? '?'}</div>
+        <div className="mp-user-strip__info">
+          <p className="mp-user-strip__name">{userName}</p>
+          <p className="mp-user-strip__email">{userEmail}</p>
+        </div>
+      </div>
+
+      <div className="mpd-body">
+
+        {/* Hero */}
+        <div className="mpd-hero">
+          <a href="/mis-proyectos" className="mpd-back">‹ Mis proyectos</a>
+          <h1 className="mpd-title">{order.book_name}</h1>
+          <p className="mpd-order-num">{orderNumber(order.id, order.created_at)}</p>
+          <div className={`mpd-status-badge mpd-status-badge--${order.status}`}>
+            {STATUS_LABEL[order.status] ?? order.status}
+          </div>
         </div>
 
-        {/* ── Detalles del pedido ─────────────────────────────────────── */}
-        <Accordion title="Detalles del pedido" open={openSection === 'detalles'} onToggle={() => toggle('detalles')}>
-          <div className="mp-details-grid">
-            <div className="mp-detail-item">
-              <label>Formato</label>
-              <span>{sizeInfo.name}</span>
+        {/* Accordions */}
+        <div className="mpd-accordions">
+
+          {/* ── Detalles del pedido ─────────────────────────────────────── */}
+          <Accordion title="Detalles del pedido" open={openSection === 'detalles'} onToggle={() => toggle('detalles')}>
+            <div className="mpd-row">
+              <span className="mpd-row__key">Formato</span>
+              <span className="mpd-row__val">{sizeInfo.name} {sizeInfo.dims}</span>
             </div>
-            <div className="mp-detail-item">
-              <label>Medidas</label>
-              <span>{sizeInfo.dims}</span>
+            <div className="mpd-row">
+              <span className="mpd-row__key">Páginas</span>
+              <span className="mpd-row__val">{totalPages} base</span>
             </div>
-            <div className="mp-detail-item">
-              <label>Páginas</label>
-              <span>{totalPages} base</span>
+            <div className="mpd-row">
+              <span className="mpd-row__key">Fecha del pedido</span>
+              <span className="mpd-row__val">{fmtDate(order.created_at)}</span>
             </div>
-            <div className="mp-detail-item">
-              <label>Fecha pedido</label>
-              <span>{fmtDate(order.created_at)}</span>
+            <div className="mpd-row">
+              <span className="mpd-row__key">Diseño estimado</span>
+              <span className="mpd-row__val">
+                {order.estimated_design_date ? fmtDate(order.estimated_design_date) : 'En 48hs hábiles'}
+              </span>
             </div>
-            {order.estimated_design_date && (
-              <div className="mp-detail-item">
-                <label>Diseño estimado</label>
-                <span>{fmtDate(order.estimated_design_date)}</span>
+            <div className="mpd-row">
+              <span className="mpd-row__key">Pagado</span>
+              <span className="mpd-row__val">{fmt(order.price_paid)}</span>
+            </div>
+            {!afterProduction && (
+              <div className="mpd-row mpd-row--balance">
+                <span className="mpd-row__key">Saldo pendiente</span>
+                <span className="mpd-row__val">{fmt(order.price_total - order.price_paid)}</span>
               </div>
             )}
-            <div className="mp-detail-item">
-              <label>Pagado</label>
-              <span>{fmt(order.price_paid)}</span>
-            </div>
-          </div>
-          {!afterProduction && (
-            <div className="mp-saldo-row">
-              <span>Saldo pendiente</span>
-              <span className="mp-saldo-amount">{fmt(order.price_total - order.price_paid)}</span>
-            </div>
-          )}
-        </Accordion>
+          </Accordion>
 
-        {/* ── Estado ─────────────────────────────────────────────────── */}
-        <Accordion title="Estado" open={openSection === 'estado'} onToggle={() => toggle('estado')}>
-          <div className="mp-timeline">
+          {/* ── Estado ──────────────────────────────────────────────────── */}
+          <Accordion title="Estado" open={openSection === 'estado'} onToggle={() => toggle('estado')}>
             {TIMELINE_STEPS.map((step, i) => {
-              const stepDone  = i < done
-              const stepCurrent = !allDone && i === done
-              const stepGrey  = !stepDone && !stepCurrent
-              const date = statusDates[step.key]
+              const isDone    = i < done || allDone
+              const isCurrent = !allDone && i === done
+              const isPending = !isDone && !isCurrent
+              const date      = statusDates[step.key]
                 ?? (step.key === 'confirmado' ? order.created_at : null)
-              const isTracking = step.key === 'en_produccion' && order.status === 'en_camino'
+              const circleState = isDone ? 'done' : isCurrent ? 'current' : 'pending'
+
               return (
-                <div key={step.key} className="mp-timeline-step">
-                  <div className={`mp-step-icon ${stepDone ? 'mp-step-icon--done' : stepCurrent ? 'mp-step-icon--current' : 'mp-step-icon--grey'}`}>
-                    {stepDone ? '✓' : null}
-                  </div>
-                  <div className="mp-step-info">
-                    <div className={`mp-step-label ${stepGrey ? 'mp-step-label--grey' : ''}`}>
-                      {step.label}
-                      {step.key === 'en_camino' && order.tracking_number
-                        ? ` · AND-${order.tracking_number}` : ''}
-                    </div>
-                    {date && <div className="mp-step-date">{fmtDate(date)}</div>}
-                    {step.key === 'en_camino' && order.tracking_number && (
-                      <div className="mp-tracking-box">
-                        <span className="mp-tracking-label">Número de seguimiento</span>
-                        <div className="mp-tracking-number-row">
-                          <span className="mp-tracking-number">{order.tracking_number}</span>
-                          <button className="mp-tracking-copy" onClick={copyTracking}>
-                            {copied ? '✓' : 'Copiar'}
-                          </button>
-                        </div>
-                        <a
-                          className="mp-tracking-andreani"
-                          href={`https://www.andreani.com/#!/informacionEnvio/${order.tracking_number}`}
-                          target="_blank"
-                          rel="noreferrer"
-                        >
-                          Rastrear en Andreani ↗
-                        </a>
+                <div key={step.key} className={`mpd-timeline-row${isCurrent ? ' mpd-timeline-row--current' : ''}`}>
+                  <div className="mpd-timeline-row__inner">
+                    <StepCircle state={circleState} />
+                    <div className="mpd-step-text">
+                      <div className={`mpd-step-name${isPending ? ' mpd-step-name--pending' : ''}`}>
+                        {step.label}
                       </div>
-                    )}
+                      {date && !isPending && (
+                        <div className="mpd-step-date">{fmtDate(date)}</div>
+                      )}
+                    </div>
                   </div>
+                  {step.key === 'en_camino' && (isDone || isCurrent) && order.tracking_number && (
+                    <div className="mpd-tracking-wrap">
+                      <div className="mpd-tracking-row">
+                        <span className="mpd-tracking-number">{order.tracking_number}</span>
+                        <button className="mpd-tracking-copy-btn" onClick={copyTracking}>
+                          {copied ? '✓' : 'Copiar'}
+                        </button>
+                      </div>
+                      <a
+                        className="mpd-tracking-andreani"
+                        href={`https://www.andreani.com/#!/informacionEnvio/${order.tracking_number}`}
+                        target="_blank" rel="noreferrer"
+                      >
+                        Rastrear en Andreani ↗
+                      </a>
+                    </div>
+                  )}
                 </div>
               )
             })}
-          </div>
-        </Accordion>
+          </Accordion>
 
-        {/* ── Tu material ────────────────────────────────────────────── */}
-        <Accordion title="Tu material" open={openSection === 'material'} onToggle={() => toggle('material')}>
-          <div className="mp-material-field">
-            <span className="mp-material-label">Fotos — Google Drive</span>
-            <div className="mp-material-row">
+          {/* ── Tu material ─────────────────────────────────────────────── */}
+          <Accordion title="Tu material" open={openSection === 'material'} onToggle={() => toggle('material')}>
+            {/* Fotos / Google Drive */}
+            <div className="mpd-mat-row">
+              <div className="mpd-mat-header">
+                <span className="mpd-mat-header__label">Fotos / Google Drive</span>
+              </div>
               <input
-                className="mp-material-input"
+                className="mpd-mat-input"
                 placeholder="Pegá el link de tu carpeta"
                 value={driveLink}
                 onChange={e => setDriveLink(e.target.value)}
+                onBlur={e => saveLinkSilently('drive_link', e.target.value)}
               />
-              <button
-                className="mp-material-save-btn"
-                onClick={() => saveLink('drive_link', driveLink)}
-                disabled={savingLink === 'drive'}
-              >
-                {savingLink === 'drive' ? '...' : 'Guardar'}
-              </button>
             </div>
-          </div>
 
-          <div className="mp-material-field">
-            <span className="mp-material-label">Textos — Google Docs (opcional)</span>
-            <div className="mp-material-row">
+            {/* Textos / Google Docs */}
+            <div className="mpd-mat-row">
+              <div className="mpd-mat-header">
+                <span className="mpd-mat-header__label">Textos / Google Docs</span>
+                <span className="mpd-mat-header__opt">(Opcional)</span>
+              </div>
               <input
-                className="mp-material-input"
-                placeholder="Pegá el link del documento"
+                className="mpd-mat-input"
+                placeholder="Pegá el link de tu carpeta"
                 value={docsLink}
                 onChange={e => setDocsLink(e.target.value)}
+                onBlur={e => saveLinkSilently('docs_link', e.target.value)}
               />
-              <button
-                className="mp-material-save-btn"
-                onClick={() => saveLink('docs_link', docsLink)}
-                disabled={savingLink === 'docs'}
-              >
-                {savingLink === 'docs' ? '...' : 'Guardar'}
-              </button>
             </div>
-          </div>
 
-          <div className="mp-material-field">
-            <span className="mp-material-label">Referencias de diseño (tapa, contratapa, estilo)</span>
-            <div className="mp-ref-images">
-              {(order.reference_images ?? []).map((url, i) => (
-                // eslint-disable-next-line @next/next/no-img-element
-                <img key={i} src={url} alt="" className="mp-ref-img" />
-              ))}
-              {(order.reference_images ?? []).length < 6 && (
-                <button className="mp-ref-upload-btn" onClick={() => refInputRef.current?.click()} disabled={uploadingRef}>
-                  {uploadingRef ? '...' : (<>↑<span>Subir</span></>)}
-                </button>
-              )}
-            </div>
-            <input
-              ref={refInputRef}
-              type="file"
-              accept="image/*"
-              style={{ display: 'none' }}
-              onChange={e => { if (e.target.files?.[0]) uploadRefImage(e.target.files[0]); e.target.value = '' }}
-            />
-            <p style={{ fontFamily: '"forma-djr-display",sans-serif', fontSize: 11, color: '#aaa', margin: 0 }}>
-              Podés subir fotos de referencia, moodboards, ejemplos de otros libros.
-            </p>
-          </div>
-
-          <div className="mp-material-field">
-            <span className="mp-material-label">Notas para el equipo</span>
-            <textarea
-              className="mp-material-note"
-              placeholder="Contanos cualquier detalle que quieras que tengamos en cuenta..."
-              value={noteText}
-              onChange={e => setNoteText(e.target.value)}
-            />
-            <button className="mp-send-btn" onClick={sendNote} disabled={!noteText.trim() || sendingNote}>
-              {sendingNote ? 'Enviando...' : 'Enviar nota'}
-            </button>
-          </div>
-        </Accordion>
-
-        {/* ── Preview del libro ───────────────────────────────────────── */}
-        <Accordion title="Preview del libro" open={openSection === 'preview'} onToggle={() => toggle('preview')}>
-          {!canPreview ? (
-            <div className="mp-preview-locked">
-              <p>Disponible cuando el diseño esté listo.</p>
-              <p>Tenés {MAX_CHANGES} rondas de cambios.</p>
-            </div>
-          ) : (
-            <>
-              <div className="mp-preview-frame">
-                {order.preview_url ? (
-                  <a className="mp-preview-link" href={order.preview_url} target="_blank" rel="noreferrer">
-                    Ver libro completo ↗
-                  </a>
-                ) : (
-                  <span style={{ fontFamily: '"forma-djr-display",sans-serif', fontSize: 13, color: '#aaa' }}>
-                    Preview no disponible aún
-                  </span>
-                )}
+            {/* Referencias de diseño */}
+            <div className="mpd-mat-row">
+              <div className="mpd-mat-header">
+                <span className="mpd-mat-header__label">Referencias de diseño</span>
+                <span className="mpd-mat-header__opt">(Opcional)</span>
               </div>
-
-              {canApprove && (
-                <>
-                  <div className="mp-rounds">
-                    <div className="mp-rounds-header">
-                      <span className="mp-rounds-label">Rondas de cambios</span>
-                      <div className="mp-rounds-dots">
-                        {Array.from({ length: MAX_CHANGES }, (_, i) => (
-                          <span key={i} className={`mp-round-dot ${i < (order.change_requests_used ?? 0) ? 'mp-round-dot--used' : 'mp-round-dot--free'}`} />
-                        ))}
-                      </div>
-                    </div>
-                    <p className="mp-rounds-text">
-                      Nuestro precio incluye {MAX_CHANGES} rondas de cambios.
-                      A partir de la tercera hay un precio extra de $5.000 por ronda.
-                    </p>
+              <div className="mpd-ref-upload">
+                {(order.reference_images ?? []).length > 0 && (
+                  <div className="mpd-ref-images-row">
+                    {(order.reference_images ?? []).map((url, idx) => (
+                      // eslint-disable-next-line @next/next/no-img-element
+                      <img key={idx} src={url} alt="" className="mpd-ref-img" />
+                    ))}
                   </div>
-
-                  {!showChangeInput ? (
-                    <button className="mp-change-btn" onClick={() => setShowChangeInput(true)}>
-                      Pedir un cambio
+                )}
+                {(order.reference_images ?? []).length < 6 && (
+                  <div className="mpd-ref-add-wrap">
+                    <button className="mpd-ref-add-btn" onClick={() => refInputRef.current?.click()} disabled={uploadingRef}>
+                      {uploadingRef ? '...' : '+'}
                     </button>
-                  ) : (
-                    <>
-                      <textarea
-                        className="mp-change-input"
-                        placeholder="Describí los cambios que necesitás..."
-                        value={changeText}
-                        onChange={e => setChangeText(e.target.value)}
-                        autoFocus
-                      />
-                      <div style={{ display: 'flex', gap: 8 }}>
-                        <button className="mp-change-btn" style={{ flex: 1 }} onClick={() => setShowChangeInput(false)}>
-                          Cancelar
-                        </button>
-                        <button className="mp-send-btn" style={{ flex: 1 }} onClick={sendChangeRequest} disabled={!changeText.trim() || sendingChange}>
-                          {sendingChange ? 'Enviando...' : 'Enviar cambio'}
-                        </button>
-                      </div>
-                    </>
-                  )}
-
-                  <div className="mp-approve-row">
-                    <input
-                      type="checkbox"
-                      id="approve"
-                      checked={approved}
-                      onChange={e => setApproved(e.target.checked)}
-                    />
-                    <label htmlFor="approve">Revisé el diseño y estoy de acuerdo con él</label>
+                    <span className="mpd-ref-upload-label">Subir</span>
                   </div>
-
-                  <button
-                    className="mp-cta-btn"
-                    disabled={!approved}
-                    onClick={() => router.push(`/mis-proyectos/${order.id}/pagar`)}
-                  >
-                    Aceptar y comprar
-                  </button>
-
-                  <p className="mp-legal">
-                    Por tratarse de un producto personalizado, no realizamos cambios ni devoluciones una vez enviado a producción.
-                  </p>
-                </>
-              )}
-
-              {afterProduction && (
-                <p style={{ fontFamily: '"forma-djr-display",sans-serif', fontSize: 13, color: '#666', margin: 0 }}>
-                  Diseño aprobado. Tu libro está en producción.
+                )}
+                <p className="mpd-ref-desc">
+                  Podes subir fotos de referencia, moodboards, ejemplos de otros libros... lo que sirva para que entendamos el estilo que querés.
                 </p>
-              )}
-            </>
-          )}
-        </Accordion>
+              </div>
+              <input
+                ref={refInputRef} type="file" accept="image/*"
+                className="mpd-hidden-input"
+                onChange={e => { if (e.target.files?.[0]) uploadRefImage(e.target.files[0]); e.target.value = '' }}
+              />
+            </div>
 
-        {/* ── Thank you (entregado) ───────────────────────────────────── */}
+            {/* Notas para el equipo */}
+            <div className="mpd-mat-row">
+              <div className="mpd-mat-header">
+                <span className="mpd-mat-header__label">Notas para el equipo</span>
+                <span className="mpd-mat-header__opt">(Opcional)</span>
+              </div>
+              <textarea
+                className="mpd-mat-textarea"
+                placeholder="Contanos cualquier detalle que quieras que tengamos en cuenta..."
+                value={noteText}
+                onChange={e => setNoteText(e.target.value)}
+              />
+            </div>
+
+            {/* Confirmar material */}
+            {(() => {
+              const confirmed = !['pendiente_pago', 'confirmado'].includes(order.status)
+              return (
+                <div className="mpd-mat-save-wrap">
+                  <button
+                    className={`mpd-accept-check mpd-accept-check--material${confirmed ? ' mpd-accept-check--unavailable' : ''}`}
+                    onClick={!confirmed && !confirmingMaterial ? confirmMaterial : undefined}
+                    disabled={confirmed || confirmingMaterial}
+                  >
+                    <div className={`mpd-check-circle${confirmed ? ' mpd-check-circle--checked' : ''}`} />
+                    <span>{confirmingMaterial ? 'Confirmando...' : 'Material cargado'}</span>
+                  </button>
+                </div>
+              )
+            })()}
+          </Accordion>
+
+          {/* ── Preview ─────────────────────────────────────────────────── */}
+          <Accordion
+            title="Preview"
+            open={openSection === 'preview'}
+            onToggle={() => toggle('preview')}
+            extraClass={!canPreview ? 'mpd-accordion--disabled' : ''}
+          >
+            {!canPreview ? (
+              <div className="mpd-preview-unready">
+                <p>Estará disponible cuando el diseño esté listo.</p>
+                <p>Tendrás 3 rondas de cambio.</p>
+              </div>
+            ) : (
+              <>
+                <div className="mpd-preview-row">
+                  <div className="mpd-preview-frame-box" />
+                  {order.preview_url ? (
+                    <a className="mpd-preview-link" href={order.preview_url} target="_blank" rel="noreferrer">
+                      Ver el libro completo ›
+                    </a>
+                  ) : (
+                    <span className="mpd-preview-pending">Preview no disponible aún</span>
+                  )}
+                </div>
+
+                {canApprove && (
+                  <>
+                    <div className="mpd-rounds-row">
+                      <div className="mpd-rounds-header">
+                        <span className="mpd-rounds-label">Ronda de cambios</span>
+                        <div className="mpd-rounds-circles">
+                          {Array.from({ length: MAX_CHANGES }, (_, i) => {
+                            const state = i < usedRounds ? 'done' : i === usedRounds && usedRounds < MAX_CHANGES ? 'current' : 'free'
+                            return <RoundCircle key={i} state={state} />
+                          })}
+                        </div>
+                      </div>
+                      <p className="mpd-rounds-desc">
+                        Nuestro precio incluye 3 rondas de cambios. A partir de la tercera hay un precio extra de $5.000 por ronda.
+                      </p>
+                    </div>
+
+                    <div className="mpd-change-btn-row">
+                      {!showChangeInput ? (
+                        <button className="mpd-change-btn" onClick={() => setShowChangeInput(true)}>
+                          Pedir un cambio
+                        </button>
+                      ) : (
+                        <div className="mpd-change-form">
+                          <textarea
+                            className="mpd-mat-textarea"
+                            placeholder="Describí los cambios que necesitás..."
+                            value={changeText}
+                            onChange={e => setChangeText(e.target.value)}
+                            autoFocus
+                          />
+                          <div className="mpd-change-form__actions">
+                            <button className="mpd-change-btn mpd-change-btn--cancel" onClick={() => setShowChangeInput(false)}>
+                              Cancelar
+                            </button>
+                            <button
+                              className="mpd-save-btn mpd-save-btn--flex"
+                              onClick={sendChangeRequest}
+                              disabled={!changeText.trim() || sendingChange}
+                            >
+                              {sendingChange ? 'Enviando...' : 'Enviar'}
+                            </button>
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  </>
+                )}
+
+                {afterProduction && (
+                  <div className="mpd-preview-approved">
+                    Diseño aprobado. Tu libro está en producción.
+                  </div>
+                )}
+              </>
+            )}
+          </Accordion>
+        </div>
+
+        {/* Bottom: approve + CTA — always visible, disabled when preview not ready */}
+        {!afterProduction && order.status !== 'entregado' && (
+          <div className="mpd-bottom">
+            <button
+              className={`mpd-accept-check${!canApprove ? ' mpd-accept-check--unavailable' : ''}`}
+              onClick={() => canApprove && setApproved(v => !v)}
+              disabled={!canApprove}
+            >
+              <div className={`mpd-check-circle${approved ? ' mpd-check-circle--checked' : ''}`} />
+              <span>Revisé el diseño y lo acepto</span>
+            </button>
+            <div className="mpd-cta-wrap">
+              <button
+                className={`mpd-cta-btn${approved && canApprove ? ' mpd-cta-btn--active' : ''}`}
+                disabled={!approved || !canApprove}
+                onClick={() => router.push(`/mis-proyectos/${order.id}/pagar`)}
+              >
+                Aceptar y comprar
+              </button>
+              <p className="mpd-legal">
+                Por tratarse de un producto personalizado, no realizamos cambios ni devoluciones una vez enviado a producción.
+              </p>
+            </div>
+          </div>
+        )}
+
         {order.status === 'entregado' && (
           <div className="mp-thankyou">
             <h3>¡Gracias por confiar en Zeika!</h3>
             <p>Esperamos que ames tu libro tanto como nosotras disfrutamos hacerlo.</p>
-            <Link href="/orden" className="mp-cta-btn" style={{ marginTop: 8 }}>
+            <a href="/orden" className="mpd-thankyou-cta">
               Contar otra historia
-            </Link>
+            </a>
           </div>
         )}
       </div>

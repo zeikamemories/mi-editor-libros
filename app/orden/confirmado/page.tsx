@@ -13,7 +13,7 @@ const STEPS = [
 
 function ConfirmadoContent() {
   const params  = useSearchParams()
-  const orderId = params.get('order_id')
+  const orderId = params.get('order_id') || (typeof window !== 'undefined' ? sessionStorage.getItem('zeika_pending_order_id') : null)
   const status  = params.get('status')
   const [done, setDone] = useState(false)
 
@@ -106,7 +106,7 @@ function ConfirmadoContent() {
             </>
           )}
 
-          <a className="conf__cta" href="/mis-proyectos">IR A MIS PROYECTOS</a>
+          <a className="conf__cta" href={orderId ? `/mis-proyectos/${orderId}?open=material` : '/mis-proyectos'}>IR A MI PROYECTO</a>
         </div>
       )}
     </div>
