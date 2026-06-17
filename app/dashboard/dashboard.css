@@ -332,10 +332,14 @@
   vertical-align: middle;
 }
 
-.dash-badge--confirmado       { background: #e8f4fd; color: #1565c0; }
-.dash-badge--material_recibido { background: #e8f5e9; color: #2e7d32; }
-.dash-badge--preview_listo    { background: #191919; color: #fff; }
-.dash-badge--en_camino        { background: #e8f5e9; color: #2a7a4f; }
+.dash-badge--pendiente_pago    { background: #808080; color: #fff; }
+.dash-badge--confirmado        { background: #e03535; color: #fff; }
+.dash-badge--material_recibido { background: #528ED6; color: #fff; }
+.dash-badge--en_diseno         { background: #ffcd00; color: #fff; }
+.dash-badge--preview_listo     { background: #2dd257; color: #fff; }
+.dash-badge--en_produccion     { background: #bf5af2; color: #fff; }
+.dash-badge--en_camino         { background: #00c8bf; color: #fff; }
+.dash-badge--entregado         { background: #808080; color: #fff; }
 
 .dash-delete-btn {
   background: none;

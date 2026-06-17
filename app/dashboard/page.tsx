@@ -31,9 +31,9 @@ interface OrderRow {
 const TABS: FilterTab[] = ['TODOS', 'NUEVOS', 'EN PROCESO', 'EN PRODUCCIÓN', 'FINALIZADOS']
 
 const STATUS_LABEL: Record<string, string> = {
-  pendiente_pago:    'Pago pend.',
-  confirmado:        'Confirmado',
-  material_recibido: 'Mat. recibido',
+  pendiente_pago:    'Pago pendiente',
+  confirmado:        'Cargar material',
+  material_recibido: 'Material Cargado',
   en_diseno:         'En diseño',
   preview_listo:     'Preview listo',
   en_produccion:     'En producción',

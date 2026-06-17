@@ -1,0 +1,216 @@
+.conf {
+  min-height: 100dvh;
+  background: var(--color-cream-dark);
+  display: flex;
+  flex-direction: column;
+}
+
+/* ── Body ────────────────────────────────────────────────────────────────── */
+
+.conf__body {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 48px 20px 40px;
+  gap: 0;
+}
+
+/* ── Check circle ────────────────────────────────────────────────────────── */
+
+.conf__check {
+  width: 65px;
+  height: 65px;
+  border-radius: 50%;
+  background: var(--color-blue);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 28px;
+  flex-shrink: 0;
+}
+
+.conf__check svg {
+  width: 34px;
+  height: 34px;
+  stroke: white;
+  fill: none;
+  stroke-width: 3;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+/* ── Title + subtitle ────────────────────────────────────────────────────── */
+
+.conf__title {
+  font-family: "Times New Roman", Times, serif;
+  font-weight: 400;
+  font-size: 36px;
+  letter-spacing: -0.02em;
+  color: var(--color-black);
+  margin: 0 0 16px;
+  text-align: center;
+  line-height: 1.1;
+}
+
+.conf__subtitle {
+  font-family: "forma-djr-display", sans-serif;
+  font-weight: 500;
+  font-size: 15px;
+  letter-spacing: 0.02em;
+  color: var(--color-black);
+  text-align: center;
+  margin: 0 0 40px;
+  line-height: 1.3;
+  max-width: 320px;
+}
+
+/* ── Next steps ──────────────────────────────────────────────────────────── */
+
+.conf__steps-label {
+  font-family: "forma-djr-display", sans-serif;
+  font-weight: 600;
+  font-size: 12px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--color-black);
+  margin: 0 0 40px;
+  text-align: center;
+}
+
+.conf__steps {
+  width: 100%;
+  max-width: 480px;
+  display: flex;
+  flex-direction: column;
+  border-top: 1px solid var(--color-border);
+  margin-bottom: 40px;
+}
+
+.conf__step {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 18px 4px;
+  border-bottom: 1px solid var(--color-border);
+}
+
+.conf__step-num {
+  width: 38px;
+  height: 38px;
+  border-radius: 50%;
+  background: var(--color-blue);
+  color: white;
+  font-family: "forma-djr-display", sans-serif;
+  font-weight: 700;
+  font-size: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.conf__step-text {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.conf__step-main {
+  font-family: "forma-djr-display", sans-serif;
+  font-weight: 600;
+  font-size: 16px;
+  letter-spacing: 0.01em;
+  color: var(--color-black);
+}
+
+.conf__step-sub {
+  font-family: "forma-djr-display", sans-serif;
+  font-weight: 500;
+  font-size: 13px;
+  letter-spacing: 0.06em;
+  color: #666;
+}
+
+.conf__step-arrow {
+  color: #aaa;
+  font-size: 18px;
+  flex-shrink: 0;
+}
+
+/* ── CTA button ──────────────────────────────────────────────────────────── */
+
+.conf__cta {
+  display: block;
+  width: 100%;
+  max-width: 480px;
+  padding: 12px;
+  background: var(--color-blue);
+  color: white;
+  font-family: "forma-djr-display", sans-serif;
+  font-weight: 600;
+  font-size: 14px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  text-align: center;
+  text-decoration: none;
+  border: none;
+  cursor: pointer;
+}
+
+/* ── Error / failure state ───────────────────────────────────────────────── */
+
+.conf__check--error {
+  background: #c0392b;
+}
+
+/* ── Desktop ─────────────────────────────────────────────────────────────── */
+
+@media (min-width: 1024px) {
+  .conf__body {
+    padding: 48px 40px 40px;
+  }
+
+  .conf__check {
+    margin-bottom: 20px;
+  }
+
+  .conf__title {
+    font-size: 52px;
+    margin-bottom: 12px;
+  }
+
+  .conf__subtitle {
+    font-size: 17px;
+    max-width: 420px;
+    margin-bottom: 28px;
+  }
+
+  .conf__steps-label {
+    font-size: 13px;
+    margin-bottom: 24px;
+  }
+
+  .conf__steps {
+    margin-bottom: 28px;
+  }
+
+  .conf__step {
+    padding: 14px 4px;
+  }
+
+  .conf__step-num {
+    width: 42px;
+    height: 42px;
+    font-size: 17px;
+  }
+
+  .conf__step-main {
+    font-size: 17px;
+  }
+
+  .conf__step-sub {
+    font-size: 14px;
+  }
+}

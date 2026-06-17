@@ -12,7 +12,7 @@ const navLinks = [
   { label: 'FAQs',           href: '#faqs'            },
 ]
 
-export default function Navbar() {
+export default function Navbar({ hideLinks }: { hideLinks?: boolean } = {}) {
   const [open,      setOpen]      = useState(false)
   const [user,      setUser]      = useState<{ name: string; initial: string } | null>(null)
   const [dropOpen,  setDropOpen]  = useState(false)
@@ -66,11 +66,13 @@ export default function Navbar() {
           </a>
 
           {/* Desktop links */}
-          <nav className="navbar__links">
-            {navLinks.map(l => (
-              <a key={l.href} href={l.href} className="navbar__link">{l.label}</a>
-            ))}
-          </nav>
+          {!hideLinks && (
+            <nav className="navbar__links">
+              {navLinks.map(l => (
+                <a key={l.href} href={l.href} className="navbar__link">{l.label}</a>
+              ))}
+            </nav>
+          )}
 
           {/* Desktop auth */}
           <div className="navbar__auth">

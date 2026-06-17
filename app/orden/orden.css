@@ -83,6 +83,7 @@
   color: var(--color-black);
   cursor: pointer;
   align-self: flex-start;
+  text-decoration: none;
 }
 
 /* ── Blue subtitle ────────────────────────────────────────────────────────── */
@@ -962,4 +963,143 @@
 .orden__comp-tab--active {
   background: white;
   border-color: var(--color-black);
+}
+
+/* ── Desktop two-column layout ───────────────────────────────────────────── */
+
+/* Hide desktop layout on mobile */
+.orden__desktop-body { display: none; }
+
+@media (min-width: 1024px) {
+  /* Hide mobile layout */
+  .orden__scroll    { display: none; }
+  .orden__cta-bar   { display: none; }
+
+  /* Show desktop layout */
+  .orden__desktop-body {
+    display: grid;
+    grid-template-columns: 620px 1fr;
+    max-width: 1200px;
+    margin: 0 auto;
+    width: 100%;
+    height: calc(100vh - 71px);
+  }
+
+  /* Left column: back link to the LEFT of the photo */
+  .orden__left-col {
+    display: flex;
+    flex-direction: row;
+    align-items: stretch;
+    padding: 28px 20px 28px 8px;
+    gap: 12px;
+    overflow: hidden;
+  }
+
+  /* Back link sits to the left of the photo, vertically centered at top */
+  .orden__back-link--side {
+    flex-shrink: 0;
+    align-self: flex-start;
+    white-space: nowrap;
+  }
+
+  /* Product image with blue stroke */
+  .orden__product-frame {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+  }
+
+  .orden__product-img {
+    max-width: 88%;
+    max-height: 88%;
+    width: auto;
+    height: auto;
+    display: block;
+    border: 3px solid var(--color-blue);
+  }
+
+  /* Horizontal books: fill width, center vertically */
+  .orden__product-img--chico_h,
+  .orden__product-img--mediano_h,
+  .orden__product-img--grande_h {
+    max-width: 100%;
+    max-height: 69%;
+  }
+
+  /* Vertical book: smaller, centered */
+  .orden__product-img--vertical {
+    max-width: 63%;
+    max-height: 92%;
+  }
+
+  /* Square book: medium, centered */
+  .orden__product-img--cuadrado {
+    max-width: 83%;
+    max-height: 83%;
+  }
+
+  /* Right column: scrollable, button pushed to bottom */
+  .orden__right-col {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+    padding: 28px 40px 28px 36px;
+    overflow-y: auto;
+    border-left: 1px solid var(--color-border);
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+  }
+
+  .orden__right-col::-webkit-scrollbar { display: none; }
+
+  .orden__right-col .orden__subtitle-blue {
+    margin-top: -12px;
+    text-align: center;
+  }
+
+  .orden__right-col .orden__title {
+    text-align: center;
+  }
+
+  /* Push button to the bottom of the right col */
+  .orden__cta-btn--desktop {
+    margin-top: auto;
+  }
+
+  /* Compact summary rows on desktop */
+  .orden__summary-row {
+    padding: 10px 16px;
+  }
+
+  /* Desktop inline button — same as landing pm__cta */
+  .orden__cta-btn--desktop {
+    display: block;
+    width: 100%;
+    padding: 12px 15px;
+    background: var(--color-blue);
+    color: white;
+    border: none;
+    font-family: "forma-djr-display", sans-serif;
+    font-size: 16px;
+    font-weight: 600;
+    letter-spacing: 0.64px;
+    text-transform: uppercase;
+    cursor: pointer;
+    transition: opacity 0.15s;
+    margin-top: auto;
+  }
+
+  .orden__cta-btn--desktop:disabled {
+    opacity: 0.35;
+    cursor: default;
+  }
+
+  .orden__cta-btn--desktop:not(:disabled):hover { opacity: 0.88; }
+
+  /* Legal text tighter on desktop */
+  .orden__legal {
+    margin: -12px 0 0;
+  }
 }

@@ -14,6 +14,14 @@ const SIZES = [
   { id: 'cuadrado',  name: 'Cuadrado',           dims: '29 × 29 cm'   },
 ]
 
+const PRODUCT_IMAGES: Record<string, string> = {
+  chico_h:   '/fotos/chico.jpg',
+  mediano_h: '/fotos/mediano.jpg',
+  grande_h:  '/fotos/grande.jpg',
+  vertical:  '/fotos/vertical.jpg',
+  cuadrado:  '/fotos/cuadrado.jpg',
+}
+
 const PRICES_BY_PAGES: Record<string, [number, number, number]> = {
   chico_h:   [82700,  104300, 118700],
   mediano_h: [94700,  116700, 138700],
@@ -150,75 +158,108 @@ export default function OrdenPage() {
     <div className="orden-loading"><div className="orden-spinner" /></div>
   )
 
+  const summaryContent = (
+    <>
+      <div className="orden__summary">
+        <div className="orden__summary-row">
+          <span className="orden__summary-key">FORMATO</span>
+          <span className="orden__summary-val">{selectedSize.name} {selectedSize.dims}</span>
+        </div>
+        <div className="orden__summary-row">
+          <span className="orden__summary-key">PÁGINAS</span>
+          <span className="orden__summary-val">{selectedPage.pages} páginas</span>
+        </div>
+        <div className="orden__summary-row">
+          <span className="orden__summary-key">TEXTOS</span>
+          <span className="orden__summary-val">{textExtra ? 'Textos varios' : '1 texto'}</span>
+        </div>
+        <div className="orden__summary-row">
+          <span className="orden__summary-key">NOMBRE</span>
+          <span className="orden__summary-val">{bookName || '—'}</span>
+        </div>
+        <div className="orden__summary-row">
+          <span className="orden__summary-key">DISEÑO ESTIMADO</span>
+          <span className="orden__summary-val">En 48hs hábiles</span>
+        </div>
+      </div>
+
+      <div className="orden__totals">
+        <div className="orden__total-col">
+          <span className="orden__total-label orden__total-label--blue">TOTAL:</span>
+          <span className="orden__total-price orden__total-price--blue">{fmt(totalPrice)}</span>
+        </div>
+        <div className="orden__total-col">
+          <span className="orden__total-label">A PAGAR AHORA (50%)</span>
+          <span className="orden__total-now">{fmt(payNow)}</span>
+        </div>
+      </div>
+
+      <p className="orden__legal">El 50% restante se paga cuando se aprueba el diseño final.</p>
+
+      <div className="orden__field">
+        <label className="orden__label">WHATSAPP</label>
+        <div className={`orden__phone-row${whatsappError ? ' orden__phone-row--error' : ''}`}>
+          <span className="orden__phone-prefix">+54</span>
+          <input
+            ref={whatsappRef}
+            className="orden__input orden__input--phone"
+            placeholder="11 1234 5678"
+            value={whatsapp}
+            onChange={e => { setWhatsapp(e.target.value); if (e.target.value.trim()) setWhatsappError(false) }}
+          />
+        </div>
+        <p className="orden__note">Usamos tu WhatsApp para mandar el comprobante del pedido y avisar cuando el diseño esté listo.</p>
+      </div>
+
+      {error && <p className="orden__error">{error}</p>}
+    </>
+  )
+
   return (
     <div className="orden">
       <header className="orden__header">
         <a href="/"><Image src="/LogoZeika.png" alt="Zeika" width={50} height={50} /></a>
       </header>
 
+      {/* ── Desktop: two-column layout ── */}
+      <div className="orden__desktop-body">
+
+        {/* Left column: back (left of photo) + product image */}
+        <div className="orden__left-col">
+          <a className="orden__back-link orden__back-link--side" href="/">‹ Atrás</a>
+          <div className="orden__product-frame">
+            {PRODUCT_IMAGES[sizeId] && (
+              <img src={PRODUCT_IMAGES[sizeId]} alt={selectedSize.name} className={`orden__product-img orden__product-img--${sizeId}`} />
+            )}
+          </div>
+        </div>
+
+        {/* Right column: scrollable content */}
+        <div className="orden__right-col">
+          <h1 className="orden__title">Contar mi historia</h1>
+          <p className="orden__subtitle-blue">
+            Una vez abonado se crea una carpeta dentro de tu perfil donde podés cargar el material
+          </p>
+          {summaryContent}
+          <button
+            className="orden__cta-btn orden__cta-btn--desktop"
+            disabled={saving}
+            onClick={handleConfirm}
+          >
+            {saving ? 'Guardando...' : `PAGAR ${fmt(payNow)}`}
+          </button>
+        </div>
+      </div>
+
+      {/* ── Mobile: single-column scroll + fixed CTA ── */}
       <div className="orden__scroll">
         <div className="orden__content orden__content--summary">
-
           <a className="orden__back-link" href="/">‹ Atrás</a>
-
-          <h1 className="orden__title">Resumen del pedido</h1>
+          <h1 className="orden__title">Contar mi historia</h1>
           <p className="orden__subtitle-blue">
             Una vez abonado se crea una carpeta dentro de tu perfil donde podés cargás el material
           </p>
-
-          <div className="orden__summary">
-            <div className="orden__summary-row">
-              <span className="orden__summary-key">FORMATO</span>
-              <span className="orden__summary-val">{selectedSize.name} {selectedSize.dims}</span>
-            </div>
-            <div className="orden__summary-row">
-              <span className="orden__summary-key">PÁGINAS</span>
-              <span className="orden__summary-val">{selectedPage.pages} páginas</span>
-            </div>
-            <div className="orden__summary-row">
-              <span className="orden__summary-key">TEXTOS</span>
-              <span className="orden__summary-val">{textExtra ? 'Textos varios' : '1 texto'}</span>
-            </div>
-            <div className="orden__summary-row">
-              <span className="orden__summary-key">NOMBRE</span>
-              <span className="orden__summary-val">{bookName || '—'}</span>
-            </div>
-            <div className="orden__summary-row">
-              <span className="orden__summary-key">DISEÑO ESTIMADO</span>
-              <span className="orden__summary-val">En 48hs hábiles</span>
-            </div>
-          </div>
-
-          <div className="orden__totals">
-            <div className="orden__total-col">
-              <span className="orden__total-label orden__total-label--blue">TOTAL:</span>
-              <span className="orden__total-price orden__total-price--blue">{fmt(totalPrice)}</span>
-            </div>
-            <div className="orden__total-col">
-              <span className="orden__total-label">A PAGAR AHORA (50%)</span>
-              <span className="orden__total-now">{fmt(payNow)}</span>
-            </div>
-          </div>
-
-          <p className="orden__legal">El 50% restante se paga cuando se aprueba el diseño final.</p>
-
-          <div className="orden__field">
-            <label className="orden__label">WHATSAPP</label>
-            <div className={`orden__phone-row${whatsappError ? ' orden__phone-row--error' : ''}`}>
-              <span className="orden__phone-prefix">+54</span>
-              <input
-                ref={whatsappRef}
-                className="orden__input orden__input--phone"
-                placeholder="11 1234 5678"
-                value={whatsapp}
-                onChange={e => { setWhatsapp(e.target.value); if (e.target.value.trim()) setWhatsappError(false) }}
-              />
-            </div>
-            <p className="orden__note">Usamos tu WhatsApp para mandar el comprobante del pedido y avisar cuando el diseño esté listo.</p>
-          </div>
-
-          {error && <p className="orden__error">{error}</p>}
-
+          {summaryContent}
         </div>
       </div>
 

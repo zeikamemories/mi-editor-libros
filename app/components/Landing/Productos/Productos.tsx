@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useLayoutEffect } from 'react'
 import ProductCard, { type ProductData } from './ProductCard'
 import ProductModal from './ProductModal'
 import MobileProductModal from './MobileProductModal'
@@ -19,13 +19,12 @@ export default function Productos() {
   const [selected, setSelected]       = useState<ProductData | null>(null)
   const [showCompare, setShowCompare] = useState(false)
 
-  useEffect(() => {
+  useLayoutEffect(() => {
     const backProduct = sessionStorage.getItem('zeika_back_product')
-    if (backProduct) {
-      sessionStorage.removeItem('zeika_back_product')
-      const product = PRODUCTS.find(p => p.sizeId === backProduct)
-      if (product) setSelected(product)
-    }
+    if (!backProduct) return
+    sessionStorage.removeItem('zeika_back_product')
+    const product = PRODUCTS.find(p => p.sizeId === backProduct)
+    if (product) setSelected(product)
   }, [])
 
   return (

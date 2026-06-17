@@ -2,12 +2,19 @@
 import { useEffect, useState, Suspense } from 'react'
 import { useSearchParams } from 'next/navigation'
 import { supabase } from '../../lib/supabase'
-import '../orden.css'
+import Navbar from '../../components/Landing/Navbar/Navbar'
+import './confirmado.css'
+
+const STEPS = [
+  { main: 'Subí tus fotos al proyecto',  sub: '',                                          arrow: true  },
+  { main: 'Diseñamos en 48hs',           sub: 'Nos comunicamos por WhatsApp',              arrow: false },
+  { main: 'Te enviamos el preview',      sub: 'Cuando esté finalizado, se manda a imprimir.', arrow: false },
+]
 
 function ConfirmadoContent() {
   const params  = useSearchParams()
   const orderId = params.get('order_id')
-  const status  = params.get('status') // null = success, 'failure', 'pending'
+  const status  = params.get('status')
   const [done, setDone] = useState(false)
 
   useEffect(() => {
@@ -16,7 +23,6 @@ function ConfirmadoContent() {
     async function confirm() {
       const newStatus = status === 'pending' ? 'pendiente_pago' : 'confirmado'
 
-      // Fetch order data + update status
       const [{ data: orderData }] = await Promise.all([
         supabase.from('orders').select('book_name, size').eq('id', orderId!).single(),
         supabase.from('orders').update({
@@ -25,7 +31,6 @@ function ConfirmadoContent() {
         }).eq('id', orderId!),
       ])
 
-      // Auto-create project linked to this order (only on successful payment)
       if (newStatus === 'confirmado' && orderData) {
         const { data: existing } = await supabase
           .from('projects').select('id').eq('order_id', orderId!).maybeSingle()
@@ -45,44 +50,65 @@ function ConfirmadoContent() {
     confirm()
   }, [orderId, status])
 
-  if (!done) {
-    return <div className="orden-loading"><div className="orden-spinner" /></div>
-  }
-
-  if (status === 'failure') {
-    return (
-      <div className="orden">
-        <div className="orden__confirmed">
-          <div className="orden__check-circle" style={{ background: '#c0392b' }}>✕</div>
-          <h2 className="orden__step-title">El pago no se completó</h2>
-          <p className="orden__step-sub">Podés intentarlo de nuevo.</p>
-          <a className="orden__black-btn" href="/orden">Volver al pedido</a>
-        </div>
-      </div>
-    )
-  }
+  const isFailure = status === 'failure'
+  const isPending = status === 'pending'
 
   return (
-    <div className="orden">
-      <div className="orden__confirmed">
-        <div className="orden__check-circle">✓</div>
-        <h2 className="orden__step-title">
-          {status === 'pending' ? '¡Pago en proceso!' : '¡Pedido confirmado!'}
-        </h2>
-        <p className="orden__step-sub">
-          {status === 'pending'
-            ? 'Tu pago está siendo procesado. Te avisamos cuando se confirme.'
-            : 'Te mandamos el comprobante por WhatsApp. Ahora subí tu material.'}
-        </p>
-        {status !== 'pending' && (
-          <ol className="orden__next-steps">
-            <li>Subí tus fotos al proyecto</li>
-            <li>Diseñamos en menos de 48 hs</li>
-            <li>Te enviamos el preview</li>
-          </ol>
-        )}
-        <a className="orden__black-btn" href="/mis-proyectos">Ir a mi proyecto</a>
-      </div>
+    <div className="conf">
+      <Navbar hideLinks />
+
+      {!done ? (
+        <div className="conf__body">
+          <div className="conf__check">
+            <svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12" /></svg>
+          </div>
+          <p className="conf__subtitle">Procesando tu pedido…</p>
+        </div>
+      ) : isFailure ? (
+        <div className="conf__body">
+          <div className={`conf__check conf__check--error`}>
+            <svg viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" /></svg>
+          </div>
+          <h1 className="conf__title">El pago no se completó</h1>
+          <p className="conf__subtitle">Podés intentarlo de nuevo desde tu pedido.</p>
+          <a className="conf__cta" href="/orden">Volver al pedido</a>
+        </div>
+      ) : (
+        <div className="conf__body">
+          <div className="conf__check">
+            <svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12" /></svg>
+          </div>
+
+          <h1 className="conf__title">
+            {isPending ? '¡Pago en proceso!' : '¡Pedido confirmado!'}
+          </h1>
+          <p className="conf__subtitle">
+            {isPending
+              ? 'Tu pago está siendo procesado. Te avisamos cuando se confirme.'
+              : 'Te mandamos el comprobante por WhatsApp. ¡Ahora te toca subir el material!'}
+          </p>
+
+          {!isPending && (
+            <>
+              <p className="conf__steps-label">Próximos pasos</p>
+              <div className="conf__steps">
+                {STEPS.map((step, i) => (
+                  <div className="conf__step" key={i}>
+                    <div className="conf__step-num">{i + 1}</div>
+                    <div className="conf__step-text">
+                      <span className="conf__step-main">{step.main}</span>
+                      {step.sub && <span className="conf__step-sub">{step.sub}</span>}
+                    </div>
+                    {step.arrow && <span className="conf__step-arrow">›</span>}
+                  </div>
+                ))}
+              </div>
+            </>
+          )}
+
+          <a className="conf__cta" href="/mis-proyectos">IR A MIS PROYECTOS</a>
+        </div>
+      )}
     </div>
   )
 }
