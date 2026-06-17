@@ -317,6 +317,14 @@
 
 .pm__name-input::placeholder { color: #bbb; }
 .pm__name-input:focus { border-color: var(--color-black); }
+.pm__name-input--error { border-color: #e03535; animation: pm-shake 0.3s ease; }
+.pm__name-input--error:focus { border-color: #e03535; }
+
+@keyframes pm-shake {
+  0%, 100% { transform: translateX(0); }
+  25%       { transform: translateX(-4px); }
+  75%       { transform: translateX(4px); }
+}
 
 /* ── Details bullets ─────────────────────────────────────────────────────── */
 
@@ -403,6 +411,8 @@
   letter-spacing: 0.64px;
   text-transform: uppercase;
   text-decoration: none;
+  border: none;
+  cursor: pointer;
   padding: 12px 15px;
   margin: 0 30px 24px;
 }

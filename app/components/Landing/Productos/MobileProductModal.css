@@ -245,6 +245,14 @@
 
 .mpm__name-input::placeholder { color: #bbb; }
 .mpm__name-input:focus { border-color: var(--color-black); }
+.mpm__name-input--error { border-color: #e03535; animation: mpm-shake 0.3s ease; }
+.mpm__name-input--error:focus { border-color: #e03535; }
+
+@keyframes mpm-shake {
+  0%, 100% { transform: translateX(0); }
+  25%       { transform: translateX(-4px); }
+  75%       { transform: translateX(4px); }
+}
 
 /* ── Details ────────────────────────────────────────────────────────────────── */
 
@@ -338,6 +346,8 @@
   letter-spacing: 0.56px;
   text-transform: uppercase;
   text-decoration: none;
+  border: none;
+  cursor: pointer;
   padding: 16px;
 }
 

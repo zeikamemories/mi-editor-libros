@@ -46,7 +46,9 @@ export default function ProductModal({ product, onClose }: Props) {
   const [pageIdx,         setPageIdx]         = useState(0)
   const [textExtra,       setTextExtra]       = useState(false)
   const [bookName,        setBookName]        = useState('')
+  const [nameError,       setNameError]       = useState(false)
   const [cp,              setCp]              = useState('')
+  const nameInputRef = useRef<HTMLInputElement>(null)
   const [shippingPrice,   setShippingPrice]   = useState<number | null>(null)
   const [shippingLoading, setShippingLoading] = useState(false)
   const [shippingError,   setShippingError]   = useState<string | null>(null)
@@ -220,10 +222,11 @@ export default function ProductModal({ product, onClose }: Props) {
             <div className="pm__section">
               <p className="pm__section-label">NOMBRE</p>
               <input
-                className="pm__name-input"
+                ref={nameInputRef}
+                className={`pm__name-input${nameError ? ' pm__name-input--error' : ''}`}
                 placeholder="Ej: Verano Grecia 2024"
                 value={bookName}
-                onChange={e => setBookName(e.target.value)}
+                onChange={e => { setBookName(e.target.value); if (e.target.value.trim()) setNameError(false) }}
               />
             </div>
 
@@ -256,10 +259,15 @@ export default function ProductModal({ product, onClose }: Props) {
           </div>
 
           {/* CTA pinned at bottom */}
-          <a
-            href="/orden"
+          <button
             className="pm__cta"
             onClick={() => {
+              if (!bookName.trim()) {
+                setNameError(true)
+                nameInputRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' })
+                nameInputRef.current?.focus()
+                return
+              }
               const MAP: Record<string, string> = {
                 chico: 'chico_h', mediano: 'mediano_h', grande: 'grande_h',
                 vertical: 'vertical', cuadrado: 'cuadrado',
@@ -271,10 +279,11 @@ export default function ProductModal({ product, onClose }: Props) {
                 bookName,
               }))
               sessionStorage.setItem('zeika_back_product', product.sizeId)
+              window.location.href = '/orden'
             }}
           >
             CONTAR MI HISTORIA
-          </a>
+          </button>
         </div>
       </div>
     </div>

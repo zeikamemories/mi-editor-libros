@@ -46,13 +46,14 @@ export default function Hero() {
           de fotolibros personalizados
         </h1>
 
-        <a
-          href="/orden"
+        <button
           className={`hero__cta${scrolled ? ' hero__cta--full' : ''}`}
-          onClick={() => sessionStorage.removeItem('zeika_product_selection')}
+          onClick={() => {
+            document.getElementById('productos')?.scrollIntoView({ behavior: 'smooth' })
+          }}
         >
           CONTAR MI HISTORIA
-        </a>
+        </button>
       </div>
     </section>
   )

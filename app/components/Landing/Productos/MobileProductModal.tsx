@@ -62,7 +62,9 @@ export default function MobileProductModal({ product, onClose }: Props) {
   const [pageIdx,         setPageIdx]         = useState(0)
   const [textExtra,       setTextExtra]       = useState(false)
   const [bookName,        setBookName]        = useState('')
+  const [nameError,       setNameError]       = useState(false)
   const [cp,              setCp]              = useState('')
+  const nameInputRef = useRef<HTMLInputElement>(null)
   const [shippingPrice,   setShippingPrice]   = useState<number | null>(null)
   const [shippingLoading, setShippingLoading] = useState(false)
   const [shippingError,   setShippingError]   = useState<string | null>(null)
@@ -226,10 +228,11 @@ export default function MobileProductModal({ product, onClose }: Props) {
           <div className="mpm__section">
             <p className="mpm__section-label">NOMBRE</p>
             <input
-              className="mpm__name-input"
+              ref={nameInputRef}
+              className={`mpm__name-input${nameError ? ' mpm__name-input--error' : ''}`}
               placeholder="Ej: Verano Grecia 2024"
               value={bookName}
-              onChange={e => setBookName(e.target.value)}
+              onChange={e => { setBookName(e.target.value); if (e.target.value.trim()) setNameError(false) }}
             />
           </div>
 
@@ -265,10 +268,15 @@ export default function MobileProductModal({ product, onClose }: Props) {
 
       {/* CTA — fixed at bottom */}
       <div className="mpm__cta-bar">
-        <a
-          href="/orden"
+        <button
           className="mpm__cta"
           onClick={() => {
+            if (!bookName.trim()) {
+              setNameError(true)
+              nameInputRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' })
+              nameInputRef.current?.focus()
+              return
+            }
             const MAP: Record<string, string> = {
               chico: 'chico_h', mediano: 'mediano_h', grande: 'grande_h',
               vertical: 'vertical', cuadrado: 'cuadrado',
@@ -280,10 +288,11 @@ export default function MobileProductModal({ product, onClose }: Props) {
               bookName,
             }))
             sessionStorage.setItem('zeika_back_product', product.sizeId)
+            window.location.href = '/orden'
           }}
         >
           CONTAR MI HISTORIA
-        </a>
+        </button>
       </div>
 
       {/* Close button */}

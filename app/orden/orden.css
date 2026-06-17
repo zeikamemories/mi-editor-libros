@@ -46,7 +46,7 @@
 .orden__scroll {
   flex: 1;
   overflow-y: auto;
-  padding-bottom: 110px;
+  padding-bottom: calc(70px + env(safe-area-inset-bottom, 0px));
   -webkit-overflow-scrolling: touch;
 }
 
@@ -90,12 +90,12 @@
 .orden__subtitle-blue {
   font-family: "forma-djr-display", sans-serif;
   font-size: 13px;
-  font-weight: 500;
+  font-weight: 600;
   letter-spacing: 0.26px;
   color: var(--color-blue);
   text-align: center;
   margin: 0;
-  line-height: 1.5;
+  line-height: 1.2;
 }
 
 /* ── Dropdown rows ────────────────────────────────────────────────────────── */
@@ -500,15 +500,15 @@
 .orden__summary {
   display: flex;
   flex-direction: column;
-  border-top: 1px solid var(--color-border);
+  gap: 2px;
 }
 
 .orden__summary-row {
   display: flex;
   align-items: baseline;
   justify-content: space-between;
-  padding: 12px 0;
-  border-bottom: 1px solid var(--color-border);
+  padding: 14px 16px;
+  background: white;
   gap: 12px;
 }
 
@@ -547,26 +547,34 @@
 
 .orden__total-label {
   font-family: "forma-djr-display", sans-serif;
-  font-size: 10px;
+  font-size: 13px;
   font-weight: 700;
   letter-spacing: 0.4px;
   text-transform: uppercase;
-  color: #888;
+  color: var(--color-black);
+}
+
+.orden__total-label--blue {
+  color: var(--color-blue);
 }
 
 .orden__total-price {
-  font-family: "Times New Roman", Times, serif;
+  font-family: "forma-djr-display", sans-serif;
   font-size: 28px;
-  font-weight: 400;
-  letter-spacing: -0.56px;
+  font-weight: 600;
+  letter-spacing: 0.5px;
+  color: var(--color-black);
+}
+
+.orden__total-price--blue {
   color: var(--color-blue);
 }
 
 .orden__total-now {
-  font-family: "Times New Roman", Times, serif;
+  font-family: "forma-djr-display", sans-serif;
   font-size: 28px;
-  font-weight: 400;
-  letter-spacing: -0.56px;
+  font-weight: 600;
+  letter-spacing: 0.5px;
   color: var(--color-black);
   text-align: right;
 }
@@ -596,6 +604,13 @@
 }
 
 .orden__input--phone:focus { outline: none; }
+.orden__phone-row--error { border-color: #e03535; animation: orden-shake 0.3s ease; }
+
+@keyframes orden-shake {
+  0%, 100% { transform: translateX(0); }
+  25%       { transform: translateX(-4px); }
+  75%       { transform: translateX(4px); }
+}
 
 .orden__error {
   font-family: "forma-djr-display", sans-serif;
@@ -611,14 +626,13 @@
   bottom: 0;
   left: 0;
   right: 0;
-  display: flex;
-  flex-direction: column;
   z-index: 50;
 }
 
 .orden__cta-btn {
   width: 100%;
   padding: 18px 20px;
+  padding-bottom: calc(18px + env(safe-area-inset-bottom, 0px));
   background: var(--color-blue);
   color: white;
   border: none;
@@ -628,6 +642,7 @@
   letter-spacing: 0.56px;
   cursor: pointer;
   transition: opacity 0.15s;
+  display: block;
 }
 
 .orden__cta-btn:disabled {
@@ -639,13 +654,12 @@
 
 .orden__legal {
   font-family: "forma-djr-display", sans-serif;
-  font-size: 11px;
-  font-weight: 400;
+  font-size: 13px;
+  font-weight: 600;
   letter-spacing: 0.22px;
-  color: #aaa;
-  margin: 0;
+  color: #888;
+  margin: -22px 0 0;
   text-align: center;
-  padding: 8px 20px 12px;
 }
 
 /* ── Login ────────────────────────────────────────────────────────────────── */

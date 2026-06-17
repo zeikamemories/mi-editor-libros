@@ -1,5 +1,5 @@
 'use client'
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useRef } from 'react'
 import Image from 'next/image'
 import { useRouter } from 'next/navigation'
 import { supabase } from '../lib/supabase'
@@ -42,22 +42,20 @@ function fmt(n: number) {
   return '$' + Math.round(n).toLocaleString('es-AR')
 }
 
-type DropOpen = 'formato' | 'paginas' | 'textos' | null
-
 export default function OrdenPage() {
   const router = useRouter()
 
-  const [loading,      setLoading]      = useState(true)
-  const [user,         setUser]         = useState<User | null>(null)
-  const [sizeId,       setSizeId]       = useState('chico_h')
-  const [pageIdx,      setPageIdx]      = useState(0)
-  const [textExtra,    setTextExtra]    = useState(false)
-  const [bookName,     setBookName]     = useState('')
-  const [nameEditing,  setNameEditing]  = useState(false)
-  const [whatsapp,     setWhatsapp]     = useState('')
-  const [openDrop,     setOpenDrop]     = useState<DropOpen>(null)
-  const [saving,       setSaving]       = useState(false)
-  const [error,        setError]        = useState('')
+  const [loading,       setLoading]       = useState(true)
+  const [user,          setUser]          = useState<User | null>(null)
+  const [sizeId,        setSizeId]        = useState('chico_h')
+  const [pageIdx,       setPageIdx]       = useState(0)
+  const [textExtra,     setTextExtra]     = useState(false)
+  const [bookName,      setBookName]      = useState('')
+  const [whatsapp,      setWhatsapp]      = useState('')
+  const [whatsappError, setWhatsappError] = useState(false)
+  const [saving,        setSaving]        = useState(false)
+  const [error,         setError]         = useState('')
+  const whatsappRef = useRef<HTMLInputElement>(null)
 
   useEffect(() => {
     try {
@@ -95,12 +93,14 @@ export default function OrdenPage() {
   const selectedSize = SIZES.find(s => s.id === sizeId) ?? SIZES[0]
   const selectedPage = pageOptions[pageIdx] ?? pageOptions[0]
 
-  function toggleDrop(name: DropOpen) {
-    setOpenDrop(o => o === name ? null : name)
-  }
-
   async function handleConfirm() {
     if (!user) return
+    if (!whatsapp.trim()) {
+      setWhatsappError(true)
+      whatsappRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' })
+      whatsappRef.current?.focus()
+      return
+    }
     setSaving(true)
     setError('')
 
@@ -167,114 +167,32 @@ export default function OrdenPage() {
           </p>
 
           <div className="orden__summary">
-
-            {/* FORMATO */}
-            <div
-              className="orden__summary-row orden__summary-row--drop"
-              onClick={() => toggleDrop('formato')}
-            >
+            <div className="orden__summary-row">
               <span className="orden__summary-key">FORMATO</span>
-              <div className="orden__drop-trigger">
-                <span className="orden__summary-val">{selectedSize.name} {selectedSize.dims}</span>
-                <span className={`orden__drop-arrow${openDrop === 'formato' ? ' orden__drop-arrow--open' : ''}`}>∨</span>
-              </div>
+              <span className="orden__summary-val">{selectedSize.name} {selectedSize.dims}</span>
             </div>
-            {openDrop === 'formato' && (
-              <div className="orden__drop-list">
-                {SIZES.map(s => (
-                  <button
-                    key={s.id}
-                    className={`orden__drop-item${sizeId === s.id ? ' orden__drop-item--active' : ''}`}
-                    onClick={e => { e.stopPropagation(); setSizeId(s.id); setPageIdx(0); setOpenDrop(null) }}
-                  >
-                    {s.name} · {s.dims}
-                  </button>
-                ))}
-              </div>
-            )}
-
-            {/* PÁGINAS */}
-            <div
-              className="orden__summary-row orden__summary-row--drop"
-              onClick={() => toggleDrop('paginas')}
-            >
+            <div className="orden__summary-row">
               <span className="orden__summary-key">PÁGINAS</span>
-              <div className="orden__drop-trigger">
-                <span className="orden__summary-val">{selectedPage.pages} páginas</span>
-                <span className={`orden__drop-arrow${openDrop === 'paginas' ? ' orden__drop-arrow--open' : ''}`}>∨</span>
-              </div>
+              <span className="orden__summary-val">{selectedPage.pages} páginas</span>
             </div>
-            {openDrop === 'paginas' && (
-              <div className="orden__drop-list">
-                {pageOptions.map((opt, i) => (
-                  <button
-                    key={i}
-                    className={`orden__drop-item${pageIdx === i ? ' orden__drop-item--active' : ''}`}
-                    onClick={e => { e.stopPropagation(); setPageIdx(i); setOpenDrop(null) }}
-                  >
-                    {opt.label}
-                  </button>
-                ))}
-              </div>
-            )}
-
-            {/* TEXTOS */}
-            <div
-              className="orden__summary-row orden__summary-row--drop"
-              onClick={() => toggleDrop('textos')}
-            >
+            <div className="orden__summary-row">
               <span className="orden__summary-key">TEXTOS</span>
-              <div className="orden__drop-trigger">
-                <span className="orden__summary-val">{textExtra ? 'Textos varios' : '1 texto'}</span>
-                <span className={`orden__drop-arrow${openDrop === 'textos' ? ' orden__drop-arrow--open' : ''}`}>∨</span>
-              </div>
+              <span className="orden__summary-val">{textExtra ? 'Textos varios' : '1 texto'}</span>
             </div>
-            {openDrop === 'textos' && (
-              <div className="orden__drop-list">
-                {TEXT_OPTIONS.map(opt => (
-                  <button
-                    key={String(opt.value)}
-                    className={`orden__drop-item${textExtra === opt.value ? ' orden__drop-item--active' : ''}`}
-                    onClick={e => { e.stopPropagation(); setTextExtra(opt.value); setOpenDrop(null) }}
-                  >
-                    {opt.label}
-                  </button>
-                ))}
-              </div>
-            )}
-
-            {/* NOMBRE */}
             <div className="orden__summary-row">
               <span className="orden__summary-key">NOMBRE</span>
-              {nameEditing ? (
-                <input
-                  className="orden__name-input"
-                  autoFocus
-                  value={bookName}
-                  placeholder="Ej: Verano Grecia 2024"
-                  onChange={e => setBookName(e.target.value)}
-                  onBlur={() => setNameEditing(false)}
-                  onKeyDown={e => e.key === 'Enter' && setNameEditing(false)}
-                />
-              ) : (
-                <button className="orden__name-btn" onClick={() => setNameEditing(true)}>
-                  {bookName || <span className="orden__name-placeholder">Agregar</span>}
-                </button>
-              )}
+              <span className="orden__summary-val">{bookName || '—'}</span>
             </div>
-
-            {/* DISEÑO ESTIMADO */}
             <div className="orden__summary-row">
               <span className="orden__summary-key">DISEÑO ESTIMADO</span>
               <span className="orden__summary-val">En 48hs hábiles</span>
             </div>
-
           </div>
 
           <div className="orden__totals">
             <div className="orden__total-col">
-              <span className="orden__total-label">TOTAL:</span>
-              <span className="orden__total-price">{fmt(totalPrice)}</span>
+              <span className="orden__total-label orden__total-label--blue">TOTAL:</span>
+              <span className="orden__total-price orden__total-price--blue">{fmt(totalPrice)}</span>
             </div>
             <div className="orden__total-col">
               <span className="orden__total-label">A PAGAR AHORA (50%)</span>
@@ -282,15 +200,18 @@ export default function OrdenPage() {
             </div>
           </div>
 
+          <p className="orden__legal">El 50% restante se paga cuando se aprueba el diseño final.</p>
+
           <div className="orden__field">
             <label className="orden__label">WHATSAPP</label>
-            <div className="orden__phone-row">
+            <div className={`orden__phone-row${whatsappError ? ' orden__phone-row--error' : ''}`}>
               <span className="orden__phone-prefix">+54</span>
               <input
+                ref={whatsappRef}
                 className="orden__input orden__input--phone"
                 placeholder="11 1234 5678"
                 value={whatsapp}
-                onChange={e => setWhatsapp(e.target.value)}
+                onChange={e => { setWhatsapp(e.target.value); if (e.target.value.trim()) setWhatsappError(false) }}
               />
             </div>
             <p className="orden__note">Usamos tu WhatsApp para mandar el comprobante del pedido y avisar cuando el diseño esté listo.</p>
@@ -304,12 +225,11 @@ export default function OrdenPage() {
       <div className="orden__cta-bar">
         <button
           className="orden__cta-btn"
-          disabled={saving || !bookName.trim() || !whatsapp.trim()}
+          disabled={saving}
           onClick={handleConfirm}
         >
           {saving ? 'Guardando...' : `PAGAR ${fmt(payNow)}`}
         </button>
-        <p className="orden__legal">El 50% restante se paga cuando se aprueba el diseño final.</p>
       </div>
     </div>
   )
