@@ -129,6 +129,16 @@ Common failure modes when adding canvas features:
 
 When you fix or add something in Canvas.tsx, always check: does it depend on runtime state that isn't in `PageData`? If yes, propagate it to `exportPageAsJpg`.
 
+## Reglas para el equipo (Azu)
+
+- Siempre trabajar en el branch `feat/tareas-equipo` — NUNCA en `main`
+- Antes de empezar, verificar el branch activo con `git branch` (el que tiene `*` es donde estás)
+- Solo tocar archivos dentro de `app/dashboard/tareas/` y sus componentes directos
+- NUNCA modificar archivos del editor: `app/editor/`, `app/components/Canvas/`, `app/components/PhotoPanel/`, `app/components/Toolbar/`, `app/components/Topbar/`, `app/config/`, `app/context/`
+- NUNCA modificar archivos de la landing: `app/components/Landing/`, `app/page.tsx`
+- NUNCA hacer push a `main` — solo push a `feat/tareas-equipo`
+- Si una tarea requiere tocar algo fuera de `app/dashboard/tareas/`, consultar con Maika antes de proceder
+
 ## Important rules
 - ALWAYS use CSS variables from globals.css for colors and typography.
 - Root is `app/` — never write `src/app/`.

@@ -2,8 +2,9 @@
 
 import { useEffect, useState, Suspense } from 'react'
 import { useSearchParams, useParams } from 'next/navigation'
-import Link from 'next/link'
+import { useRouter } from 'next/navigation'
 import { supabase } from '../../../lib/supabase'
+import Navbar from '../../../components/Landing/Navbar/Navbar'
 import '../../mis-proyectos.css'
 
 interface Order {
@@ -15,31 +16,35 @@ interface Order {
   delivery_address: string
   price_total: number
   price_paid: number
-  created_at: string
-}
-
-const SIZE_NAMES: Record<string, string> = {
-  chico_h:   'Chico Horizontal · 21×14,8 cm',
-  mediano_h: 'Mediano Horizontal · 28×21,6 cm',
-  grande_h:  'Grande Horizontal · 41×29 cm',
-  vertical:  'Vertical · 28×21,6 cm',
-  cuadrado:  'Cuadrado · 29×29 cm',
+  status_dates: Record<string, string> | null
 }
 
 const PRICES: Record<string, number> = {
   chico_h: 75000, mediano_h: 81500, grande_h: 100000, vertical: 81500, cuadrado: 97000,
 }
 
-function fmt(n: number) { return '$' + n.toLocaleString('es-AR') }
+const STEPS = [
+  { key: 'confirmado',        label: 'Pedido confirmado'  },
+  { key: 'material_recibido', label: 'Material recibido'  },
+  { key: 'en_diseno',         label: 'En diseño'          },
+  { key: 'preview_listo',     label: 'Preview disponible' },
+  { key: 'en_produccion',     label: 'En producción'      },
+  { key: 'en_camino',         label: 'En camino'          },
+  { key: 'entregado',         label: 'Entregado'          },
+]
+
+const STATUS_ORDER = STEPS.map(s => s.key)
+
 function fmtDate(iso: string) {
   return new Date(iso).toLocaleDateString('es-AR', { day: '2-digit', month: '2-digit', year: 'numeric' })
 }
 
-function ConfirmadoSegundoPagoContent() {
-  const params      = useParams()
+function ConfirmadoContent() {
+  const params       = useParams()
   const searchParams = useSearchParams()
-  const orderId     = params.orderId as string
-  const status      = searchParams.get('status')
+  const router       = useRouter()
+  const orderId      = params.orderId as string
+  const status       = searchParams.get('status')
 
   const [order, setOrder] = useState<Order | null>(null)
   const [done,  setDone]  = useState(false)
@@ -50,15 +55,17 @@ function ConfirmadoSegundoPagoContent() {
     supabase.from('orders').select('*').eq('id', orderId).single()
       .then(async ({ data }) => {
         if (!data) { setDone(true); return }
-        setOrder(data as Order)
         const discount   = (data.copies ?? 1) >= 3 ? 0.8 : 1
         const total      = (data.copies ?? 1) * (PRICES[data.size] ?? data.price_total) * discount
         const secondPaid = Math.round(total - data.price_paid)
+        const nowIso     = new Date().toISOString()
+        const newDates   = { ...(data.status_dates ?? {}), en_produccion: nowIso }
         await supabase.from('orders').update({
           status:            'en_produccion',
           second_price_paid: secondPaid,
-          status_dates:      { ...(data.status_dates ?? {}), en_produccion: new Date().toISOString() },
+          status_dates:      newDates,
         }).eq('id', orderId)
+        setOrder({ ...data, status_dates: newDates } as Order)
         setDone(true)
       })
   }, [orderId, status])
@@ -66,72 +73,104 @@ function ConfirmadoSegundoPagoContent() {
   if (!done) return <div className="mp-loading"><div className="mp-spinner" /></div>
 
   if (status === 'failure') return (
-    <div className="mp-conf-root">
-      <div className="mp-conf-check" style={{ background: '#c0392b' }}>✕</div>
-      <h2 className="mp-conf-title">El pago no se completó</h2>
-      <p className="mp-conf-sub">Podés intentarlo de nuevo.</p>
-      <Link href={`/mis-proyectos/${orderId}/pagar`} className="mp-conf-btn">
-        Volver al pago
-      </Link>
+    <div className="mpconf2-page">
+      <Navbar />
+      <div className="mpconf2-body">
+        <div className="mpconf2-hero">
+          <div className="mpconf2-check-circle mpconf2-check-circle--error">✕</div>
+          <p className="mpconf2-title">El pago no se completó</p>
+          <p className="mpconf2-subtitle">Podés intentarlo de nuevo.</p>
+        </div>
+        <button className="mpconf2-cta" onClick={() => router.push(`/mis-proyectos/${orderId}/pagar`)}>
+          Volver al pago
+        </button>
+      </div>
     </div>
   )
 
   if (!order) return null
 
-  const copies   = order.copies ?? 1
-  const discount = copies >= 3 ? 0.8 : 1
-  const total    = copies * (PRICES[order.size] ?? order.price_total) * discount
-  const pagado   = fmt(Math.round(total - order.price_paid) + (order.delivery_type === 'pickup' ? 0 : 0))
+  const dates        = order.status_dates ?? {}
+  const currentIdx   = STATUS_ORDER.indexOf('en_produccion')
 
   return (
-    <div className="mp-conf-root">
-      <div className="mp-conf-check">✓</div>
-      <h2 className="mp-conf-title">¡Compra confirmada!</h2>
-      <p className="mp-conf-sub">Tu libro va a producción. En 2–3 días hábiles empieza a imprimirse.</p>
+    <div className="mpconf2-page">
+      <Navbar />
+      <div className="mpconf2-body">
 
-      <div className="mp-conf-summary">
-        <div className="mp-conf-summary-label">Resumen</div>
-        <div className="mp-conf-row"><span>Proyecto</span><span>{order.book_name}</span></div>
-        <div className="mp-conf-row"><span>Copias</span><span>{copies}</span></div>
-        <div className="mp-conf-row"><span>Formato</span><span>{SIZE_NAMES[order.size] ?? order.size}</span></div>
-        <div className="mp-conf-row">
-          <span>Entrega</span>
-          <span>{order.delivery_type === 'pickup' ? 'Retiro en fábrica' : `Andreani · ${order.delivery_address}`}</span>
-        </div>
-        <div className="mp-conf-row"><span>Pagado</span><span>{pagado}</span></div>
-      </div>
-
-      <div className="mp-conf-wpp">
-        Te mandamos el comprobante por WhatsApp. También te avisamos cuando el libro salga a distribución.
-      </div>
-
-      <p className="mp-conf-next-title">Qué pasa ahora</p>
-      <div className="mp-conf-timeline">
-        {[
-          { label: 'Pago confirmado', date: fmtDate(new Date().toISOString()), done: true },
-          { label: 'En producción',   date: 'Estimado: 2–3 días hábiles',      done: false },
-          { label: 'En camino',       date: 'Estimado: 5–7 días hábiles',      done: false },
-          { label: 'Entregado',       date: 'Estimado: 7–10 días hábiles',     done: false },
-        ].map((step, i) => (
-          <div key={i} className="mp-timeline-step">
-            <div className={`mp-step-icon ${step.done ? 'mp-step-icon--done' : 'mp-step-icon--grey'}`}>
-              {step.done ? '✓' : null}
-            </div>
-            <div className="mp-step-info">
-              <div className="mp-step-label">{step.label}</div>
-              <div className="mp-step-date">{step.date}</div>
-            </div>
+        {/* Hero */}
+        <div className="mpconf2-hero">
+          <div className="mpconf2-check-circle">
+            <svg width="22" height="17" viewBox="0 0 22 17" fill="none">
+              <path d="M2 8.5L8.5 15L20 2" stroke="white" strokeWidth="2.8" strokeLinecap="round" strokeLinejoin="round"/>
+            </svg>
           </div>
-        ))}
-      </div>
+          <p className="mpconf2-title">¡Pedido confirmado!</p>
+          <p className="mpconf2-subtitle">
+            Tu libro está siendo enviado a producción.<br />
+            En 2-3 días hábiles empieza a imprimirse.
+          </p>
+        </div>
 
-      <Link href="/mis-proyectos" className="mp-conf-btn">
-        Ir a mis proyectos
-      </Link>
+        {/* WhatsApp notice */}
+        <div className="mpconf2-wpp-box">
+          Te mandamos el comprobante por WhatsApp al +54 9 11 6264 3005.<br /><br />
+          También te avisamos cuando el libro salga a distribución.
+        </div>
+
+        {/* Próximos pasos */}
+        <p className="mpconf2-next-title">Próximos pasos</p>
+
+        {/* Status + CTA pegados */}
+        <div className="mpconf2-status-block">
+          <div className="mpconf2-status-section">
+            <div className="mpconf2-status-header">Estado</div>
+            {STEPS.map((step, idx) => {
+              const isDone   = idx < currentIdx
+              const isActive = idx === currentIdx
+              const isFuture = idx > currentIdx
+              const dateStr  = dates[step.key]
+
+              return (
+                <div
+                  key={step.key}
+                  className={`mpconf2-status-row${isActive ? ' mpconf2-status-row--active' : ''}`}
+                >
+                  <div className={
+                    `mpconf2-status-icon${isDone ? ' mpconf2-status-icon--done' : isActive ? ' mpconf2-status-icon--active' : ' mpconf2-status-icon--future'}`
+                  }>
+                    {isDone && (
+                      <svg width="16" height="12" viewBox="0 0 16 12" fill="none">
+                        <path d="M1.5 6L6 10.5L14.5 1.5" stroke="white" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"/>
+                      </svg>
+                    )}
+                    {isActive && <span className="mpconf2-status-icon__dot" />}
+                  </div>
+                  <div className="mpconf2-status-text">
+                    <p className={`mpconf2-status-label${isFuture ? ' mpconf2-status-label--future' : ''}`}>
+                      {step.label}
+                    </p>
+                    {dateStr && (
+                      <p className="mpconf2-status-date">{fmtDate(dateStr)}</p>
+                    )}
+                  </div>
+                </div>
+              )
+            })}
+          </div>
+
+          {/* CTA */}
+          <div className="mpconf2-cta-wrap">
+            <button className="mpconf2-cta" onClick={() => router.push(`/mis-proyectos/${orderId}`)}>
+              Ir al proyecto
+            </button>
+          </div>
+        </div>
+      </div>
     </div>
   )
 }
 
-export default function ConfirmadoSegundoPagoPage() {
-  return <Suspense><ConfirmadoSegundoPagoContent /></Suspense>
+export default function ConfirmadoPage() {
+  return <Suspense><ConfirmadoContent /></Suspense>
 }

@@ -33,6 +33,8 @@ interface Props {
   annotations?:    Annotation[]
   onCommentSave?:  (text: string, page: number) => Promise<Annotation | null>
   onDrawingSave?:  (dataUrl: string, page: number) => Promise<Annotation | null>
+  // Change request — optional, shown when client views preview via orderId link
+  onSaveChanges?:  () => Promise<void>
 }
 
 const TITLEBAR_H  = 50
@@ -78,7 +80,7 @@ function ensureTurnJs(cb: () => void) {
 
 export default function PreviewModal({
   spreadsData, totalSpreads, initialSpread, pageW, pageH, onClose, onPageChange,
-  annotations: initialAnnotations, onCommentSave, onDrawingSave,
+  annotations: initialAnnotations, onCommentSave, onDrawingSave, onSaveChanges,
 }: Props) {
   const EMPTY_PAGE: PageData = { background: '#ffffff', pageW, pageH, objects: [] }
   const { t } = useLang()
@@ -572,9 +574,35 @@ export default function PreviewModal({
             <ChevronsRight size={15} strokeWidth={1.5} />
           </button>
         </div>
+        {onSaveChanges && (
+          <SaveChangesButton onSaveChanges={onSaveChanges} />
+        )}
         <button className="preview-close-btn" onClick={onClose}>{t.close}</button>
       </div>
 
     </div>
+  )
+}
+
+function SaveChangesButton({ onSaveChanges }: { onSaveChanges: () => Promise<void> }) {
+  const [saving, setSaving] = useState(false)
+  const [saved,  setSaved]  = useState(false)
+
+  async function handleClick() {
+    if (saving || saved) return
+    setSaving(true)
+    await onSaveChanges()
+    setSaving(false)
+    setSaved(true)
+  }
+
+  return (
+    <button
+      className={`preview-save-changes-btn${saved ? ' preview-save-changes-btn--saved' : ''}`}
+      onClick={handleClick}
+      disabled={saving || saved}
+    >
+      {saving ? 'Guardando...' : saved ? 'Cambios guardados ✓' : 'Guardar cambios'}
+    </button>
   )
 }

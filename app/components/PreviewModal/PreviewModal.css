@@ -377,6 +377,31 @@
   letter-spacing: 0.2px;
 }
 
+.preview-save-changes-btn {
+  position: absolute;
+  right: 120px;
+  background: var(--color-blue);
+  border: none;
+  border-radius: 1px;
+  font-family: var(--font-body);
+  font-weight: 600;
+  font-size: 12px;
+  color: white;
+  padding: 7px 20px;
+  cursor: pointer;
+  letter-spacing: 0.24px;
+  text-transform: uppercase;
+  transition: opacity 0.15s;
+}
+
+.preview-save-changes-btn:disabled {
+  cursor: default;
+}
+
+.preview-save-changes-btn--saved {
+  opacity: 0.7;
+}
+
 .preview-close-btn {
   position: absolute;
   right: 24px;

@@ -1066,6 +1066,10 @@
   border-bottom: 0.3px solid #7b7a78;
 }
 
+.mpd-row--white {
+  background: #fff;
+}
+
 .mpd-row--balance {
   border-top: 2px solid var(--color-blue);
   border-bottom: 2px solid var(--color-blue);
@@ -1087,7 +1091,7 @@
 .mpd-row__val {
   font-family: "forma-djr-display", sans-serif;
   font-size: 16px;
-  font-weight: 400;
+  font-weight: 500;
   letter-spacing: 0.04em;
   color: var(--color-black);
 }
@@ -1178,45 +1182,83 @@
 
 /* Tracking (inside timeline row) */
 
-.mpd-tracking-wrap {
-  padding: 0 20px 14px 71px;
+.mpd-tracking-card {
+  margin: 10px 0 14px 51px;
+  border: 1px solid #7b7a78;
+  background: #fff;
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: 10px;
+  padding: 15px 17px;
 }
 
-.mpd-tracking-row {
+.mpd-tracking-card__header {
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   justify-content: space-between;
-  gap: 8px;
 }
 
-.mpd-tracking-number {
+.mpd-tracking-card__labels {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.mpd-tracking-card__label {
   font-family: "forma-djr-display", sans-serif;
-  font-size: 15px;
+  font-size: 12px;
+  font-weight: 500;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: #7b7a78;
+}
+
+.mpd-tracking-card__number {
+  font-family: "forma-djr-display", sans-serif;
+  font-size: 16px;
+  font-weight: 500;
+  letter-spacing: 0.04em;
+  color: var(--color-blue);
+  text-decoration: underline;
+}
+
+.mpd-tracking-card__logo {
+  height: 90px;
+  width: auto;
+  object-fit: contain;
+  object-position: top right;
+  flex-shrink: 0;
+  align-self: flex-start;
+  margin-top: -8px;
+}
+
+.mpd-tracking-card__delivery {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.mpd-tracking-card__delivery-date {
+  font-family: "forma-djr-display", sans-serif;
+  font-size: 16px;
   font-weight: 600;
   letter-spacing: 0.04em;
   color: var(--color-black);
 }
 
-.mpd-tracking-copy-btn {
-  background: none;
-  border: 1px solid #7b7a78;
-  padding: 4px 10px;
+.mpd-tracking-card__btn {
+  display: block;
+  background: var(--color-blue);
+  color: #fff;
   font-family: "forma-djr-display", sans-serif;
-  font-size: 11px;
-  cursor: pointer;
-  color: var(--color-black);
-}
-
-.mpd-tracking-andreani {
-  font-family: "forma-djr-display", sans-serif;
-  font-size: 12px;
+  font-size: 16px;
   font-weight: 500;
   letter-spacing: 0.04em;
-  color: var(--color-black);
-  text-decoration: underline;
+  text-align: center;
+  text-decoration: none;
+  padding: 10px;
+  width: 100%;
+  box-sizing: border-box;
 }
 
 /* ── Material rows (Tu material) ─────────────────────────────────────────── */
@@ -1431,6 +1473,22 @@
   height: 175px;
   border: 1px solid #7b7a78;
   background: #e8e6e1;
+  overflow: hidden;
+  display: flex;
+  align-items: stretch;
+}
+
+.mpd-preview-spread {
+  display: flex;
+  width: 100%;
+  height: 100%;
+}
+
+.mpd-preview-spread__page {
+  flex: 1;
+  height: 100%;
+  object-fit: cover;
+  display: block;
 }
 
 .mpd-preview-link {
@@ -1560,6 +1618,29 @@
   justify-content: center;
 }
 
+.mpd-guardar-cambios-btn {
+  width: 100%;
+  height: 44px;
+  background: var(--color-blue);
+  border: none;
+  cursor: pointer;
+  font-family: "forma-djr-display", sans-serif;
+  font-size: 16px;
+  font-weight: 500;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: opacity 0.15s;
+}
+
+.mpd-guardar-cambios-btn:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+
 .mpd-change-form {
   width: 100%;
   display: flex;
@@ -1595,7 +1676,278 @@
   margin-top: 8px;
 }
 
-/* ── Pagar page ──────────────────────────────────────────────────────────── */
+/* ── Pagar page (mpag = mis-proyectos/pagar) ────────────────────────────── */
+
+.mpag-section-label {
+  font-family: "forma-djr-display", sans-serif;
+  font-size: 14px;
+  font-weight: 500;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--color-black);
+}
+
+/* Cantidad de copias */
+
+.mpag-copies-section {
+  background: white;
+  border-bottom: 0.3px solid #7b7a78;
+  display: flex;
+  flex-direction: column;
+}
+
+.mpag-copies-top {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  padding: 20px;
+  gap: 16px;
+}
+
+.mpag-copies-left {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.mpag-counter {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.mpag-counter-btn {
+  width: 45px;
+  height: 45px;
+  border-radius: 50%;
+  border: 0.5px solid #7b7a78;
+  background: var(--color-cream);
+  font-size: 22px;
+  font-weight: 300;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--color-black);
+}
+
+.mpag-counter-btn:disabled {
+  opacity: 0.3;
+  cursor: default;
+}
+
+.mpag-counter-num {
+  font-family: "forma-djr-display", sans-serif;
+  font-size: 16px;
+  font-weight: 500;
+  letter-spacing: 0.04em;
+  color: var(--color-black);
+  min-width: 16px;
+  text-align: center;
+}
+
+.mpag-copies-right {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 1px;
+}
+
+.mpag-unit-price {
+  font-family: "forma-djr-display", sans-serif;
+  font-size: 24px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--color-black);
+}
+
+.mpag-cu {
+  font-size: 16px;
+}
+
+.mpag-total-label {
+  font-family: "forma-djr-display", sans-serif;
+  font-size: 14px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--color-blue);
+}
+
+.mpag-discount-banner {
+  background: rgba(52, 199, 89, 0.2);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 35px;
+  margin: 0 20px 20px;
+  font-family: "forma-djr-display", sans-serif;
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  color: #34c759;
+}
+
+/* Entrega */
+
+.mpag-entrega-section {
+  background: white;
+  border-bottom: 0.3px solid #7b7a78;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 20px;
+}
+
+.mpag-delivery-card {
+  border: 1px solid var(--color-blue);
+  background: white;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 15px 20px;
+  cursor: pointer;
+}
+
+.mpag-delivery-card--selected {
+  border-width: 2px;
+}
+
+.mpag-delivery-card__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+}
+
+.mpag-delivery-card__left {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.mpag-radio {
+  width: 22px;
+  height: 22px;
+  flex-shrink: 0;
+  border: 1.5px solid var(--color-blue);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.mpag-radio--selected::after {
+  content: '';
+  width: 11px;
+  height: 11px;
+  border-radius: 50%;
+  background: var(--color-blue);
+  display: block;
+}
+
+.mpag-delivery-name {
+  font-family: "forma-djr-display", sans-serif;
+  font-size: 16px;
+  font-weight: 500;
+  letter-spacing: 0.04em;
+  color: var(--color-blue);
+}
+
+.mpag-delivery-price {
+  font-family: "forma-djr-display", sans-serif;
+  font-size: 16px;
+  font-weight: 500;
+  letter-spacing: 0.04em;
+  color: #7b7a78;
+}
+
+.mpag-delivery-price--free {
+  color: #34c759;
+}
+
+.mpag-delivery-price--known {
+  color: var(--color-black);
+}
+
+.mpag-delivery-desc {
+  font-family: "forma-djr-display", sans-serif;
+  font-size: 12px;
+  font-weight: 500;
+  letter-spacing: 0.04em;
+  color: #7b7a78;
+  margin: 0;
+  line-height: 1.5;
+}
+
+/* Address fields */
+
+.mpag-address-fields {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  margin-top: 5px;
+}
+
+.mpag-field {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  flex: 1;
+}
+
+.mpag-field--sm {
+  flex: 0 0 70px;
+}
+
+.mpag-field-row {
+  display: flex;
+  gap: 10px;
+}
+
+.mpag-field-label {
+  font-family: "forma-djr-display", sans-serif;
+  font-size: 12px;
+  font-weight: 500;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: #7b7a78;
+}
+
+.mpag-field-input {
+  border: 1px solid #7b7a78;
+  padding: 15px 20px;
+  font-family: "forma-djr-display", sans-serif;
+  font-size: 16px;
+  font-weight: 500;
+  letter-spacing: 0.04em;
+  color: var(--color-black);
+  background: white;
+  outline: none;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.mpag-field-input::placeholder {
+  color: #7b7a78;
+  opacity: 0.5;
+}
+
+/* Resumen final */
+
+.mpag-resumen-section {
+  display: flex;
+  flex-direction: column;
+  padding: 10px 20px 0;
+  gap: 0;
+}
+
+.mpag-resumen-section .mpag-section-label {
+  padding: 10px 0;
+}
+
+/* ── Old pagar page ──────────────────────────────────────────────────────── */
 
 .mp-pagar-root {
   min-height: 100vh;
@@ -2009,4 +2361,212 @@
   text-align: center;
   text-decoration: none;
   display: block;
+}
+
+/* ─── Confirmado v2 (segundo pago) ──────────────────────────────────────────── */
+
+.mpconf2-page {
+  min-height: 100vh;
+  background: var(--color-cream);
+}
+
+.mpconf2-body {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 40px;
+  padding: 40px 0 0;
+}
+
+.mpconf2-hero {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  padding: 0 20px;
+  width: 100%;
+  text-align: center;
+}
+
+.mpconf2-check-circle {
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  background: var(--color-blue);
+  color: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 22px;
+  font-weight: 600;
+  flex-shrink: 0;
+}
+
+.mpconf2-check-circle--error {
+  background: #c0392b;
+}
+
+.mpconf2-title {
+  font-family: "Times New Roman", Times, serif;
+  font-size: 35px;
+  letter-spacing: -0.7px;
+  color: var(--color-black);
+  margin: 0;
+}
+
+.mpconf2-subtitle {
+  font-family: "forma-djr-display", sans-serif;
+  font-size: 16px;
+  font-weight: 500;
+  letter-spacing: 0.04em;
+  color: var(--color-black);
+  margin: 0;
+  line-height: 1.2;
+}
+
+.mpconf2-wpp-box {
+  background: #fff;
+  padding: 20px;
+  width: 100%;
+  font-family: "forma-djr-display", sans-serif;
+  font-size: 16px;
+  font-weight: 500;
+  letter-spacing: 0.04em;
+  color: var(--color-black);
+  text-align: center;
+  line-height: 1.6;
+  box-sizing: border-box;
+}
+
+.mpconf2-next-title {
+  font-family: "forma-djr-display", sans-serif;
+  font-size: 14px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--color-black);
+  margin: 0;
+}
+
+.mpconf2-status-section {
+  width: 100%;
+  border-bottom: 1px solid #7b7a78;
+  display: flex;
+  flex-direction: column;
+}
+
+.mpconf2-status-header {
+  background: #fff;
+  padding: 20px;
+  font-family: "forma-djr-display", sans-serif;
+  font-size: 14px;
+  font-weight: 500;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--color-black);
+}
+
+.mpconf2-status-row {
+  background: var(--color-cream-dark);
+  border-bottom: 0.3px solid #7b7a78;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 14px 20px 12px;
+}
+
+.mpconf2-status-row--active {
+  border-top: 1px solid var(--color-blue);
+  border-bottom: 1px solid var(--color-blue);
+}
+
+.mpconf2-status-icon {
+  flex-shrink: 0;
+  width: 35px;
+  height: 35px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.mpconf2-status-icon--done {
+  background: var(--color-blue);
+}
+
+.mpconf2-status-icon--active {
+  background: var(--color-cream-dark);
+  border: 2px solid var(--color-blue);
+}
+
+.mpconf2-status-icon__dot {
+  width: 15px;
+  height: 15px;
+  border-radius: 50%;
+  background: var(--color-blue);
+}
+
+.mpconf2-status-icon--future {
+  background: var(--color-cream-dark);
+  border: 1px solid #7b7a78;
+}
+
+.mpconf2-status-text {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  flex: 1;
+}
+
+.mpconf2-status-label {
+  font-family: "forma-djr-display", sans-serif;
+  font-size: 16px;
+  font-weight: 500;
+  letter-spacing: 0.04em;
+  color: var(--color-black);
+  margin: 0;
+}
+
+.mpconf2-status-label--future {
+  opacity: 0.5;
+}
+
+.mpconf2-status-date {
+  font-family: "forma-djr-display", sans-serif;
+  font-size: 12px;
+  letter-spacing: 0.04em;
+  color: #7b7a78;
+  margin: 0;
+}
+
+.mpconf2-status-block {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+.mpconf2-cta-wrap {
+  background: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 32px 20px 20px;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.mpconf2-cta {
+  width: 100%;
+  max-width: 353px;
+  padding: 10px 15px;
+  background: var(--color-blue);
+  color: #fff;
+  border: none;
+  font-family: "forma-djr-display", sans-serif;
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  cursor: pointer;
+  text-align: center;
 }

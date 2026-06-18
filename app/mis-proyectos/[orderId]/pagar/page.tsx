@@ -2,8 +2,8 @@
 
 import { useEffect, useRef, useState } from 'react'
 import { useRouter, useParams } from 'next/navigation'
-import Link from 'next/link'
 import { supabase } from '../../../lib/supabase'
+import Navbar from '../../../components/Landing/Navbar/Navbar'
 import '../../mis-proyectos.css'
 
 interface Order {
@@ -42,20 +42,52 @@ export default function PagarPage() {
   const [order,   setOrder]   = useState<Order | null>(null)
   const [loading, setLoading] = useState(true)
   const [paying,  setPaying]  = useState(false)
+  const [userName,  setUserName]  = useState('')
+  const [userEmail, setUserEmail] = useState('')
 
   const [copies,          setCopies]          = useState(1)
   const [deliveryType,    setDeliveryType]    = useState<'andreani' | 'pickup'>('andreani')
-  const [address,         setAddress]         = useState('')
-  const [cp,              setCp]              = useState('')
   const [shippingPrice,   setShippingPrice]   = useState<number | null>(null)
   const [shippingLoading, setShippingLoading] = useState(false)
-  const [shippingError,   setShippingError]   = useState<string | null>(null)
-
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+
+  // Structured address fields
+  const [pais,      setPais]      = useState('')
+  const [provincia, setProvincia] = useState('')
+  const [ciudad,    setCiudad]    = useState('')
+  const [calle,     setCalle]     = useState('')
+  const [numero,    setNumero]    = useState('')
+  const [piso,      setPiso]      = useState('')
+  const [depto,     setDepto]     = useState('')
+  const [cp,        setCp]        = useState('')
+
+  // Debounce CP → shipping quote
+  useEffect(() => {
+    if (deliveryType !== 'andreani') return
+    if (debounceRef.current) clearTimeout(debounceRef.current)
+    const trimmed = cp.trim()
+    if (!/^\d{4}$/.test(trimmed)) { setShippingPrice(null); return }
+    setShippingLoading(true)
+    debounceRef.current = setTimeout(async () => {
+      try {
+        const res  = await fetch(`/api/shipping-quote?cp=${trimmed}`)
+        const data = await res.json()
+        setShippingPrice(res.ok ? (data.price as number) : null)
+      } catch {
+        setShippingPrice(null)
+      } finally {
+        setShippingLoading(false)
+      }
+    }, 600)
+    return () => { if (debounceRef.current) clearTimeout(debounceRef.current) }
+  }, [cp, deliveryType])
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
       if (!session?.user) { router.replace('/orden'); return }
+      const meta = session.user.user_metadata
+      setUserName(meta?.full_name || meta?.name || session.user.email?.split('@')[0] || '')
+      setUserEmail(session.user.email ?? '')
       supabase.from('orders').select('id, book_name, size, price_total, price_paid, status')
         .eq('id', orderId).eq('user_id', session.user.id).single()
         .then(({ data }) => {
@@ -69,69 +101,36 @@ export default function PagarPage() {
     })
   }, [orderId, router])
 
-  // Debounce CP lookup — fires 600ms after user stops typing
-  useEffect(() => {
-    if (debounceRef.current) clearTimeout(debounceRef.current)
-
-    const trimmed = cp.trim()
-    if (!/^\d{4}$/.test(trimmed)) {
-      setShippingPrice(null)
-      setShippingError(trimmed.length > 0 ? 'El CP debe tener 4 dígitos' : null)
-      return
-    }
-
-    setShippingLoading(true)
-    setShippingError(null)
-
-    debounceRef.current = setTimeout(async () => {
-      try {
-        const res  = await fetch(`/api/shipping-quote?cp=${trimmed}`)
-        const data = await res.json()
-        if (!res.ok) {
-          setShippingError(data.error ?? 'No se pudo calcular el envío')
-          setShippingPrice(null)
-        } else {
-          setShippingPrice(data.price as number)
-          setShippingError(null)
-        }
-      } catch {
-        setShippingError('No se pudo calcular el envío')
-        setShippingPrice(null)
-      } finally {
-        setShippingLoading(false)
-      }
-    }, 600)
-
-    return () => {
-      if (debounceRef.current) clearTimeout(debounceRef.current)
-    }
-  }, [cp])
-
   if (loading || !order) return (
     <div className="mp-loading"><div className="mp-spinner" /></div>
   )
 
-  const unitPrice     = PRICES[order.size] ?? order.price_total
-  const discount      = copies >= 3 ? 0.8 : 1
-  const subtotal      = copies * unitPrice * discount
-  const shippingTotal = deliveryType === 'andreani' ? (shippingPrice ?? 0) : 0
-  const payNow        = Math.round(subtotal - order.price_paid)
-  const payNowTotal   = payNow + shippingTotal
+  const unitPrice      = PRICES[order.size] ?? order.price_total
+  const discount       = copies >= 3 ? 0.8 : 1
+  const subtotal       = copies * unitPrice * discount
+  const shippingTotal  = deliveryType === 'andreani' ? (shippingPrice ?? 0) : 0
+  const payNow         = Math.round(subtotal - order.price_paid + shippingTotal)
+  const firstName      = userName.split(' ')[0]
+  const shippingLabel  = shippingLoading ? 'Calculando...' : shippingPrice !== null ? fmt(shippingPrice) : 'A calcular'
+  const shippingReady  = deliveryType === 'pickup' || shippingPrice !== null
 
-  const shippingLabel = shippingLoading
-    ? 'Calculando...'
-    : shippingPrice !== null
-      ? fmt(shippingPrice)
-      : 'a calcular'
+  const addressFilled = deliveryType === 'pickup' || (
+    pais.trim() && provincia.trim() && ciudad.trim() && calle.trim() && numero.trim() && cp.trim()
+  )
+
+  const fullAddress = [
+    calle, numero, piso && `Piso ${piso}`, depto && `Depto ${depto}`,
+    ciudad, provincia, pais, cp && `CP ${cp}`,
+  ].filter(Boolean).join(', ')
 
   async function handlePay() {
-    if (deliveryType === 'andreani' && !address.trim()) return
+    if (!addressFilled) return
     setPaying(true)
 
     await supabase.from('orders').update({
       copies,
       delivery_type:    deliveryType,
-      delivery_address: `${address}${cp ? ` (CP ${cp})` : ''}`,
+      delivery_address: deliveryType === 'andreani' ? fullAddress : 'Retiro en fábrica',
     }).eq('id', order!.id)
 
     const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? window.location.origin
@@ -141,7 +140,7 @@ export default function PagarPage() {
       body: JSON.stringify({
         orderId:    order!.id,
         bookName:   order!.book_name,
-        amount:     payNowTotal,
+        amount:     payNow,
         successUrl: `${siteUrl}/mis-proyectos/${order!.id}/confirmado`,
         failureUrl: `${siteUrl}/mis-proyectos/${order!.id}/pagar?error=1`,
       }),
@@ -152,137 +151,174 @@ export default function PagarPage() {
   }
 
   return (
-    <div className="mp-pagar-root">
-      <header className="mp-pagar-header">
-        <Link href={`/mis-proyectos/${orderId}`} className="mp-pagar-back">←</Link>
-        <div style={{ flex: 1, fontFamily: '"forma-djr-display",sans-serif', fontSize: 16, fontWeight: 500 }}>
-          Mis Proyectos
+    <div className="mpd-root">
+      <Navbar hideLinks />
+
+      {/* User strip */}
+      <div className="mp-user-strip">
+        <div className="mp-user-strip__initial">{firstName[0]?.toUpperCase() ?? '?'}</div>
+        <div className="mp-user-strip__info">
+          <p className="mp-user-strip__name">{userName}</p>
+          <p className="mp-user-strip__email">{userEmail}</p>
         </div>
-      </header>
+      </div>
 
-      <div className="mp-pagar-main">
-        <h1 className="mp-pagar-title">Finalizar compra</h1>
-        <p className="mp-pagar-sub">{order.book_name}</p>
+      <div className="mpd-body">
 
-        {/* Cantidad de copias */}
-        <div className="mp-pagar-card">
-          <span className="mp-pagar-card-label">Cantidad de copias</span>
-          <div className="mp-copies-row">
-            <div className="mp-copies-counter">
-              <button className="mp-copies-btn" onClick={() => setCopies(c => Math.max(1, c - 1))} disabled={copies <= 1}>−</button>
-              <span className="mp-copies-num">{copies}</span>
-              <button className="mp-copies-btn" onClick={() => setCopies(c => c + 1)}>+</button>
-            </div>
-            <span className="mp-copies-price">{fmt(unitPrice * discount)} c/u · Total {fmt(subtotal)}</span>
+        {/* Hero */}
+        <div className="mpd-hero">
+          <a href={`/mis-proyectos/${orderId}`} className="mpd-back">‹ Detalle proyecto</a>
+          <h1 className="mpd-title">Finalizar compra</h1>
+        </div>
+
+        {/* Nombre + Formato */}
+        <div className="mpd-accordions" style={{ gap: 0 }}>
+          <div className="mpd-row mpd-row--white">
+            <span className="mpd-row__key">Nombre</span>
+            <span className="mpd-row__val">{order.book_name}</span>
           </div>
-          {copies >= 3 && (
-            <div className="mp-discount-notice">A partir de 3 copias: 20% de descuento</div>
-          )}
-        </div>
+          <div className="mpd-row mpd-row--white">
+            <span className="mpd-row__key">Formato</span>
+            <span className="mpd-row__val">{SIZE_NAMES[order.size] ?? order.size}</span>
+          </div>
 
-        {/* Entrega */}
-        <div className="mp-pagar-card">
-          <span className="mp-pagar-card-label">Entrega</span>
+          {/* Cantidad de copias */}
+          <div className="mpag-copies-section">
+            <div className="mpag-copies-top">
+              <div className="mpag-copies-left">
+                <span className="mpag-section-label">Cantidad de copias</span>
+                <div className="mpag-counter">
+                  <button className="mpag-counter-btn" onClick={() => setCopies(c => Math.max(1, c - 1))} disabled={copies <= 1}>−</button>
+                  <span className="mpag-counter-num">{copies}</span>
+                  <button className="mpag-counter-btn" onClick={() => setCopies(c => c + 1)}>+</button>
+                </div>
+              </div>
+              <div className="mpag-copies-right">
+                <span className="mpag-unit-price">{fmt(unitPrice * discount)} <span className="mpag-cu">c/u</span></span>
+                <span className="mpag-total-label">Total: {fmt(subtotal)}</span>
+              </div>
+            </div>
+            <div className="mpag-discount-banner">
+              A partir de 3 copias: 20% de descuento
+            </div>
+          </div>
 
-          <div
-            className={`mp-delivery-option ${deliveryType === 'andreani' ? 'mp-delivery-option--selected' : ''}`}
-            onClick={() => setDeliveryType('andreani')}
-          >
-            <div className={`mp-delivery-radio ${deliveryType === 'andreani' ? 'mp-delivery-radio--selected' : ''}`} />
-            <div className="mp-delivery-info">
-              <div className="mp-delivery-title">
-                Envío por Andreani
-                <span className={`mp-delivery-price ${shippingPrice !== null ? 'mp-delivery-price--known' : ''}`}>
-                  {deliveryType === 'andreani' ? shippingLabel : 'a calcular'}
+          {/* Entrega */}
+          <div className="mpag-entrega-section">
+            <span className="mpag-section-label">Entrega</span>
+
+            {/* Andreani */}
+            <div
+              className={`mpag-delivery-card${deliveryType === 'andreani' ? ' mpag-delivery-card--selected' : ''}`}
+              onClick={() => setDeliveryType('andreani')}
+            >
+              <div className="mpag-delivery-card__header">
+                <div className="mpag-delivery-card__left">
+                  <div className={`mpag-radio${deliveryType === 'andreani' ? ' mpag-radio--selected' : ''}`} />
+                  <span className="mpag-delivery-name">Envío por Andreani</span>
+                </div>
+                <span className={`mpag-delivery-price${shippingPrice !== null ? ' mpag-delivery-price--known' : ''}`}>
+                  {shippingLabel}
                 </span>
               </div>
-              <div className="mp-delivery-desc">Todo el país y Uruguay · 2–7 días hábiles</div>
+              <p className="mpag-delivery-desc">Todo el país y Uruguay:<br />2-7 días hábiles</p>
+
               {deliveryType === 'andreani' && (
-                <div className="mp-andreani-fields" onClick={e => e.stopPropagation()}>
-                  <input
-                    className="mp-address-input"
-                    placeholder="Dirección de entrega"
-                    value={address}
-                    onChange={e => setAddress(e.target.value)}
-                  />
-                  <div className="mp-cp-row">
-                    <input
-                      className="mp-cp-input"
-                      placeholder="Código postal (4 dígitos)"
-                      value={cp}
-                      maxLength={4}
-                      onChange={e => setCp(e.target.value.replace(/\D/g, '').slice(0, 4))}
-                    />
-                    {shippingLoading && <span className="mp-cp-status mp-cp-status--loading">Calculando...</span>}
-                    {!shippingLoading && shippingPrice !== null && (
-                      <span className="mp-cp-status mp-cp-status--ok">Envío: {fmt(shippingPrice)}</span>
-                    )}
-                    {!shippingLoading && shippingError && (
-                      <span className="mp-cp-status mp-cp-status--error">{shippingError}</span>
-                    )}
+                <div className="mpag-address-fields" onClick={e => e.stopPropagation()}>
+                  <div className="mpag-field">
+                    <label className="mpag-field-label">País</label>
+                    <input className="mpag-field-input" placeholder="País" value={pais} onChange={e => setPais(e.target.value)} />
+                  </div>
+                  <div className="mpag-field-row">
+                    <div className="mpag-field">
+                      <label className="mpag-field-label">Provincia</label>
+                      <input className="mpag-field-input" placeholder="Provincia" value={provincia} onChange={e => setProvincia(e.target.value)} />
+                    </div>
+                    <div className="mpag-field">
+                      <label className="mpag-field-label">Ciudad</label>
+                      <input className="mpag-field-input" placeholder="Ciudad" value={ciudad} onChange={e => setCiudad(e.target.value)} />
+                    </div>
+                  </div>
+                  <div className="mpag-field">
+                    <label className="mpag-field-label">Calle</label>
+                    <input className="mpag-field-input" placeholder="Calle" value={calle} onChange={e => setCalle(e.target.value)} />
+                  </div>
+                  <div className="mpag-field-row">
+                    <div className="mpag-field">
+                      <label className="mpag-field-label">Número</label>
+                      <input className="mpag-field-input" placeholder="Número" value={numero} onChange={e => setNumero(e.target.value)} />
+                    </div>
+                    <div className="mpag-field mpag-field--sm">
+                      <label className="mpag-field-label">Piso</label>
+                      <input className="mpag-field-input" placeholder="Piso" value={piso} onChange={e => setPiso(e.target.value)} />
+                    </div>
+                    <div className="mpag-field mpag-field--sm">
+                      <label className="mpag-field-label">Depto</label>
+                      <input className="mpag-field-input" placeholder="Depto" value={depto} onChange={e => setDepto(e.target.value)} />
+                    </div>
+                  </div>
+                  <div className="mpag-field">
+                    <label className="mpag-field-label">Código postal</label>
+                    <input className="mpag-field-input" placeholder="Código postal" value={cp} maxLength={6} onChange={e => setCp(e.target.value.replace(/\D/g, ''))} />
                   </div>
                 </div>
               )}
             </div>
+
+            {/* Retiro */}
+            <div
+              className={`mpag-delivery-card${deliveryType === 'pickup' ? ' mpag-delivery-card--selected' : ''}`}
+              onClick={() => setDeliveryType('pickup')}
+            >
+              <div className="mpag-delivery-card__header">
+                <div className="mpag-delivery-card__left">
+                  <div className={`mpag-radio${deliveryType === 'pickup' ? ' mpag-radio--selected' : ''}`} />
+                  <span className="mpag-delivery-name">Retiro en fábrica</span>
+                </div>
+                <span className="mpag-delivery-price mpag-delivery-price--free">Gratis</span>
+              </div>
+              <p className="mpag-delivery-desc">Retiro por Concepción Arenal 4501, Chacarita, Bs As,<br />Lunes a Viernes 10-18 hs</p>
+            </div>
           </div>
 
-          <div
-            className={`mp-delivery-option ${deliveryType === 'pickup' ? 'mp-delivery-option--selected' : ''}`}
-            onClick={() => setDeliveryType('pickup')}
-          >
-            <div className={`mp-delivery-radio ${deliveryType === 'pickup' ? 'mp-delivery-radio--selected' : ''}`} />
-            <div className="mp-delivery-info">
-              <div className="mp-delivery-title">
-                Retiro en fábrica
-                <span className="mp-delivery-price mp-delivery-price--free">Gratis</span>
-              </div>
-              <div className="mp-delivery-desc">Concepción Arenal 4501, Chacarita · Lun–Vie 10–18 hs</div>
+          {/* Resumen final */}
+          <div className="mpag-resumen-section">
+            <span className="mpag-section-label">Resumen final</span>
+            <div className="mpd-row">
+              <span className="mpd-row__key">{copies} {copies === 1 ? 'copia' : 'copias'}</span>
+              <span className="mpd-row__val">{fmt(subtotal)}</span>
             </div>
-          </div>
-        </div>
-
-        {/* Resumen */}
-        <div className="mp-pagar-card">
-          <div className="mp-summary-rows">
-            <div className="mp-summary-row">
-              <span>{copies} {copies === 1 ? 'copia' : 'copias'}</span>
-              <span>{fmt(subtotal)}</span>
+            <div className="mpd-row">
+              <span className="mpd-row__key">Ya pagaste</span>
+              <span className="mpd-row__val">−{fmt(order.price_paid)}</span>
             </div>
-            <div className="mp-summary-row mp-summary-row--deducted">
-              <span>Ya pagaste</span>
-              <span>− {fmt(order.price_paid)}</span>
+            <div className="mpd-row">
+              <span className="mpd-row__key">Envío</span>
+              <span className="mpd-row__val">{deliveryType === 'pickup' ? 'Gratis' : shippingLabel}</span>
             </div>
-            {deliveryType === 'andreani' && (
-              <div className="mp-summary-row">
-                <span>Envío Andreani</span>
-                <span className={shippingPrice !== null ? '' : 'mp-summary-muted'}>
-                  {shippingLoading ? 'Calculando...' : shippingPrice !== null ? fmt(shippingPrice) : 'ingresá tu CP'}
-                </span>
-              </div>
-            )}
-            <hr className="mp-summary-divider" />
-            <div className="mp-summary-total">
-              <span>Pagás ahora</span>
-              <span>
-                {shippingPrice !== null || deliveryType === 'pickup'
-                  ? fmt(payNowTotal)
-                  : `${fmt(payNow)} + envío`}
+            <div className="mpd-row mpd-row--balance">
+              <span className="mpd-row__key">Pagás ahora</span>
+              <span className="mpd-row__val">
+                {shippingReady ? fmt(payNow) : `${fmt(Math.round(subtotal - order.price_paid))} + envío`}
               </span>
             </div>
           </div>
         </div>
 
-        <button
-          className="mp-cta-btn"
-          onClick={handlePay}
-          disabled={paying || (deliveryType === 'andreani' && !address.trim())}
-        >
-          {paying ? 'Redirigiendo...' : 'Aceptar y comprar'}
-        </button>
+        {/* CTA */}
+        <div className="mpd-bottom">
+          <button
+            className={`mpd-cta-btn${addressFilled && shippingReady ? ' mpd-cta-btn--active' : ''}`}
+            onClick={handlePay}
+            disabled={!addressFilled || !shippingReady || paying}
+          >
+            {paying ? 'Redirigiendo...' : 'Aceptar y finalizar'}
+          </button>
+          <p className="mpd-legal" style={{ marginTop: 10 }}>
+            Por tratarse de un producto personalizado, no realizamos cambios ni devoluciones una vez enviado a producción.
+          </p>
+        </div>
 
-        <p className="mp-legal">
-          Por tratarse de un producto personalizado, no realizamos cambios ni devoluciones una vez enviado a producción.
-        </p>
       </div>
     </div>
   )

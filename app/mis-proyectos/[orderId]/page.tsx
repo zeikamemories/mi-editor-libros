@@ -175,12 +175,11 @@ export default function ProyectoPage() {
   const refInputRef = useRef<HTMLInputElement>(null)
   const [uploadingRef, setUploadingRef] = useState(false)
 
-  const [showChangeInput, setShowChangeInput] = useState(false)
-  const [changeText,      setChangeText]      = useState('')
-  const [sendingChange,   setSendingChange]   = useState(false)
+  const [sendingChange, setSendingChange] = useState(false)
 
   const [approved, setApproved] = useState(false)
   const [copied,   setCopied]   = useState(false)
+  const [coverThumbnail, setCoverThumbnail] = useState<{ left?: string; right?: string } | null>(null)
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
@@ -193,12 +192,14 @@ export default function ProyectoPage() {
       Promise.all([
         supabase.from('orders').select('*').eq('id', orderId).eq('user_id', session.user.id).single(),
         supabase.from('order_notes').select('id, content, type, created_at').eq('order_id', orderId).order('created_at'),
-      ]).then(([{ data: o }, { data: n }]) => {
+        supabase.from('projects').select('cover_thumbnail').eq('order_id', orderId).maybeSingle(),
+      ]).then(([{ data: o }, { data: n }, { data: p }]) => {
         if (!o) { router.replace('/mis-proyectos'); return }
         setOrder(o as Order)
         setDriveLink(o.drive_link ?? '')
         setDocsLink(o.docs_link ?? '')
         setNotes((n ?? []) as Note[])
+        if (p?.cover_thumbnail) setCoverThumbnail(p.cover_thumbnail)
         setLoading(false)
       })
     })
@@ -249,18 +250,15 @@ export default function ProyectoPage() {
     setUploadingRef(false)
   }
 
-  async function sendChangeRequest() {
-    if (!changeText.trim() || !order) return
+  async function requestChange() {
+    if (!order || sendingChange) return
     setSendingChange(true)
-    const { data } = await supabase.from('order_notes').insert({
-      order_id: order.id, user_id: userId, content: changeText.trim(), type: 'change_request',
-    }).select().single()
     const newUsed = (order.change_requests_used ?? 0) + 1
     await supabase.from('orders').update({ change_requests_used: newUsed }).eq('id', order.id)
-    if (data) setNotes(prev => [...prev, data as Note])
+    await supabase.from('order_notes').insert({
+      order_id: order.id, user_id: userId, content: 'Ronda de cambios solicitada', type: 'change_request',
+    })
     setOrder(prev => prev ? { ...prev, change_requests_used: newUsed } : prev)
-    setChangeText('')
-    setShowChangeInput(false)
     setSendingChange(false)
   }
 
@@ -374,19 +372,32 @@ export default function ProyectoPage() {
                     </div>
                   </div>
                   {step.key === 'en_camino' && (isDone || isCurrent) && order.tracking_number && (
-                    <div className="mpd-tracking-wrap">
-                      <div className="mpd-tracking-row">
-                        <span className="mpd-tracking-number">{order.tracking_number}</span>
-                        <button className="mpd-tracking-copy-btn" onClick={copyTracking}>
-                          {copied ? '✓' : 'Copiar'}
-                        </button>
+                    <div className="mpd-tracking-card">
+                      <div className="mpd-tracking-card__header">
+                        <div className="mpd-tracking-card__labels">
+                          <span className="mpd-tracking-card__label">Número de seguimiento</span>
+                          <a
+                            className="mpd-tracking-card__number"
+                            href={`https://www.andreani.com/#!/informacionEnvio/${order.tracking_number}`}
+                            target="_blank" rel="noreferrer"
+                          >
+                            {order.tracking_number}
+                          </a>
+                        </div>
+                        <img src="/fotos/andreani.png" alt="Andreani" className="mpd-tracking-card__logo" />
                       </div>
+                      {order.estimated_delivery_date && (
+                        <div className="mpd-tracking-card__delivery">
+                          <span className="mpd-tracking-card__label">Entrega estimada</span>
+                          <span className="mpd-tracking-card__delivery-date">{fmtDate(order.estimated_delivery_date)}</span>
+                        </div>
+                      )}
                       <a
-                        className="mpd-tracking-andreani"
+                        className="mpd-tracking-card__btn"
                         href={`https://www.andreani.com/#!/informacionEnvio/${order.tracking_number}`}
                         target="_blank" rel="noreferrer"
                       >
-                        Rastrear en Andreani ↗
+                        Rastrear el pedido
                       </a>
                     </div>
                   )}
@@ -507,9 +518,25 @@ export default function ProyectoPage() {
             ) : (
               <>
                 <div className="mpd-preview-row">
-                  <div className="mpd-preview-frame-box" />
+                  <div className="mpd-preview-frame-box">
+                    {coverThumbnail && (
+                      <div className="mpd-preview-spread">
+                        {coverThumbnail.left && (
+                          // eslint-disable-next-line @next/next/no-img-element
+                          <img src={coverThumbnail.left} alt="Portada izquierda" className="mpd-preview-spread__page" />
+                        )}
+                        {coverThumbnail.right && (
+                          // eslint-disable-next-line @next/next/no-img-element
+                          <img src={coverThumbnail.right} alt="Portada derecha" className="mpd-preview-spread__page" />
+                        )}
+                      </div>
+                    )}
+                  </div>
                   {order.preview_url ? (
-                    <a className="mpd-preview-link" href={order.preview_url} target="_blank" rel="noreferrer">
+                    <a
+                      className="mpd-preview-link"
+                      href={`${order.preview_url}?orderId=${order.id}`}
+                    >
                       Ver el libro completo ›
                     </a>
                   ) : (
@@ -535,33 +562,13 @@ export default function ProyectoPage() {
                     </div>
 
                     <div className="mpd-change-btn-row">
-                      {!showChangeInput ? (
-                        <button className="mpd-change-btn" onClick={() => setShowChangeInput(true)}>
-                          Pedir un cambio
-                        </button>
-                      ) : (
-                        <div className="mpd-change-form">
-                          <textarea
-                            className="mpd-mat-textarea"
-                            placeholder="Describí los cambios que necesitás..."
-                            value={changeText}
-                            onChange={e => setChangeText(e.target.value)}
-                            autoFocus
-                          />
-                          <div className="mpd-change-form__actions">
-                            <button className="mpd-change-btn mpd-change-btn--cancel" onClick={() => setShowChangeInput(false)}>
-                              Cancelar
-                            </button>
-                            <button
-                              className="mpd-save-btn mpd-save-btn--flex"
-                              onClick={sendChangeRequest}
-                              disabled={!changeText.trim() || sendingChange}
-                            >
-                              {sendingChange ? 'Enviando...' : 'Enviar'}
-                            </button>
-                          </div>
-                        </div>
-                      )}
+                      <button
+                        className="mpd-guardar-cambios-btn"
+                        onClick={requestChange}
+                        disabled={sendingChange || usedRounds >= MAX_CHANGES}
+                      >
+                        {sendingChange ? 'Guardando...' : 'Guardar cambios'}
+                      </button>
                     </div>
                   </>
                 )}
