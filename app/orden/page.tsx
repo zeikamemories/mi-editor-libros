@@ -23,7 +23,7 @@ const PRODUCT_IMAGES: Record<string, string> = {
 }
 
 const PRICES_BY_PAGES: Record<string, [number, number, number]> = {
-  chico_h:   [82700,  104300, 118700],
+  chico_h:   [1,  104300, 118700],
   mediano_h: [94700,  116700, 138700],
   grande_h:  [128800, 164800, 200800],
   vertical:  [94700,  116700, 138700],
