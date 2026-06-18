@@ -8,7 +8,7 @@ import CompareSizesModal from './CompareSizesModal'
 import './Productos.css'
 
 const PRODUCTS: ProductData[] = [
-  { sizeId: 'chico',    name: 'Chico Horizontal',  price: '$82.700',  dimensions: '21 x 14,8 cm' },
+  { sizeId: 'chico',    name: 'Chico Horizontal',  price: '$1',       dimensions: '21 x 14,8 cm' },
   { sizeId: 'mediano',  name: 'Mediano Horizontal', price: '$94.700',  dimensions: '28 x 21,6 cm' },
   { sizeId: 'grande',   name: 'Grande Horizontal',  price: '$128.800', dimensions: '41 x 29 cm'   },
   { sizeId: 'vertical', name: 'Vertical',           price: '$94.700',  dimensions: '28 x 21,6 cm' },

@@ -13,7 +13,7 @@ const IMAGES: Record<string, string[]> = {
 }
 
 const PRICES_BY_PAGES: Record<string, [number, number, number]> = {
-  chico:    [82700,  104300, 118700],
+  chico:    [1,  104300, 118700],
   mediano:  [94700,  116700, 138700],
   grande:   [128800, 164800, 200800],
   vertical: [94700,  116700, 138700],
