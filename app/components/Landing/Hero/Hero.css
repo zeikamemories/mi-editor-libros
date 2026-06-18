@@ -77,10 +77,10 @@
 }
 
 .hero__cta--full {
-  left: 0;
-  right: 0;
-  bottom: 0;
-  padding: 18px 15px;
+  left: 20px;
+  right: 20px;
+  bottom: 20px;
+  padding: 10px 15px;
 }
 
 /* ── Desktop ── */

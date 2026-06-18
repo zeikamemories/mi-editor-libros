@@ -331,6 +331,7 @@
   flex-shrink: 0;
   border-top: 1px solid var(--color-border);
   background: white;
+  padding: 12px 20px;
 }
 
 .mpm__cta {
@@ -348,7 +349,8 @@
   text-decoration: none;
   border: none;
   cursor: pointer;
-  padding: 16px;
+  padding: 10px 15px;
+  box-shadow: 0px 4px 7.5px rgba(0, 0, 0, 0.1);
 }
 
 /* ── Comparar overlay ───────────────────────────────────────────────────────── */
