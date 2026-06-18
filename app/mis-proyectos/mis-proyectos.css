@@ -85,6 +85,13 @@
   margin: 0 auto;
 }
 
+@media (min-width: 1024px) {
+  .mp-main {
+    max-width: 1440px;
+    padding: 32px 50px 40px;
+  }
+}
+
 .mp-title {
   font-family: "Times New Roman", Times, serif;
   font-weight: 400;
@@ -102,6 +109,14 @@
   flex-direction: column;
   gap: 10px;
   margin-bottom: 32px;
+}
+
+@media (min-width: 1024px) {
+  .mp-list {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 320px));
+    gap: 20px;
+  }
 }
 
 /* ── Project card ────────────────────────────────────────────────────────── */
@@ -222,21 +237,26 @@
 .mp-new {
   display: flex;
   align-items: center;
+  justify-content: center;
   gap: 10px;
   text-decoration: none;
-  color: var(--color-blue);
-  padding: 4px 0;
+  color: #fff;
+  background: var(--color-blue);
+  padding: 20px;
+  border: 0.5px solid var(--color-blue);
+  min-height: 80px;
 }
 
 .mp-new__plus {
   font-size: 22px;
   line-height: 1;
   font-weight: 300;
+  color: #fff;
 }
 
 .mp-new__label {
   font-family: "forma-djr-display", sans-serif;
-  font-weight: 500;
+  font-weight: 600;
   font-size: 15px;
   letter-spacing: 0.02em;
 }
@@ -327,8 +347,32 @@
   padding: 0 0 10px;
 }
 
+.mpd-accordions__left,
+.mpd-accordions__right {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+@media (min-width: 1024px) {
+  .mpd-accordions {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 40px;
+    padding: 0 50px 20px;
+  }
+}
+
 .mpd-accordion {
   background: white;
+}
+
+.mpd-accordion__body {
+  background: #fff;
+}
+
+.mpd-accordion__body .mpd-row {
+  background: #fff;
 }
 
 .mpd-accordion__trigger {
@@ -389,6 +433,18 @@
   align-items: center;
   gap: 0;
   padding: 20px 20px 0;
+}
+
+@media (min-width: 1024px) {
+  .mpd-bottom {
+    padding: 100px 50px 0;
+    align-items: center;
+  }
+  .mpd-bottom > *,
+  .mpd-cta-wrap {
+    max-width: 480px;
+    width: 100%;
+  }
 }
 
 /* "Revisé el diseño y lo acepto" — 3 states via class */

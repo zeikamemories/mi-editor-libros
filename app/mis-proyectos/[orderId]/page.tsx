@@ -315,6 +315,7 @@ export default function ProyectoPage() {
 
         {/* Accordions */}
         <div className="mpd-accordions">
+          <div className="mpd-accordions__left">
 
           {/* ── Detalles del pedido ─────────────────────────────────────── */}
           <Accordion title="Detalles del pedido" open={openSection === 'detalles'} onToggle={() => toggle('detalles')}>
@@ -405,6 +406,8 @@ export default function ProyectoPage() {
               )
             })}
           </Accordion>
+          </div>{/* end left */}
+          <div className="mpd-accordions__right">
 
           {/* ── Tu material ─────────────────────────────────────────────── */}
           <Accordion title="Tu material" open={openSection === 'material'} onToggle={() => toggle('material')}>
@@ -581,6 +584,7 @@ export default function ProyectoPage() {
               </>
             )}
           </Accordion>
+          </div>{/* end right */}
         </div>
 
         {/* Bottom: approve + CTA — always visible, disabled when preview not ready */}

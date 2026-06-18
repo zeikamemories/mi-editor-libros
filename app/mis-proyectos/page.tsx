@@ -114,12 +114,11 @@ export default function MisProyectosPage() {
               </a>
             )
           })}
+          <a href="/#productos" className="mp-new">
+            <span className="mp-new__plus">+</span>
+            <span className="mp-new__label">Nuevo Proyecto</span>
+          </a>
         </div>
-
-        <a href="/orden" className="mp-new">
-          <span className="mp-new__plus">+</span>
-          <span className="mp-new__label">Nuevo Proyecto</span>
-        </a>
       </main>
     </div>
   )
