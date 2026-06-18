@@ -20,7 +20,7 @@ interface Order {
 }
 
 const PRICES: Record<string, number> = {
-  chico_h: 75000, mediano_h: 81500, grande_h: 100000, vertical: 81500, cuadrado: 97000,
+  chico_h: 1, mediano_h: 81500, grande_h: 100000, vertical: 81500, cuadrado: 97000,
 }
 
 const STEPS = [
