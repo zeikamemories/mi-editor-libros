@@ -9,8 +9,8 @@ import './pedido.css'
 const ADMIN_EMAILS = ['maikasacerdote@gmail.com', 'zeika.memories@gmail.com']
 
 const ALL_STATUSES = [
-  { value: 'confirmado',        label: 'Confirmado'        },
-  { value: 'material_recibido', label: 'Material recibido' },
+  { value: 'confirmado',        label: 'Cargar material'   },
+  { value: 'material_recibido', label: 'Material cargado'  },
   { value: 'en_diseno',         label: 'En diseño'         },
   { value: 'preview_listo',     label: 'Preview listo'     },
   { value: 'en_produccion',     label: 'En producción'     },
@@ -347,38 +347,36 @@ export default function PedidoAdminPage() {
               Enviar confirmación de compra
             </a>
           )}
-        </div>
 
-        {/* ── Editar detalles ────────────────────────────────────── */}
-        <div className="pedido-card">
-          <h3 className="pedido-card-title">Editar detalles</h3>
-          <div className="pedido-row">
-            <div style={{ flex: 2 }}>
+          <hr className="pedido-divider" />
+
+          {/* Editar */}
+          <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
+            <div style={{ flex: '2 1 140px' }}>
               <label className="pedido-hint">Nombre</label>
-              <input className="pedido-input" value={editName} onChange={e => setEditName(e.target.value)} />
+              <input className="pedido-input" value={editName} onChange={e => setEditName(e.target.value)} style={{ width: '100%', boxSizing: 'border-box' }} />
             </div>
-            <div style={{ flex: 1 }}>
+            <div style={{ flex: '1 1 90px' }}>
               <label className="pedido-hint">Total ($)</label>
-              <input className="pedido-input" type="number" value={editTotal} onChange={e => setEditTotal(e.target.value)} />
+              <input className="pedido-input" type="number" value={editTotal} onChange={e => setEditTotal(e.target.value)} style={{ width: '100%', boxSizing: 'border-box' }} />
             </div>
-            <div style={{ flex: 1 }}>
+            <div style={{ flex: '1 1 90px' }}>
               <label className="pedido-hint">Pagado ($)</label>
-              <input className="pedido-input" type="number" value={editPaid} onChange={e => setEditPaid(e.target.value)} />
+              <input className="pedido-input" type="number" value={editPaid} onChange={e => setEditPaid(e.target.value)} style={{ width: '100%', boxSizing: 'border-box' }} />
             </div>
-            <div style={{ flex: 1 }}>
-              <label className="pedido-hint">WhatsApp {clientPhone ? `(actual: ${clientPhone})` : '(sin número)'}</label>
-              <input className="pedido-input" placeholder="11 1234 5678" value={editPhone} onChange={e => setEditPhone(e.target.value)} />
+            <div style={{ flex: '1 1 120px' }}>
+              <label className="pedido-hint">WhatsApp{clientPhone ? ` (actual: ${clientPhone})` : ''}</label>
+              <input className="pedido-input" placeholder="11 1234 5678" value={editPhone} onChange={e => setEditPhone(e.target.value)} style={{ width: '100%', boxSizing: 'border-box' }} />
             </div>
-            <button className="pedido-save-btn" onClick={saveDetails} disabled={savingDetails} style={{ alignSelf: 'flex-end' }}>
+            <button className="pedido-save-btn" onClick={saveDetails} disabled={savingDetails} style={{ alignSelf: 'flex-end', flexShrink: 0 }}>
               {savingDetails ? '...' : 'Guardar'}
             </button>
           </div>
-        </div>
 
-        {/* ── Asignar a cliente ───────────────────────────────────── */}
-        <div className="pedido-card">
-          <h3 className="pedido-card-title">Asignar a cliente</h3>
-          <p className="pedido-hint">El cliente va a ver este proyecto en su portal (/mis-proyectos).</p>
+          <hr className="pedido-divider" />
+
+          {/* Asignar a cliente */}
+          <p className="pedido-hint">Asignar a cliente — va a aparecer en su portal (/mis-proyectos).</p>
           <div className="pedido-row">
             <input
               className="pedido-input"
@@ -395,35 +393,6 @@ export default function PedidoAdminPage() {
               {assignMsg}
             </p>
           )}
-        </div>
-
-        {/* ── Estado ─────────────────────────────────────────────── */}
-        <div className="pedido-card">
-          <h3 className="pedido-card-title">Estado</h3>
-          <div className="pedido-row">
-            <select className="pedido-select" value={status} onChange={e => setStatus(e.target.value)}>
-              {ALL_STATUSES.map(s => (
-                <option key={s.value} value={s.value}>{s.label}</option>
-              ))}
-            </select>
-            <button className="pedido-save-btn" onClick={saveStatus} disabled={savingStatus}>
-              {savingStatus ? '...' : 'Guardar'}
-            </button>
-          </div>
-
-          <div className="pedido-dates-row">
-            <div className="pedido-date-field">
-              <label>Diseño estimado</label>
-              <input type="date" value={designDate} onChange={e => setDesignDate(e.target.value)} />
-            </div>
-            <div className="pedido-date-field">
-              <label>Entrega estimada</label>
-              <input type="date" value={deliveryDate} onChange={e => setDeliveryDate(e.target.value)} />
-            </div>
-            <button className="pedido-save-btn" onClick={saveDates} disabled={savingDates}>
-              {savingDates ? '...' : 'Guardar fechas'}
-            </button>
-          </div>
         </div>
 
         {/* ── Preview URL ─────────────────────────────────────────── */}
@@ -487,45 +456,6 @@ export default function PedidoAdminPage() {
           )}
         </div>
 
-        {/* ── Pedidos de cambio ───────────────────────────────────── */}
-        {changeRequests.length > 0 && (
-          <div className="pedido-card">
-            <h3 className="pedido-card-title">
-              Pedidos de cambio
-              <span className="pedido-badge">{changeRequests.length}</span>
-            </h3>
-            {changeRequests.map(n => (
-              <div key={n.id} className="pedido-note pedido-note--change">
-                <span className="pedido-note-date">{fmtDate(n.created_at)}</span>
-                <p className="pedido-note-content">{n.content}</p>
-              </div>
-            ))}
-          </div>
-        )}
-
-        {/* ── Comentarios y dibujos del cliente en el preview ──────── */}
-        {previewAnnotations.length > 0 && (
-          <div className="pedido-card">
-            <h3 className="pedido-card-title">
-              Anotaciones del cliente en el preview
-              <span className="pedido-badge">{previewAnnotations.length}</span>
-            </h3>
-            {previewAnnotations.map(a => (
-              <div key={a.id} className="pedido-note pedido-note--change">
-                <span className="pedido-note-date">
-                  {a.type === 'drawing' ? 'Dibujo' : 'Comentario'} · Página {a.page_number + 1} · {fmtDate(a.created_at)}
-                </span>
-                {a.type === 'drawing' ? (
-                  // eslint-disable-next-line @next/next/no-img-element
-                  <img src={a.content} alt="Dibujo del cliente" className="pedido-annot-drawing" />
-                ) : (
-                  <p className="pedido-note-content">{a.content}</p>
-                )}
-              </div>
-            ))}
-          </div>
-        )}
-
         {/* ── Notas del cliente y diseñadora ──────────────────────── */}
         <div className="pedido-card">
           <h3 className="pedido-card-title">Notas</h3>
@@ -549,8 +479,37 @@ export default function PedidoAdminPage() {
         </div>
       </div>
 
-      {/* ── Columna derecha: proyecto / editor ──────────────────── */}
+      {/* ── Columna derecha: estado + proyecto / editor ─────────── */}
       <aside className="pedido-aside">
+        {/* ── Estado ─────────────────────────────────────────────── */}
+        <div className="pedido-card pedido-aside-card">
+          <h3 className="pedido-card-title">Estado</h3>
+          <div className="pedido-row">
+            <select className="pedido-select" value={status} onChange={e => setStatus(e.target.value)}>
+              {ALL_STATUSES.map(s => (
+                <option key={s.value} value={s.value}>{s.label}</option>
+              ))}
+            </select>
+            <button className="pedido-save-btn" onClick={saveStatus} disabled={savingStatus}>
+              {savingStatus ? '...' : 'Guardar'}
+            </button>
+          </div>
+          <div className="pedido-dates-row">
+            <div className="pedido-date-field">
+              <label>Diseño estimado</label>
+              <input type="date" value={designDate} onChange={e => setDesignDate(e.target.value)} />
+            </div>
+            <div className="pedido-date-field">
+              <label>Entrega estimada</label>
+              <input type="date" value={deliveryDate} onChange={e => setDeliveryDate(e.target.value)} />
+            </div>
+            <button className="pedido-save-btn" onClick={saveDates} disabled={savingDates}>
+              {savingDates ? '...' : 'Guardar fechas'}
+            </button>
+          </div>
+        </div>
+
+        {/* ── Proyecto / editor ───────────────────────────────────── */}
         {!project ? (
           <button
             className="pedido-nuevo-btn"
@@ -580,6 +539,38 @@ export default function PedidoAdminPage() {
             <button className="pedido-entrar-btn" onClick={openEditor}>
               ENTRAR
             </button>
+          </div>
+        )}
+
+        {/* ── Anotaciones + pedidos de cambio ─────────────────────── */}
+        {(previewAnnotations.length > 0 || changeRequests.length > 0) && (
+          <div className="pedido-card pedido-aside-card">
+            <h3 className="pedido-card-title">
+              Anotaciones del cliente
+              <span className="pedido-badge">{previewAnnotations.length + changeRequests.length}</span>
+            </h3>
+            {previewAnnotations.map(a => (
+              <div key={a.id} className="pedido-note pedido-note--change">
+                <span className="pedido-note-date">
+                  {a.type === 'drawing' ? 'Dibujo' : 'Comentario'} · Página {a.page_number + 1} · {fmtDate(a.created_at)}
+                </span>
+                {a.type === 'drawing' ? (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img src={a.content} alt="Dibujo del cliente" className="pedido-annot-drawing" />
+                ) : (
+                  <p className="pedido-note-content">{a.content}</p>
+                )}
+              </div>
+            ))}
+            {changeRequests.length > 0 && previewAnnotations.length > 0 && (
+              <hr className="pedido-divider" />
+            )}
+            {changeRequests.map(n => (
+              <div key={n.id} className="pedido-note pedido-note--change">
+                <span className="pedido-note-date">Pedido de cambio · {fmtDate(n.created_at)}</span>
+                <p className="pedido-note-content">{n.content}</p>
+              </div>
+            ))}
           </div>
         )}
       </aside>

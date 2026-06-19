@@ -15,6 +15,15 @@ const ADMIN_EMAILS = [
 
 type FilterTab = 'TODOS' | 'NUEVOS' | 'EN PROCESO' | 'EN PRODUCCIÓN' | 'FINALIZADOS'
 
+type Designer = 'maika' | 'vicky' | 'jose' | null
+
+const DESIGNER_COLORS: Record<string, string> = {
+  maika: '#109e90',
+  vicky: '#a719d3',
+  jose:  '#f97944',
+}
+const DESIGNER_CYCLE: Designer[] = ['maika', 'vicky', 'jose', null]
+
 interface OrderRow {
   id: string
   order_number: string
@@ -27,12 +36,13 @@ interface OrderRow {
   price_total: number
   price_paid: number
   change_requests_used: number
+  designer: Designer
 }
 
 const TABS: FilterTab[] = ['TODOS', 'NUEVOS', 'EN PROCESO', 'EN PRODUCCIÓN', 'FINALIZADOS']
 
 const STATUS_LABEL: Record<string, string> = {
-  pendiente_pago:    'Pago pendiente',
+  pendiente_pago:    'Cargar material',
   confirmado:        'Cargar material',
   material_recibido: 'Material Cargado',
   en_diseno:         'En diseño',
@@ -67,7 +77,18 @@ export default function DashboardPage() {
   const [viewMode, setViewMode]     = useState<'list' | 'grid'>('list')
   const [projectMap, setProjectMap] = useState<Record<string, { cover_thumbnail: { left: string; right: string } | null }>>({})
 
-  const [authChecked, setAuthChecked] = useState(false)
+  const [authChecked, setAuthChecked]     = useState(false)
+  const [editMode, setEditMode]           = useState(false)
+  const [selected, setSelected]           = useState<Set<string>>(new Set())
+  const [deleting, setDeleting]           = useState(false)
+  const [designerPopup, setDesignerPopup] = useState<string | null>(null)
+
+  useEffect(() => {
+    if (!designerPopup) return
+    const close = () => setDesignerPopup(null)
+    window.addEventListener('click', close)
+    return () => window.removeEventListener('click', close)
+  }, [designerPopup])
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
@@ -109,6 +130,7 @@ export default function DashboardPage() {
         price_total:          o.price_total,
         price_paid:           o.price_paid,
         change_requests_used: o.change_requests_used ?? 0,
+        designer:             (o.designer as Designer) ?? null,
       }))
       setOrders(rows)
       setLoading(false)
@@ -121,6 +143,45 @@ export default function DashboardPage() {
     await supabase.from('orders').delete().eq('id', id)
     setOrders(prev => prev.filter(o => o.id !== id))
   }
+
+  function toggleSelect(id: string) {
+    setSelected(prev => {
+      const next = new Set(prev)
+      next.has(id) ? next.delete(id) : next.add(id)
+      return next
+    })
+  }
+
+  function toggleSelectAll() {
+    if (selected.size === filtered.length) {
+      setSelected(new Set())
+    } else {
+      setSelected(new Set(filtered.map(o => o.id)))
+    }
+  }
+
+  async function deleteSelected() {
+    if (!window.confirm(`¿Eliminar ${selected.size} pedido${selected.size > 1 ? 's' : ''}? Esta acción no se puede deshacer.`)) return
+    setDeleting(true)
+    const ids = Array.from(selected)
+    await supabase.from('orders').delete().in('id', ids)
+    setOrders(prev => prev.filter(o => !ids.includes(o.id)))
+    setSelected(new Set())
+    setEditMode(false)
+    setDeleting(false)
+  }
+
+  async function selectDesigner(id: string, value: Designer) {
+    await supabase.from('orders').update({ designer: value }).eq('id', id)
+    setOrders(prev => prev.map(o => o.id === id ? { ...o, designer: value } : o))
+    setDesignerPopup(null)
+  }
+
+  function exitEditMode() {
+    setEditMode(false)
+    setSelected(new Set())
+  }
+
 
   if (!authChecked) return <div className="dashboard-loading"><div className="dashboard-spinner" /></div>
 
@@ -168,17 +229,32 @@ export default function DashboardPage() {
       <main className="dash-main">
         <p className="dash-greeting">Hola Maika! Hoy va a ser un gran día 🌿</p>
 
+        <div className="dash-tabs">
+          {TABS.map(tab => (
+            <button
+              key={tab}
+              onClick={() => setActiveTab(tab)}
+              className={`dash-tab ${activeTab === tab ? 'dash-tab--active' : ''}`}
+            >
+              {tab}
+            </button>
+          ))}
+        </div>
+
         <div className="dash-toolbar">
-          <div className="dash-tabs">
-            {TABS.map(tab => (
-              <button
-                key={tab}
-                onClick={() => setActiveTab(tab)}
-                className={`dash-tab ${activeTab === tab ? 'dash-tab--active' : ''}`}
-              >
-                {tab}
-              </button>
-            ))}
+          <div className="dash-toolbar-actions">
+            {editMode ? (
+              <>
+                {selected.size > 0 && (
+                  <button className="dash-bulk-delete-btn" onClick={deleteSelected} disabled={deleting}>
+                    {deleting ? 'Eliminando...' : `Eliminar (${selected.size})`}
+                  </button>
+                )}
+                <button className="dash-edit-btn dash-edit-btn--cancel" onClick={exitEditMode}>Cancelar</button>
+              </>
+            ) : (
+              <button className="dash-edit-btn" onClick={() => setEditMode(true)}>Editar</button>
+            )}
           </div>
           <div className="dash-view-toggle">
             <button
@@ -206,7 +282,32 @@ export default function DashboardPage() {
           <div className="dash-grid">
             {filtered.map(order => {
               const proj = projectMap[order.id]
-              return (
+              const isSelected = selected.has(order.id)
+              return editMode ? (
+                <div
+                  key={order.id}
+                  className={`dash-grid-card dash-grid-card--selectable ${isSelected ? 'dash-grid-card--selected' : ''}`}
+                  onClick={() => toggleSelect(order.id)}
+                >
+                  <div className="dash-grid-checkbox">{isSelected ? '✓' : ''}</div>
+                  <div className="dash-grid-thumb">
+                    {proj?.cover_thumbnail ? (
+                      <>
+                        {/* eslint-disable-next-line @next/next/no-img-element */}
+                        <img src={proj.cover_thumbnail.left}  alt="" className="dash-grid-thumb-page" />
+                        {/* eslint-disable-next-line @next/next/no-img-element */}
+                        <img src={proj.cover_thumbnail.right} alt="" className="dash-grid-thumb-page" />
+                      </>
+                    ) : (
+                      <div className="dash-grid-thumb-empty" />
+                    )}
+                  </div>
+                  <div className="dash-grid-info">
+                    <div className="dash-grid-name">{order.book_name}</div>
+                    <div className="dash-grid-meta">{order.client_name} · {order.created_at}</div>
+                  </div>
+                </div>
+              ) : (
                 <Link key={order.id} href={`/dashboard/pedidos/${order.id}`} className="dash-grid-card">
                   <div className="dash-grid-thumb">
                     {proj?.cover_thumbnail ? (
@@ -233,6 +334,12 @@ export default function DashboardPage() {
             <table className="dash-table">
               <thead>
                 <tr className="dash-table-header-row">
+                  <th className="dash-col-designer-th"></th>
+                  {editMode && (
+                    <th className="dash-col-check">
+                      <input type="checkbox" onChange={toggleSelectAll} checked={selected.size === filtered.length && filtered.length > 0} />
+                    </th>
+                  )}
                   <th>PEDIDO</th>
                   <th>CLIENTE</th>
                   <th>TELÉFONO</th>
@@ -241,13 +348,40 @@ export default function DashboardPage() {
                   <th>TAMAÑO</th>
                   <th>TOTAL</th>
                   <th>ESTADO</th>
-                  <th>ABRIR</th>
-                  <th></th>
+                  {!editMode && <th>ABRIR</th>}
+                  {!editMode && <th></th>}
                 </tr>
               </thead>
               <tbody>
                 {filtered.map(order => (
-                  <tr key={order.id} className="dash-table-row">
+                  <tr
+                    key={order.id}
+                    className={`dash-table-row ${editMode && selected.has(order.id) ? 'dash-table-row--selected' : ''}`}
+                    onClick={editMode ? () => toggleSelect(order.id) : undefined}
+                    style={editMode ? { cursor: 'pointer' } : undefined}
+                  >
+                    <td className="dash-col-designer-td" onClick={e => { e.stopPropagation(); setDesignerPopup(designerPopup === order.id ? null : order.id) }}>
+                      <div className="dash-designer-dot" style={{ background: order.designer ? DESIGNER_COLORS[order.designer] : '#ddd' }} />
+                      {designerPopup === order.id && (
+                        <div className="dash-designer-popup" onClick={e => e.stopPropagation()}>
+                          {(['maika', 'vicky', 'jose'] as Designer[]).map(d => (
+                            <button key={d} className="dash-designer-option" onClick={() => selectDesigner(order.id, d)}>
+                              <span className="dash-designer-option-dot" style={{ background: DESIGNER_COLORS[d!] }} />
+                              {d}
+                            </button>
+                          ))}
+                          <button className="dash-designer-option" onClick={() => selectDesigner(order.id, null)}>
+                            <span className="dash-designer-option-dot" style={{ background: '#ddd' }} />
+                            ninguna
+                          </button>
+                        </div>
+                      )}
+                    </td>
+                    {editMode && (
+                      <td className="dash-col-check">
+                        <input type="checkbox" checked={selected.has(order.id)} onChange={() => toggleSelect(order.id)} onClick={e => e.stopPropagation()} />
+                      </td>
+                    )}
                     <td className="dash-cell-pedido">{order.order_number}</td>
                     <td>{order.client_name}</td>
                     <td className="dash-cell-phone">{order.client_phone}</td>
@@ -265,18 +399,22 @@ export default function DashboardPage() {
                         )}
                       </div>
                     </td>
-                    <td>
-                      <Link href={`/dashboard/pedidos/${order.id}`} className="dash-link-abrir">ABRIR</Link>
-                    </td>
-                    <td>
-                      <button
-                        className="dash-delete-btn"
-                        onClick={() => deleteOrder(order.id, order.book_name)}
-                        aria-label="Eliminar pedido"
-                      >
-                        <Trash2 size={18} strokeWidth={1.5} />
-                      </button>
-                    </td>
+                    {!editMode && (
+                      <td>
+                        <Link href={`/dashboard/pedidos/${order.id}`} className="dash-link-abrir">ABRIR</Link>
+                      </td>
+                    )}
+                    {!editMode && (
+                      <td>
+                        <button
+                          className="dash-delete-btn"
+                          onClick={() => deleteOrder(order.id, order.book_name)}
+                          aria-label="Eliminar pedido"
+                        >
+                          <Trash2 size={18} strokeWidth={1.5} />
+                        </button>
+                      </td>
+                    )}
                   </tr>
                 ))}
               </tbody>
