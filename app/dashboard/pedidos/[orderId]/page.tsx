@@ -86,6 +86,7 @@ export default function PedidoAdminPage() {
   const [project,         setProject]         = useState<Project | null>(null)
   const [loading,  setLoading]  = useState(true)
   const [creatingProject, setCreatingProject] = useState(false)
+  const [clientPhone,     setClientPhone]     = useState('')
 
   // Status editing
   const [status,       setStatus]       = useState('')
@@ -108,6 +109,17 @@ export default function PedidoAdminPage() {
   const [sendingNote,    setSendingNote]    = useState(false)
   const [adminUserId,    setAdminUserId]    = useState('')
 
+  // Edit detalles
+  const [editName,       setEditName]       = useState('')
+  const [editTotal,      setEditTotal]      = useState('')
+  const [editPaid,       setEditPaid]       = useState('')
+  const [savingDetails,  setSavingDetails]  = useState(false)
+
+  // Asignar cliente
+  const [assignEmail,    setAssignEmail]    = useState('')
+  const [assigning,      setAssigning]      = useState(false)
+  const [assignMsg,      setAssignMsg]      = useState('')
+
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
       const email = session?.user?.email
@@ -127,7 +139,14 @@ export default function PedidoAdminPage() {
         setTracking(ord.tracking_number ?? '')
         setDesignDate(ord.estimated_design_date ?? '')
         setDeliveryDate(ord.estimated_delivery_date ?? '')
+        setEditName(ord.book_name)
+        setEditTotal(String(ord.price_total))
+        setEditPaid(String(ord.price_paid))
         setNotes((n ?? []) as Note[])
+        if (o?.user_id) {
+          supabase.from('profiles').select('whatsapp').eq('id', (o as Order).user_id).single()
+            .then(({ data: prof }) => { if (prof?.whatsapp) setClientPhone(prof.whatsapp) })
+        }
         if (p) {
           setProject(p as Project)
           supabase
@@ -225,6 +244,45 @@ export default function PedidoAdminPage() {
     setSendingNote(false)
   }
 
+  async function saveDetails() {
+    if (!order) return
+    setSavingDetails(true)
+    const total = parseInt(editTotal) || 0
+    const paid  = parseInt(editPaid)  || 0
+    await supabase.from('orders').update({
+      book_name:   editName.trim() || order.book_name,
+      price_total: total,
+      price_paid:  paid,
+    }).eq('id', order.id)
+    setOrder(prev => prev ? { ...prev, book_name: editName.trim() || prev.book_name, price_total: total, price_paid: paid } : prev)
+    setSavingDetails(false)
+  }
+
+  async function assignToClient() {
+    if (!assignEmail.trim() || !order) return
+    setAssigning(true)
+    setAssignMsg('')
+    const res  = await fetch('/api/assign-order', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ orderId: order.id, email: assignEmail.trim() }),
+    })
+    const json = await res.json()
+    if (json.ok) {
+      setAssignMsg(`✓ Asignado a ${json.userName}`)
+      setAssignEmail('')
+    } else {
+      setAssignMsg(json.error ?? 'Error')
+    }
+    setAssigning(false)
+  }
+
+  function buildWaLink(message: string) {
+    const digits = clientPhone.replace(/\D/g, '')
+    const waNumber = digits.startsWith('54') ? digits : '549' + digits
+    return `https://wa.me/${waNumber}?text=${encodeURIComponent(message)}`
+  }
+
   if (loading || !order) return (
     <div className="pedido-loading"><div className="pedido-spinner" /></div>
   )
@@ -270,6 +328,61 @@ export default function PedidoAdminPage() {
                 <img key={i} src={url} alt="" className="pedido-ref-img" />
               ))}
             </div>
+          )}
+          {clientPhone && (
+            <a
+              className="pedido-wa-btn"
+              href={buildWaLink(`¡Hola! 👋 Recibimos tu pedido del fotolibro "${order.book_name}" ✨ Estamos trabajando en el diseño y te contactamos en las próximas 48hs hábiles. ¡Gracias por confiar en Zeika! 📸`)}
+              target="_blank"
+              rel="noreferrer"
+            >
+              <svg width="16" height="16" viewBox="0 0 32 32" fill="none"><rect width="32" height="32" rx="8" fill="#25D366"/><path d="M16 6C10.477 6 6 10.477 6 16c0 1.89.523 3.655 1.432 5.16L6 26l4.98-1.407A9.946 9.946 0 0016 26c5.523 0 10-4.477 10-10S21.523 6 16 6zm4.38 13.13c-.24-.12-1.42-.7-1.64-.78-.22-.08-.38-.12-.54.12-.16.24-.62.78-.76.94-.14.16-.28.18-.52.06-.24-.12-1.014-.374-1.932-1.19-.714-.636-1.196-1.42-1.336-1.66-.14-.24-.015-.37.105-.49.108-.108.24-.28.36-.42.12-.14.16-.24.24-.4.08-.16.04-.3-.02-.42-.06-.12-.54-1.3-.74-1.78-.195-.468-.394-.404-.54-.412l-.46-.008c-.16 0-.42.06-.64.3-.22.24-.84.82-.84 2s.86 2.32.98 2.48c.12.16 1.692 2.582 4.1 3.62.573.248 1.02.396 1.368.506.575.183 1.098.157 1.512.095.461-.069 1.42-.58 1.62-1.14.2-.56.2-1.04.14-1.14-.06-.1-.22-.16-.46-.28z" fill="white"/></svg>
+              Enviar confirmación de compra
+            </a>
+          )}
+        </div>
+
+        {/* ── Editar detalles ────────────────────────────────────── */}
+        <div className="pedido-card">
+          <h3 className="pedido-card-title">Editar detalles</h3>
+          <div className="pedido-row">
+            <div style={{ flex: 2 }}>
+              <label className="pedido-hint">Nombre</label>
+              <input className="pedido-input" value={editName} onChange={e => setEditName(e.target.value)} />
+            </div>
+            <div style={{ flex: 1 }}>
+              <label className="pedido-hint">Total ($)</label>
+              <input className="pedido-input" type="number" value={editTotal} onChange={e => setEditTotal(e.target.value)} />
+            </div>
+            <div style={{ flex: 1 }}>
+              <label className="pedido-hint">Pagado ($)</label>
+              <input className="pedido-input" type="number" value={editPaid} onChange={e => setEditPaid(e.target.value)} />
+            </div>
+            <button className="pedido-save-btn" onClick={saveDetails} disabled={savingDetails} style={{ alignSelf: 'flex-end' }}>
+              {savingDetails ? '...' : 'Guardar'}
+            </button>
+          </div>
+        </div>
+
+        {/* ── Asignar a cliente ───────────────────────────────────── */}
+        <div className="pedido-card">
+          <h3 className="pedido-card-title">Asignar a cliente</h3>
+          <p className="pedido-hint">El cliente va a ver este proyecto en su portal (/mis-proyectos).</p>
+          <div className="pedido-row">
+            <input
+              className="pedido-input"
+              placeholder="Email del cliente"
+              value={assignEmail}
+              onChange={e => { setAssignEmail(e.target.value); setAssignMsg('') }}
+            />
+            <button className="pedido-save-btn" onClick={assignToClient} disabled={assigning || !assignEmail.trim()}>
+              {assigning ? '...' : 'Asignar'}
+            </button>
+          </div>
+          {assignMsg && (
+            <p className="pedido-hint" style={{ color: assignMsg.startsWith('✓') ? '#2d7a3a' : '#c0392b' }}>
+              {assignMsg}
+            </p>
           )}
         </div>
 
@@ -322,6 +435,17 @@ export default function PedidoAdminPage() {
               Ver preview ↗
             </a>
           )}
+          {clientPhone && previewUrl && (
+            <a
+              className="pedido-wa-btn"
+              href={buildWaLink(`¡Hola! 🎉 El diseño de tu fotolibro "${order.book_name}" está listo para que lo revises. Entrá a tu portal en Zeika para verlo y dejarnos tus comentarios. ¡Cualquier cambio nos avisás! 💛`)}
+              target="_blank"
+              rel="noreferrer"
+            >
+              <svg width="16" height="16" viewBox="0 0 32 32" fill="none"><rect width="32" height="32" rx="8" fill="#25D366"/><path d="M16 6C10.477 6 6 10.477 6 16c0 1.89.523 3.655 1.432 5.16L6 26l4.98-1.407A9.946 9.946 0 0016 26c5.523 0 10-4.477 10-10S21.523 6 16 6zm4.38 13.13c-.24-.12-1.42-.7-1.64-.78-.22-.08-.38-.12-.54.12-.16.24-.62.78-.76.94-.14.16-.28.18-.52.06-.24-.12-1.014-.374-1.932-1.19-.714-.636-1.196-1.42-1.336-1.66-.14-.24-.015-.37.105-.49.108-.108.24-.28.36-.42.12-.14.16-.24.24-.4.08-.16.04-.3-.02-.42-.06-.12-.54-1.3-.74-1.78-.195-.468-.394-.404-.54-.412l-.46-.008c-.16 0-.42.06-.64.3-.22.24-.84.82-.84 2s.86 2.32.98 2.48c.12.16 1.692 2.582 4.1 3.62.573.248 1.02.396 1.368.506.575.183 1.098.157 1.512.095.461-.069 1.42-.58 1.62-1.14.2-.56.2-1.04.14-1.14-.06-.1-.22-.16-.46-.28z" fill="white"/></svg>
+              Avisar que el preview está listo
+            </a>
+          )}
         </div>
 
         {/* ── Número de seguimiento ───────────────────────────────── */}
@@ -339,6 +463,17 @@ export default function PedidoAdminPage() {
               {savingTracking ? '...' : 'Guardar'}
             </button>
           </div>
+          {clientPhone && tracking && (
+            <a
+              className="pedido-wa-btn"
+              href={buildWaLink(`¡Hola! 📦 Tu fotolibro "${order.book_name}" ya está en camino. Número de seguimiento Andreani: ${tracking}. ¡Ya falta poquito! 🎊`)}
+              target="_blank"
+              rel="noreferrer"
+            >
+              <svg width="16" height="16" viewBox="0 0 32 32" fill="none"><rect width="32" height="32" rx="8" fill="#25D366"/><path d="M16 6C10.477 6 6 10.477 6 16c0 1.89.523 3.655 1.432 5.16L6 26l4.98-1.407A9.946 9.946 0 0016 26c5.523 0 10-4.477 10-10S21.523 6 16 6zm4.38 13.13c-.24-.12-1.42-.7-1.64-.78-.22-.08-.38-.12-.54.12-.16.24-.62.78-.76.94-.14.16-.28.18-.52.06-.24-.12-1.014-.374-1.932-1.19-.714-.636-1.196-1.42-1.336-1.66-.14-.24-.015-.37.105-.49.108-.108.24-.28.36-.42.12-.14.16-.24.24-.4.08-.16.04-.3-.02-.42-.06-.12-.54-1.3-.74-1.78-.195-.468-.394-.404-.54-.412l-.46-.008c-.16 0-.42.06-.64.3-.22.24-.84.82-.84 2s.86 2.32.98 2.48c.12.16 1.692 2.582 4.1 3.62.573.248 1.02.396 1.368.506.575.183 1.098.157 1.512.095.461-.069 1.42-.58 1.62-1.14.2-.56.2-1.04.14-1.14-.06-.1-.22-.16-.46-.28z" fill="white"/></svg>
+              Avisar número de seguimiento
+            </a>
+          )}
         </div>
 
         {/* ── Pedidos de cambio ───────────────────────────────────── */}

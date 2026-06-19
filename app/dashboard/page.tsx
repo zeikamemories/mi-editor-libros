@@ -20,6 +20,7 @@ interface OrderRow {
   order_number: string
   book_name: string
   client_name: string
+  client_phone: string
   created_at: string
   size: string
   status: string
@@ -83,7 +84,7 @@ export default function DashboardPage() {
     if (!authChecked) return
     async function fetchOrders() {
       const [{ data, error }, { data: projects }] = await Promise.all([
-        supabase.from('orders').select('*, profiles(full_name)').order('created_at', { ascending: false }),
+        supabase.from('orders').select('*, profiles(full_name, whatsapp)').order('created_at', { ascending: false }),
         supabase.from('projects').select('order_id, cover_thumbnail').not('order_id', 'is', null),
       ])
 
@@ -100,6 +101,7 @@ export default function DashboardPage() {
         order_number:         orderNumber(o.id, o.created_at),
         book_name:            o.book_name ?? 'Sin título',
         client_name:          o.profiles?.full_name ?? '—',
+        client_phone:         o.profiles?.whatsapp ? '+54 ' + o.profiles.whatsapp : '—',
         created_at:           new Date(o.created_at).toLocaleDateString('es-AR'),
         size:                 o.size ?? '—',
         status:               o.status,
@@ -232,6 +234,7 @@ export default function DashboardPage() {
                 <tr className="dash-table-header-row">
                   <th>PEDIDO</th>
                   <th>CLIENTE</th>
+                  <th>TELÉFONO</th>
                   <th>LIBRO</th>
                   <th>FECHA</th>
                   <th>TAMAÑO</th>
@@ -246,17 +249,20 @@ export default function DashboardPage() {
                   <tr key={order.id} className="dash-table-row">
                     <td className="dash-cell-pedido">{order.order_number}</td>
                     <td>{order.client_name}</td>
+                    <td className="dash-cell-phone">{order.client_phone}</td>
                     <td>{order.book_name}</td>
                     <td>{order.created_at}</td>
                     <td>{order.size}</td>
                     <td>{fmt(order.price_total)}</td>
                     <td>
-                      <span className={`dash-badge dash-badge--${order.status}`}>
-                        {STATUS_LABEL[order.status] ?? order.status}
-                      </span>
-                      {order.change_requests_used > 0 && (
-                        <span className="dash-change-badge">{order.change_requests_used} cambio{order.change_requests_used > 1 ? 's' : ''}</span>
-                      )}
+                      <div className="dash-status-cell">
+                        <span className={`dash-badge dash-badge--${order.status}`}>
+                          {STATUS_LABEL[order.status] ?? order.status}
+                        </span>
+                        {order.change_requests_used > 0 && (
+                          <span className="dash-change-dot">{order.change_requests_used}</span>
+                        )}
+                      </div>
                     </td>
                     <td>
                       <Link href={`/dashboard/pedidos/${order.id}`} className="dash-link-abrir">ABRIR</Link>

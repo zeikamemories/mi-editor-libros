@@ -303,6 +303,7 @@ function NuevoContent() {
   const searchParams = useSearchParams()
 
   const [step,         setStep]         = useState(1)
+  const [adminUserId,  setAdminUserId]  = useState<string | null>(null)
   const SIZE_MAP: Record<string, string> = {
     chico_h: 'chico', mediano_h: 'mediano', grande_h: 'grande',
     vertical: 'vertical', cuadrado: 'cuadrado',
@@ -320,6 +321,12 @@ function NuevoContent() {
   const [photos,         setPhotos]         = useState<Photo[]>([])
   const [uploadingCount, setUploadingCount] = useState(0)
   const [creating,       setCreating]       = useState(false)
+
+  useEffect(() => {
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      if (session?.user) setAdminUserId(session.user.id)
+    })
+  }, [])
 
   const selectedBook = BOOK_SIZES.find((b) => b.id === selectedSize) ?? null
 
@@ -355,13 +362,13 @@ function NuevoContent() {
     const linkedOrderId = searchParams.get('orderId') ?? null
     try {
       let projectId: string | null = null
+      let returnOrderId = linkedOrderId
 
-      // If linked to an order, check if a project already exists for it
+      // If linked to an existing order, check for existing project
       if (linkedOrderId) {
         const { data: existing } = await supabase
           .from('projects').select('id').eq('order_id', linkedOrderId).maybeSingle()
         if (existing?.id) {
-          // Update the existing project with new photos/details instead of creating a duplicate
           await supabase.from('projects').update({
             name:      details.nombre || 'Sin título',
             photos,
@@ -369,6 +376,27 @@ function NuevoContent() {
           }).eq('id', existing.id)
           projectId = existing.id
         }
+      }
+
+      // Admin creation (no client order) — create a stub order first so the
+      // project gets a full /dashboard/pedidos page with drive, preview, tracking, etc.
+      if (!linkedOrderId && adminUserId) {
+        const SIZE_TO_DB: Record<string, string> = {
+          chico: 'chico_h', mediano: 'mediano_h', grande: 'grande_h',
+          vertical: 'vertical', cuadrado: 'cuadrado',
+        }
+        const { data: newOrder } = await supabase.from('orders').insert({
+          user_id:     adminUserId,
+          book_name:   details.nombre || 'Sin título',
+          size:        SIZE_TO_DB[selectedSize ?? 'vertical'] ?? selectedSize,
+          pages_base:  20,
+          extra_pages: 0,
+          extra_text:  false,
+          price_total: 0,
+          price_paid:  0,
+          status:      'en_diseno',
+        }).select('id').single()
+        if (newOrder?.id) returnOrderId = newOrder.id
       }
 
       if (!projectId) {
@@ -380,7 +408,7 @@ function NuevoContent() {
             spreads:       {},
             book_size:     selectedSize ?? 'vertical',
             total_spreads: 13,
-            ...(linkedOrderId ? { order_id: linkedOrderId } : {}),
+            ...(returnOrderId ? { order_id: returnOrderId } : {}),
           })
           .select('id')
           .single()
@@ -395,7 +423,7 @@ function NuevoContent() {
         sessionStorage.setItem('zeika_project_id', projectId)
         sessionStorage.setItem(
           'zeika_return_path',
-          linkedOrderId ? `/dashboard/pedidos/${linkedOrderId}` : '/dashboard'
+          returnOrderId ? `/dashboard/pedidos/${returnOrderId}` : '/dashboard'
         )
       }
     } catch (err) {

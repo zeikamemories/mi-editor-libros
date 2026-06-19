@@ -401,3 +401,24 @@
   border: 1px solid var(--color-border);
   margin-top: 4px;
 }
+
+.pedido-wa-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 16px;
+  background: #25D366;
+  color: #fff;
+  border: none;
+  border-radius: 8px;
+  font-family: "forma-djr-display", sans-serif;
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-decoration: none;
+  cursor: pointer;
+  align-self: flex-start;
+  transition: opacity 0.15s;
+}
+
+.pedido-wa-btn:hover { opacity: 0.85; }

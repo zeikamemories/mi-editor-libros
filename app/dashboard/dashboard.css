@@ -2,7 +2,7 @@
 
 .dash-root {
   display: grid;
-  grid-template-columns: 160px 1fr 160px;
+  grid-template-columns: 160px 1fr 100px;
   grid-template-rows: 50px 1fr;
   min-height: 100vh;
   background: var(--color-white);
@@ -72,11 +72,11 @@
   align-items: center;
   justify-content: center;
   width: 100%;
-  padding: 10px 12px;
+  padding: 10px 8px;
   background: var(--color-blue);
   color: var(--color-white);
   font-family: var(--font-body);
-  font-size: 14px;
+  font-size: 13px;
   font-weight: 600;
   letter-spacing: 0.3px;
   border: none;
@@ -222,18 +222,18 @@
   table-layout: fixed;
 }
 
-/* Column widths: auto for data cols, tight for action cols */
-.dash-table th:nth-child(8) { width: 90px; }
-.dash-table th:nth-child(9) { width: 48px; }
-.dash-table td:nth-child(8) { text-align: left; }
-.dash-table td:nth-child(9) { width: 48px; padding-left: 6px; }
+/* Column widths — ABRIR=9, trash=10 (TELÉFONO added as col 3) */
+.dash-table th:nth-child(9)  { width: 70px; text-align: left; }
+.dash-table th:nth-child(10) { width: 40px; }
+.dash-table td:nth-child(9)  { text-align: left; }
+.dash-table td:nth-child(10) { width: 40px; text-align: right; padding-right: 12px; }
 
 .dash-table-header-row {
   background: #ececec;
 }
 
 .dash-table-header-row th {
-  padding: 10px 16px;
+  padding: 8px 12px;
   font-family: var(--font-body);
   font-size: 14px;
   font-weight: 400;
@@ -257,13 +257,18 @@
 }
 
 .dash-table-row td {
-  padding: 14px 16px;
+  padding: 8px 12px;
   font-family: var(--font-body);
-  font-size: 14px;
+  font-size: 13px;
   font-weight: 400;
   color: #1b1b1b;
   letter-spacing: 0.25px;
   vertical-align: middle;
+}
+
+.dash-cell-phone {
+  color: #888 !important;
+  font-size: 13px !important;
 }
 
 /* ── Badges ───────────────────────────────────────────────────────────────── */
@@ -319,17 +324,26 @@
   text-decoration: underline;
 }
 
-.dash-change-badge {
-  display: inline-block;
-  margin-left: 6px;
-  background: #fff3e0;
-  color: #e65100;
-  border-radius: 20px;
-  padding: 2px 8px;
-  font-size: 10px;
+.dash-status-cell {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: nowrap;
+}
+
+.dash-change-dot {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: #e03535;
+  color: #fff;
   font-family: "forma-djr-display", sans-serif;
-  letter-spacing: 0.04em;
-  vertical-align: middle;
+  font-size: 10px;
+  font-weight: 700;
+  flex-shrink: 0;
 }
 
 .dash-badge--pendiente_pago    { background: #808080; color: #fff; }
