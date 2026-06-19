@@ -1732,6 +1732,172 @@
   margin-top: 8px;
 }
 
+/* ── Entrega confirmada y post-entrega ───────────────────────────────────── */
+
+.mpd-bottom--confirm,
+.mpd-bottom--finished {
+  padding: 30px 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  align-items: stretch;
+}
+
+.mpd-confirm-note {
+  font-family: "forma-djr-display", sans-serif;
+  font-size: 14px;
+  font-weight: 500;
+  letter-spacing: 0.04em;
+  color: #7b7a78;
+  text-align: center;
+  margin: 0 0 8px;
+  line-height: 1.5;
+}
+
+.mpd-action-btn {
+  width: 100%;
+  padding: 12px 15px;
+  font-family: "forma-djr-display", sans-serif;
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  text-align: center;
+  text-decoration: none;
+  cursor: pointer;
+  display: block;
+  border: none;
+  box-sizing: border-box;
+  transition: opacity 0.15s;
+}
+
+.mpd-action-btn:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+
+.mpd-action-btn--outline {
+  background: white;
+  color: var(--color-black);
+  border: 1px solid var(--color-black);
+}
+
+.mpd-action-btn--solid {
+  background: var(--color-black);
+  color: white;
+}
+
+.mpd-finished-heading {
+  font-family: "Times New Roman", Times, serif;
+  font-size: 28px;
+  font-weight: 400;
+  letter-spacing: -0.02em;
+  color: var(--color-black);
+  margin: 0;
+  text-align: center;
+}
+
+.mpd-finished-sub {
+  font-family: "forma-djr-display", sans-serif;
+  font-size: 14px;
+  font-weight: 500;
+  letter-spacing: 0.04em;
+  color: #7b7a78;
+  margin: 0;
+  text-align: center;
+  line-height: 1.5;
+}
+
+.mpd-review-block {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 20px 0;
+  border-top: 0.5px solid #7b7a78;
+  border-bottom: 0.5px solid #7b7a78;
+  margin: 4px 0;
+}
+
+.mpd-review-prompt {
+  font-family: "forma-djr-display", sans-serif;
+  font-size: 14px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--color-black);
+  margin: 0;
+  text-align: center;
+}
+
+.mpd-stars-row {
+  display: flex;
+  justify-content: center;
+  gap: 6px;
+}
+
+.mpd-star {
+  background: none;
+  border: none;
+  font-size: 36px;
+  cursor: pointer;
+  color: #c0bfbc;
+  padding: 0;
+  line-height: 1;
+  transition: color 0.1s;
+}
+
+.mpd-star--on {
+  color: var(--color-blue);
+}
+
+.mpd-review-textarea {
+  width: 100%;
+  border: 1px solid #7b7a78;
+  padding: 12px 20px;
+  font-family: "forma-djr-display", sans-serif;
+  font-size: 14px;
+  font-weight: 500;
+  letter-spacing: 0.04em;
+  color: var(--color-black);
+  background: transparent;
+  outline: none;
+  box-sizing: border-box;
+  resize: vertical;
+  min-height: 80px;
+}
+
+.mpd-review-textarea::placeholder {
+  color: #7b7a78;
+  opacity: 0.5;
+}
+
+.mpd-review-thanks {
+  font-family: "forma-djr-display", sans-serif;
+  font-size: 14px;
+  font-weight: 500;
+  letter-spacing: 0.04em;
+  color: var(--color-blue);
+  text-align: center;
+  margin: 8px 0;
+}
+
+.mpd-finished-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding-top: 8px;
+}
+
+@media (min-width: 1024px) {
+  .mpd-bottom--confirm,
+  .mpd-bottom--finished {
+    padding: 40px 50px;
+    max-width: 480px;
+    margin: 0 auto;
+    width: 100%;
+  }
+}
+
 /* ── Pagar page (mpag = mis-proyectos/pagar) ────────────────────────────── */
 
 .mpag-section-label {

@@ -181,6 +181,11 @@ export default function ProyectoPage() {
   const [copied,   setCopied]   = useState(false)
   const [coverThumbnail, setCoverThumbnail] = useState<{ left?: string; right?: string } | null>(null)
 
+  const [reviewStars,        setReviewStars]        = useState(0)
+  const [reviewText,         setReviewText]          = useState('')
+  const [submittingReview,   setSubmittingReview]    = useState(false)
+  const [confirmingDelivery, setConfirmingDelivery]  = useState(false)
+
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
       if (!session?.user) { router.replace('/orden'); return }
@@ -269,6 +274,41 @@ export default function ProyectoPage() {
     setTimeout(() => setCopied(false), 2000)
   }
 
+  async function confirmDelivery() {
+    if (!order || confirmingDelivery) return
+    setConfirmingDelivery(true)
+    await supabase.from('order_notes').insert({
+      order_id: order.id, user_id: userId,
+      content: 'Entrega confirmada por el cliente',
+      type: 'delivery_confirmed',
+    })
+    setNotes(prev => [...prev, {
+      id: Date.now().toString(),
+      content: 'Entrega confirmada por el cliente',
+      type: 'delivery_confirmed',
+      created_at: new Date().toISOString(),
+    }])
+    setConfirmingDelivery(false)
+  }
+
+  async function submitReview() {
+    if (!order || !reviewStars || submittingReview) return
+    setSubmittingReview(true)
+    const content = JSON.stringify({ stars: reviewStars, text: reviewText.trim() })
+    await supabase.from('order_notes').insert({
+      order_id: order.id, user_id: userId,
+      content,
+      type: 'review',
+    })
+    setNotes(prev => [...prev, {
+      id: Date.now().toString(),
+      content,
+      type: 'review',
+      created_at: new Date().toISOString(),
+    }])
+    setSubmittingReview(false)
+  }
+
   function toggle(section: string) {
     setOpenSection(prev => prev === section ? '' : section)
   }
@@ -285,8 +325,10 @@ export default function ProyectoPage() {
   const canPreview      = ['preview_listo','en_produccion','en_camino','entregado'].includes(order.status)
   const canApprove      = order.status === 'preview_listo'
   const afterProduction = ['en_produccion','en_camino','entregado'].includes(order.status)
-  const firstName       = userName.split(' ')[0]
-  const usedRounds      = order.change_requests_used ?? 0
+  const firstName          = userName.split(' ')[0]
+  const usedRounds         = order.change_requests_used ?? 0
+  const deliveryConfirmed  = notes.some(n => n.type === 'delivery_confirmed')
+  const hasReview          = notes.some(n => n.type === 'review')
 
   return (
     <div className="mpd-root">
@@ -613,13 +655,67 @@ export default function ProyectoPage() {
           </div>
         )}
 
-        {order.status === 'entregado' && (
-          <div className="mp-thankyou">
-            <h3>¡Gracias por confiar en Zeika!</h3>
-            <p>Esperamos que ames tu libro tanto como nosotras disfrutamos hacerlo.</p>
-            <a href="/orden" className="mpd-thankyou-cta">
+        {order.status === 'entregado' && !deliveryConfirmed && (
+          <div className="mpd-bottom mpd-bottom--confirm">
+            <p className="mpd-confirm-note">
+              Por favor, confirmá la entrega del pedido para finalizar el proyecto.
+            </p>
+            <a href="/orden" className="mpd-action-btn mpd-action-btn--outline">
               Contar otra historia
             </a>
+            <button
+              className="mpd-action-btn mpd-action-btn--solid"
+              onClick={confirmDelivery}
+              disabled={confirmingDelivery}
+            >
+              {confirmingDelivery ? 'Confirmando...' : 'Confirmar entrega y finalizar proyecto'}
+            </button>
+          </div>
+        )}
+
+        {order.status === 'entregado' && deliveryConfirmed && (
+          <div className="mpd-bottom mpd-bottom--finished">
+            <h3 className="mpd-finished-heading">¡Gracias por confiar en Zeika!</h3>
+            <p className="mpd-finished-sub">Esperamos que ames tu libro tanto como nosotras disfrutamos hacerlo.</p>
+
+            {!hasReview ? (
+              <div className="mpd-review-block">
+                <p className="mpd-review-prompt">¿Cómo quedó tu libro?</p>
+                <div className="mpd-stars-row">
+                  {[1,2,3,4,5].map(n => (
+                    <button
+                      key={n}
+                      className={`mpd-star${reviewStars >= n ? ' mpd-star--on' : ''}`}
+                      onClick={() => setReviewStars(n)}
+                    >★</button>
+                  ))}
+                </div>
+                <textarea
+                  className="mpd-review-textarea"
+                  placeholder="Contanos cómo quedó..."
+                  value={reviewText}
+                  onChange={e => setReviewText(e.target.value)}
+                />
+                <button
+                  className="mpd-action-btn mpd-action-btn--solid"
+                  onClick={submitReview}
+                  disabled={!reviewStars || submittingReview}
+                >
+                  {submittingReview ? 'Enviando...' : 'Enviar reseña'}
+                </button>
+              </div>
+            ) : (
+              <p className="mpd-review-thanks">¡Gracias por tu reseña!</p>
+            )}
+
+            <div className="mpd-finished-actions">
+              <a href={`/orden?size=${order.size}`} className="mpd-action-btn mpd-action-btn--outline">
+                Volver a pedir el mismo diseño
+              </a>
+              <a href="/orden" className="mpd-action-btn mpd-action-btn--solid">
+                Contar otra historia
+              </a>
+            </div>
           </div>
         )}
       </div>

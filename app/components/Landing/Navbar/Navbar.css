@@ -74,7 +74,7 @@
   border: none;
   font-size: 20px;
   cursor: pointer;
-  color: red;
+  color: #191919;
   padding: 4px;
   letter-spacing: 0;
 }
@@ -91,7 +91,7 @@
   letter-spacing: -0.02em;
   font-size: 42px;
   font-weight: 400;
-  color: red;
+  color: #191919;
   text-decoration: none;
   line-height: 1.15;
 }
@@ -105,7 +105,7 @@
 
 .navbar__overlay-contact {
   font-size: 14px;
-  color: red;
+  color: #191919;
   letter-spacing: 0.04em;
 }
 
@@ -115,7 +115,7 @@
 }
 
 .navbar__overlay-socials a {
-  color: red;
+  color: #191919;
   display: flex;
   align-items: center;
 }
@@ -147,7 +147,7 @@
   font-size: 42px;
   font-weight: 400;
   letter-spacing: -0.02em;
-  color: red;
+  color: #191919;
   text-decoration: none;
   line-height: 1.15;
   background: none;
@@ -182,7 +182,7 @@
     font-family: "forma-djr-display", sans-serif;
     font-weight: 600;
     font-size: 18px;
-    color: red;
+    color: #191919;
     text-decoration: none;
     letter-spacing: 0.04em;
     transition: opacity 0.2s;
@@ -204,7 +204,7 @@
     font-family: "forma-djr-display", sans-serif;
     font-weight: 600;
     font-size: 18px;
-    color: red;
+    color: #191919;
     text-decoration: none;
     letter-spacing: 0.04em;
     transition: opacity 0.2s;
@@ -242,7 +242,7 @@
     font-weight: 600;
     font-size: 14px;
     letter-spacing: 0.08em;
-    color: red;
+    color: #191919;
   }
 
   .navbar__avatar {
@@ -281,7 +281,7 @@
     font-size: 14px;
     font-weight: 500;
     letter-spacing: 0.04em;
-    color: red;
+    color: #191919;
     text-decoration: none;
     background: none;
     border: none;
