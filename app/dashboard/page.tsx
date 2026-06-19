@@ -83,8 +83,8 @@ export default function DashboardPage() {
   useEffect(() => {
     if (!authChecked) return
     async function fetchOrders() {
-      const [{ data, error }, { data: projects }] = await Promise.all([
-        supabase.from('orders').select('*, profiles(full_name, whatsapp)').order('created_at', { ascending: false }),
+      const [res, { data: projects }] = await Promise.all([
+        fetch('/api/admin/orders'),
         supabase.from('projects').select('order_id, cover_thumbnail').not('order_id', 'is', null),
       ])
 
@@ -94,13 +94,14 @@ export default function DashboardPage() {
       }
       setProjectMap(map)
 
-      if (error) { console.error(error); setLoading(false); return }
+      if (!res.ok) { console.error('Failed to fetch orders'); setLoading(false); return }
+      const data = await res.json()
 
       const rows: OrderRow[] = (data ?? []).map((o: any) => ({
         id:                   o.id,
         order_number:         orderNumber(o.id, o.created_at),
         book_name:            o.book_name ?? 'Sin título',
-        client_name:          o.profiles?.full_name ?? '—',
+        client_name:          o.client_name ?? '—',
         client_phone:         o.profiles?.whatsapp ? '+54 ' + o.profiles.whatsapp : '—',
         created_at:           new Date(o.created_at).toLocaleDateString('es-AR'),
         size:                 o.size ?? '—',

@@ -31,6 +31,7 @@ interface Project {
 
 interface Order {
   id: string
+  user_id: string
   book_name: string
   size: string
   status: string
@@ -113,6 +114,7 @@ export default function PedidoAdminPage() {
   const [editName,       setEditName]       = useState('')
   const [editTotal,      setEditTotal]      = useState('')
   const [editPaid,       setEditPaid]       = useState('')
+  const [editPhone,      setEditPhone]      = useState('')
   const [savingDetails,  setSavingDetails]  = useState(false)
 
   // Asignar cliente
@@ -142,6 +144,7 @@ export default function PedidoAdminPage() {
         setEditName(ord.book_name)
         setEditTotal(String(ord.price_total))
         setEditPaid(String(ord.price_paid))
+        setEditPhone('')
         setNotes((n ?? []) as Note[])
         if (o?.user_id) {
           supabase.from('profiles').select('whatsapp').eq('id', (o as Order).user_id).single()
@@ -254,6 +257,10 @@ export default function PedidoAdminPage() {
       price_total: total,
       price_paid:  paid,
     }).eq('id', order.id)
+    if (editPhone.trim()) {
+      await supabase.from('profiles').upsert({ id: order.user_id, whatsapp: editPhone.trim() })
+      setClientPhone(editPhone.trim())
+    }
     setOrder(prev => prev ? { ...prev, book_name: editName.trim() || prev.book_name, price_total: total, price_paid: paid } : prev)
     setSavingDetails(false)
   }
@@ -357,6 +364,10 @@ export default function PedidoAdminPage() {
             <div style={{ flex: 1 }}>
               <label className="pedido-hint">Pagado ($)</label>
               <input className="pedido-input" type="number" value={editPaid} onChange={e => setEditPaid(e.target.value)} />
+            </div>
+            <div style={{ flex: 1 }}>
+              <label className="pedido-hint">WhatsApp {clientPhone ? `(actual: ${clientPhone})` : '(sin número)'}</label>
+              <input className="pedido-input" placeholder="11 1234 5678" value={editPhone} onChange={e => setEditPhone(e.target.value)} />
             </div>
             <button className="pedido-save-btn" onClick={saveDetails} disabled={savingDetails} style={{ alignSelf: 'flex-end' }}>
               {savingDetails ? '...' : 'Guardar'}
