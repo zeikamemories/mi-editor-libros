@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect, useRef } from 'react'
+import { supabase } from '../../../lib/supabase'
 import type { ProductData } from './ProductCard'
 import './MobileProductModal.css'
 
@@ -270,7 +271,7 @@ export default function MobileProductModal({ product, onClose }: Props) {
       <div className="mpm__cta-bar">
         <button
           className="mpm__cta"
-          onClick={() => {
+          onClick={async () => {
             if (!bookName.trim()) {
               setNameError(true)
               nameInputRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' })
@@ -288,7 +289,13 @@ export default function MobileProductModal({ product, onClose }: Props) {
               bookName,
             }))
             sessionStorage.setItem('zeika_back_product', product.sizeId)
-            window.location.href = '/orden'
+            const { data: { session } } = await supabase.auth.getSession()
+            if (session?.user) {
+              window.location.href = '/orden'
+            } else {
+              sessionStorage.setItem('zeika_after_login', '/#productos')
+              window.location.href = '/login'
+            }
           }}
         >
           CONTAR MI HISTORIA

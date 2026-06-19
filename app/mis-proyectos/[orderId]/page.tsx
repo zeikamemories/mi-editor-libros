@@ -709,7 +709,7 @@ export default function ProyectoPage() {
             )}
 
             <div className="mpd-finished-actions">
-              <a href={`/orden?size=${order.size}`} className="mpd-action-btn mpd-action-btn--outline">
+              <a href={`/orden?size=${order.size}&reorderFrom=${order.id}`} className="mpd-action-btn mpd-action-btn--outline">
                 Volver a pedir el mismo diseño
               </a>
               <a href="/orden" className="mpd-action-btn mpd-action-btn--solid">

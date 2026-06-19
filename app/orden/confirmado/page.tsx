@@ -11,44 +11,81 @@ const STEPS = [
   { main: 'Te enviamos el preview',      sub: 'Cuando esté finalizado, se manda a imprimir.', arrow: false },
 ]
 
+const STEPS_REORDER = [
+  { main: 'Usamos el diseño anterior',   sub: 'Tu libro ya está listo para imprimir.',     arrow: false },
+  { main: 'Lo enviamos a producción',    sub: 'Nos comunicamos por WhatsApp.',              arrow: false },
+  { main: 'Te enviamos el seguimiento',  sub: 'Andreani te lo lleva a casa.',               arrow: false },
+]
+
 function ConfirmadoContent() {
-  const params  = useSearchParams()
-  const orderId = params.get('order_id') || (typeof window !== 'undefined' ? sessionStorage.getItem('zeika_pending_order_id') : null)
-  const status  = params.get('status')
-  const [done, setDone] = useState(false)
+  const params       = useSearchParams()
+  const orderId      = params.get('order_id') || (typeof window !== 'undefined' ? sessionStorage.getItem('zeika_pending_order_id') : null)
+  const status       = params.get('status')
+  const reorderFrom  = params.get('reorderFrom')
+  const [done,       setDone]       = useState(false)
+  const [isReorder,  setIsReorder]  = useState(false)
 
   useEffect(() => {
     if (!orderId || status === 'failure') { setDone(true); return }
 
     async function confirm() {
       const newStatus = status === 'pending' ? 'pendiente_pago' : 'confirmado'
+      const now       = new Date().toISOString()
 
       const [{ data: orderData }] = await Promise.all([
         supabase.from('orders').select('book_name, size').eq('id', orderId!).single(),
         supabase.from('orders').update({
           status:       newStatus,
-          status_dates: { confirmado: new Date().toISOString() },
+          status_dates: { confirmado: now },
         }).eq('id', orderId!),
       ])
 
       if (newStatus === 'confirmado' && orderData) {
         const { data: existing } = await supabase
           .from('projects').select('id').eq('order_id', orderId!).maybeSingle()
+
         if (!existing) {
-          await supabase.from('projects').insert({
-            name:          orderData.book_name ?? 'Sin título',
-            book_size:     orderData.size ?? 'vertical',
-            total_spreads: 13,
-            photos:        [],
-            spreads:       {},
-            order_id:      orderId,
-          })
+          if (reorderFrom) {
+            // Copy design from original project
+            const { data: srcProject } = await supabase
+              .from('projects')
+              .select('spreads, photos, total_spreads, cover_thumbnail')
+              .eq('order_id', reorderFrom)
+              .maybeSingle()
+
+            await supabase.from('projects').insert({
+              name:             orderData.book_name ?? 'Sin título',
+              book_size:        orderData.size ?? 'vertical',
+              total_spreads:    srcProject?.total_spreads ?? 13,
+              photos:           srcProject?.photos        ?? [],
+              spreads:          srcProject?.spreads       ?? {},
+              cover_thumbnail:  srcProject?.cover_thumbnail ?? null,
+              order_id:         orderId,
+            })
+
+            // Skip material phase — design already exists
+            await supabase.from('orders').update({
+              status:       'material_recibido',
+              status_dates: { confirmado: now, material_recibido: now },
+            }).eq('id', orderId!)
+
+            setIsReorder(true)
+          } else {
+            await supabase.from('projects').insert({
+              name:          orderData.book_name ?? 'Sin título',
+              book_size:     orderData.size ?? 'vertical',
+              total_spreads: 13,
+              photos:        [],
+              spreads:       {},
+              order_id:      orderId,
+            })
+          }
         }
       }
       setDone(true)
     }
     confirm()
-  }, [orderId, status])
+  }, [orderId, status, reorderFrom])
 
   const isFailure = status === 'failure'
   const isPending = status === 'pending'
@@ -85,14 +122,16 @@ function ConfirmadoContent() {
           <p className="conf__subtitle">
             {isPending
               ? 'Tu pago está siendo procesado. Te avisamos cuando se confirme.'
-              : 'Te mandamos el comprobante por WhatsApp. ¡Ahora te toca subir el material!'}
+              : isReorder
+                ? 'Usamos el diseño de tu pedido anterior. ¡Ya lo mandamos a producción!'
+                : 'Te mandamos el comprobante por WhatsApp. ¡Ahora te toca subir el material!'}
           </p>
 
           {!isPending && (
             <>
               <p className="conf__steps-label">Próximos pasos</p>
               <div className="conf__steps">
-                {STEPS.map((step, i) => (
+                {(isReorder ? STEPS_REORDER : STEPS).map((step, i) => (
                   <div className="conf__step" key={i}>
                     <div className="conf__step-num">{i + 1}</div>
                     <div className="conf__step-text">
@@ -106,7 +145,7 @@ function ConfirmadoContent() {
             </>
           )}
 
-          <a className="conf__cta" href={orderId ? `/mis-proyectos/${orderId}?open=material` : '/mis-proyectos'}>IR A MI PROYECTO</a>
+          <a className="conf__cta" href={orderId ? `/mis-proyectos/${orderId}` : '/mis-proyectos'}>IR A MI PROYECTO</a>
         </div>
       )}
     </div>

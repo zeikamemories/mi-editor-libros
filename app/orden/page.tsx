@@ -77,6 +77,14 @@ export default function OrdenPage() {
       }
     } catch {}
 
+    // Pre-select size and save reorderFrom if coming from a reorder
+    const params = new URLSearchParams(window.location.search)
+    const sizeParam      = params.get('size')
+    const reorderFromParam = params.get('reorderFrom')
+    if (sizeParam) setSizeId(sizeParam)
+    if (reorderFromParam) sessionStorage.setItem('zeika_reorder_from', reorderFromParam)
+    else sessionStorage.removeItem('zeika_reorder_from')
+
     supabase.auth.getSession().then(({ data: { session } }) => {
       if (session?.user) {
         setUser(session.user)
@@ -132,7 +140,12 @@ export default function OrdenPage() {
 
     await supabase.from('profiles').upsert({ id: user.id, whatsapp })
 
-    const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? window.location.origin
+    const siteUrl     = process.env.NEXT_PUBLIC_SITE_URL ?? window.location.origin
+    const reorderFrom = sessionStorage.getItem('zeika_reorder_from')
+    const successUrl  = reorderFrom
+      ? `${siteUrl}/orden/confirmado?order_id=${order.id}&reorderFrom=${reorderFrom}`
+      : `${siteUrl}/orden/confirmado?order_id=${order.id}`
+
     const res = await fetch('/api/payment', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -140,13 +153,14 @@ export default function OrdenPage() {
         orderId:    order.id,
         bookName:   bookName.trim() || 'Sin título',
         amount:     payNow,
-        successUrl: `${siteUrl}/orden/confirmado?order_id=${order.id}`,
+        successUrl,
         failureUrl: `${siteUrl}/orden?error=1`,
       }),
     })
     const json = await res.json()
     if (json.url) {
       sessionStorage.removeItem('zeika_product_selection')
+      sessionStorage.removeItem('zeika_reorder_from')
       sessionStorage.setItem('zeika_pending_order_id', order.id)
       window.location.href = json.url
       return
@@ -175,7 +189,7 @@ export default function OrdenPage() {
           <span className="orden__summary-val">{textExtra ? 'Textos varios' : '1 texto'}</span>
         </div>
         <div className="orden__summary-row">
-          <span className="orden__summary-key">NOMBRE</span>
+          <span className="orden__summary-key">NOMBRE DEL PROYECTO</span>
           <span className="orden__summary-val">{bookName || '—'}</span>
         </div>
         <div className="orden__summary-row">

@@ -1777,9 +1777,9 @@
 }
 
 .mpd-action-btn--outline {
-  background: white;
-  color: var(--color-black);
-  border: 1px solid var(--color-black);
+  background: var(--color-blue);
+  color: white;
+  border: 1px solid var(--color-blue);
 }
 
 .mpd-action-btn--solid {

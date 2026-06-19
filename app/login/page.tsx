@@ -8,11 +8,12 @@ import './login.css'
 
 const ADMIN_EMAILS = ['maikasacerdote@gmail.com', 'zeika.memories@gmail.com']
 
-function redirectDest(email: string | undefined | null) {
-  const afterLogin = sessionStorage.getItem('zeika_after_login')
-  if (afterLogin) {
+function redirectDest(email: string | undefined | null, afterParam?: string | null) {
+  // afterParam (from URL) takes priority — it survives Google OAuth redirects
+  const after = afterParam || sessionStorage.getItem('zeika_after_login')
+  if (after) {
     sessionStorage.removeItem('zeika_after_login')
-    return afterLogin
+    return after
   }
   return email && ADMIN_EMAILS.includes(email) ? '/dashboard' : '/mis-proyectos'
 }
@@ -21,6 +22,7 @@ function LoginContent() {
   const router       = useRouter()
   const searchParams = useSearchParams()
   const defaultMode  = searchParams.get('mode') === 'signup' ? 'signup' : 'login'
+  const afterParam   = searchParams.get('after')
 
   const [mode,     setMode]     = useState<'login' | 'signup'>(defaultMode)
   const [email,    setEmail]    = useState('')
@@ -30,20 +32,24 @@ function LoginContent() {
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
-      if (session?.user) router.replace(redirectDest(session.user.email))
+      if (session?.user) router.replace(redirectDest(session.user.email, afterParam))
     })
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
       if (event === 'SIGNED_IN' && session?.user) {
-        router.replace(redirectDest(session.user.email))
+        router.replace(redirectDest(session.user.email, afterParam))
       }
     })
     return () => subscription.unsubscribe()
-  }, [router])
+  }, [router, afterParam])
 
   async function handleGoogle() {
+    // Encode the after-login destination in the OAuth redirectTo URL
+    // so it survives the Google → Supabase → app redirect chain
+    const after = afterParam || sessionStorage.getItem('zeika_after_login') || ''
+    const redirectTo = window.location.origin + '/login' + (after ? '?after=' + encodeURIComponent(after) : '')
     await supabase.auth.signInWithOAuth({
       provider: 'google',
-      options: { redirectTo: window.location.origin + '/login' },
+      options: { redirectTo },
     })
   }
 
@@ -58,7 +64,7 @@ function LoginContent() {
       if (e) { setError('Email o contraseña incorrectos.'); setLoading(false); return }
     }
     const { data: { session } } = await supabase.auth.getSession()
-    router.replace(redirectDest(session?.user?.email))
+    router.replace(redirectDest(session?.user?.email, afterParam))
   }
 
   const isSignup = mode === 'signup'
