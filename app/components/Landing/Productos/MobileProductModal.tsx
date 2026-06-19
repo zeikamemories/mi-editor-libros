@@ -84,6 +84,25 @@ export default function MobileProductModal({ product, onClose }: Props) {
   const activePxH = Math.round(ah * SCALE_Y)
 
   useEffect(() => {
+    const MAP: Record<string, string> = {
+      chico: 'chico_h', mediano: 'mediano_h', grande: 'grande_h',
+      vertical: 'vertical', cuadrado: 'cuadrado',
+    }
+    try {
+      const raw = sessionStorage.getItem('zeika_product_selection')
+      if (raw) {
+        const sel = JSON.parse(raw)
+        if (sel.sizeId === (MAP[product.sizeId] ?? product.sizeId)) {
+          if (typeof sel.pageIdx   === 'number')  setPageIdx(sel.pageIdx)
+          if (typeof sel.textExtra === 'boolean') setTextExtra(sel.textExtra)
+          if (typeof sel.bookName  === 'string')  setBookName(sel.bookName)
+          setCp('')
+          setShippingPrice(null)
+          setShippingError(null)
+          return
+        }
+      }
+    } catch {}
     setPageIdx(0)
     setTextExtra(false)
     setCp('')
