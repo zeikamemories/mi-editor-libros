@@ -120,11 +120,11 @@
 }
 
 .mpm__price {
-  font-family: "Times New Roman", Times, serif;
-  font-weight: 400;
+  font-family: "forma-djr-display", sans-serif;
+  font-weight: 500;
   font-size: 30px;
   line-height: 1;
-  letter-spacing: -0.6px;
+  letter-spacing: 0.04em;
   color: var(--color-blue);
   white-space: nowrap;
   flex-shrink: 0;
@@ -333,6 +333,8 @@
   background: white;
   padding: 12px 20px;
 }
+
+.mpm__cta:hover { background: #4A80C1; }
 
 .mpm__cta {
   display: flex;

@@ -175,11 +175,11 @@
 }
 
 .pm__price-header {
-  font-family: "Times New Roman", Times, serif;
-  font-weight: 400;
+  font-family: "forma-djr-display", sans-serif;
+  font-weight: 500;
   font-size: 34px;
   line-height: 1;
-  letter-spacing: -0.68px;
+  letter-spacing: 0.04em;
   color: var(--color-blue);
   white-space: nowrap;
   flex-shrink: 0;
@@ -223,6 +223,13 @@
   color: var(--color-blue);
 }
 
+.pm__comparar-close {
+  margin-left: 8px;
+  font-style: normal;
+  text-decoration: none;
+  display: inline-block;
+}
+
 /* ── Sections (pages / texts) ─────────────────────────────────────────────── */
 
 .pm__section {
@@ -238,8 +245,8 @@
 .pm__section-label {
   font-family: "forma-djr-display", sans-serif;
   font-weight: 700;
-  font-size: 13px;
-  letter-spacing: 0.52px;
+  font-size: 14px;
+  letter-spacing: 0.56px;
   color: var(--color-black);
   margin: 0;
 }
@@ -268,6 +275,10 @@
   cursor: pointer;
   transition: background 0.14s, border-color 0.14s;
   text-align: center;
+}
+
+.pm__card:hover:not(.pm__card--selected) {
+  background: #f0f0ef;
 }
 
 .pm__card--selected {
@@ -316,6 +327,7 @@
 }
 
 .pm__name-input::placeholder { color: #bbb; }
+.pm__name-input:hover { border-color: #888; }
 .pm__name-input:focus { border-color: var(--color-black); }
 .pm__name-input--error { border-color: #e03535; animation: pm-shake 0.3s ease; }
 .pm__name-input--error:focus { border-color: #e03535; }
@@ -398,6 +410,8 @@
 
 /* ── CTA ──────────────────────────────────────────────────────────────────── */
 
+.pm__cta:hover { background: #4A80C1; }
+
 .pm__cta {
   flex-shrink: 0;
   display: flex;
@@ -432,9 +446,8 @@
 
 .pm__comparison-canvas-wrap {
   display: flex;
-  align-items: flex-start;
+  align-items: center;
   justify-content: center;
-  padding-top: 80px;
   flex: 1;
   width: 100%;
 }
@@ -455,7 +468,12 @@
 
 .pm__size-rect--active {
   background: rgba(255, 255, 255, 0.6);
-  border: 1px solid var(--color-black);
+  border: 1.5px solid var(--color-black);
+  z-index: 1;
+}
+
+.pm__size-rect--hovered {
+  border: 1.5px solid rgba(25, 25, 25, 0.45);
   z-index: 1;
 }
 
@@ -463,8 +481,8 @@
   position: absolute;
   font-family: "forma-djr-display", sans-serif;
   font-weight: 500;
-  font-size: 12px;
-  letter-spacing: 0.48px;
+  font-size: 13px;
+  letter-spacing: 0.52px;
   color: var(--color-black);
   white-space: nowrap;
   z-index: 2;
@@ -497,6 +515,10 @@
   letter-spacing: 0.52px;
   color: var(--color-black);
   cursor: pointer;
+}
+
+.pm__size-tab:hover:not(.pm__size-tab--active) {
+  background: #b8b8b8;
 }
 
 .pm__size-tab--active {

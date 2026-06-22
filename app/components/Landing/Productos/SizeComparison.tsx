@@ -1,4 +1,5 @@
 'use client'
+import { useState } from 'react'
 
 // Physical dimensions [widthCm, heightCm] for each book
 const BOOK_DIMS: Record<string, [number, number]> = {
@@ -29,6 +30,7 @@ type Props = {
 }
 
 export default function SizeComparison({ activeSize, onChangeSize }: Props) {
+  const [hoveredSize, setHoveredSize] = useState<string | null>(null)
   const [aw, ah] = BOOK_DIMS[activeSize]
   const activePxW = Math.round(aw * SCALE_X)
   const activePxH = Math.round(ah * SCALE_Y)
@@ -39,10 +41,12 @@ export default function SizeComparison({ activeSize, onChangeSize }: Props) {
         <div className="pm__comparison-canvas">
           {ORDER.map(id => {
             const [w, h] = BOOK_DIMS[id]
+            const isActive  = id === activeSize
+            const isHovered = id === hoveredSize && !isActive
             return (
               <div
                 key={id}
-                className={`pm__size-rect${id === activeSize ? ' pm__size-rect--active' : ''}`}
+                className={`pm__size-rect${isActive ? ' pm__size-rect--active' : ''}${isHovered ? ' pm__size-rect--hovered' : ''}`}
                 style={{ width: Math.round(w * SCALE_X), height: Math.round(h * SCALE_Y) }}
               />
             )
@@ -72,6 +76,8 @@ export default function SizeComparison({ activeSize, onChangeSize }: Props) {
             key={id}
             className={`pm__size-tab${id === activeSize ? ' pm__size-tab--active' : ''}`}
             onClick={() => onChangeSize(id)}
+            onMouseEnter={() => setHoveredSize(id)}
+            onMouseLeave={() => setHoveredSize(null)}
           >
             {BOOK_LABELS[id]}
           </button>

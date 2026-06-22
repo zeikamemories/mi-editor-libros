@@ -194,7 +194,11 @@
     transition: opacity 0.2s;
   }
 
-  .navbar__link:hover { opacity: 0.5; }
+  .navbar__link:hover {
+    text-decoration: underline;
+    text-decoration-color: var(--color-blue);
+    text-underline-offset: 4px;
+  }
 
   .navbar__hamburger { display: none; }
 
@@ -220,7 +224,11 @@
     padding: 0;
   }
 
-  .navbar__auth-link:hover { opacity: 0.5; }
+  .navbar__auth-link:hover {
+    text-decoration: underline;
+    text-decoration-color: var(--color-blue);
+    text-underline-offset: 4px;
+  }
   .navbar__auth-link--btn {
     font-family: "forma-djr-display", sans-serif;
     font-size: 18px;

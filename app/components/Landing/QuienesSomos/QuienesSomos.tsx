@@ -47,7 +47,7 @@ export default function QuienesSomos() {
       <div className="qs__founder">
         <div className="qs__founder-photo-wrap">
           {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img src="/fotos/Founder.jpg" alt="Maika" className="qs__founder-photo" />
+          <img src="/fotos/founder3.jpg" alt="Maika" className="qs__founder-photo" />
         </div>
         <div className="qs__founder-letter">
           <p className="qs__founder-text">

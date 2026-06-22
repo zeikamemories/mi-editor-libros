@@ -143,6 +143,10 @@
     gap: 50px;
   }
 
+  .como__card:last-child {
+    border-right: none;
+  }
+
   .como__icon-wrap {
     width: 70px;
     height: 70px;

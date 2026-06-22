@@ -38,7 +38,7 @@
 
 .faqs__question {
   display: flex;
-  align-items: flex-start;
+  align-items: center;
   gap: 15px;
   background: none;
   border: none;
@@ -46,6 +46,17 @@
   cursor: pointer;
   text-align: left;
   width: 100%;
+  justify-content: space-between;
+}
+
+.faqs__chevron {
+  color: rgba(25, 25, 25, 0.3);
+  flex-shrink: 0;
+  transition: transform 0.2s ease;
+}
+
+.faqs__chevron--open {
+  transform: rotate(180deg);
 }
 
 .faqs__num {
@@ -66,6 +77,8 @@
   line-height: 0.9;
   letter-spacing: 0.12px;
   color: var(--color-black);
+  flex: 1;
+  text-align: left;
 }
 
 .faqs__answer {
@@ -121,7 +134,7 @@
   .faqs__answer {
     font-size: 16px;
     letter-spacing: 0.64px;
-    padding-left: 45px;
+    padding-left: 43px;
     width: 675px;
   }
 }

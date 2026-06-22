@@ -194,6 +194,7 @@ export default function ProductModal({ product, onClose }: Props) {
                 onClick={toggleComp}
               >
                 Comparar con otros tamaños
+                {showComp && <span className="pm__comparar-close">✕</span>}
               </button>
             </div>
 

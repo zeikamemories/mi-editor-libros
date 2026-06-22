@@ -49,6 +49,8 @@
 }
 
 /* CTA button — fixed so it stays visible while scrolling */
+.hero__cta:hover { background: #4A80C1; }
+
 .hero__cta {
   position: fixed;
   bottom: 20px;

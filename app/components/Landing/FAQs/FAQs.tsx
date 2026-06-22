@@ -1,6 +1,7 @@
 'use client'
 
 import { useState } from 'react'
+import { ChevronDown } from 'lucide-react'
 import './FAQs.css'
 
 const FAQS = [
@@ -57,6 +58,11 @@ export default function FAQs() {
             >
               <span className="faqs__num">{num}</span>
               <span className="faqs__q-text">{q}</span>
+              <ChevronDown
+                className={`faqs__chevron${open === i ? ' faqs__chevron--open' : ''}`}
+                size={20}
+                strokeWidth={1.5}
+              />
             </button>
             {open === i && (
               <p className="faqs__answer">{a}</p>
