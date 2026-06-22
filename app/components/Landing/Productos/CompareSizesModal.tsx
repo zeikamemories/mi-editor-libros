@@ -30,6 +30,7 @@ type Props = { onClose: () => void }
 
 export default function CompareSizesModal({ onClose }: Props) {
   const [active, setActive] = useState('chico')
+  const [hovered, setHovered] = useState<string | null>(null)
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => { if (e.key === 'Escape') onClose() }
@@ -57,10 +58,12 @@ export default function CompareSizesModal({ onClose }: Props) {
           <div className="csm__canvas">
             {ORDER.map(id => {
               const [w, h] = BOOK_DIMS[id]
+              const isActive  = id === active
+              const isHovered = id === hovered && !isActive
               return (
                 <div
                   key={id}
-                  className={`csm__rect${id === active ? ' csm__rect--active' : ''}`}
+                  className={`csm__rect${isActive ? ' csm__rect--active' : ''}${isHovered ? ' csm__rect--hovered' : ''}`}
                   style={{ width: Math.round(w * SCALE_X), height: Math.round(h * SCALE_Y) }}
                 />
               )
@@ -91,6 +94,8 @@ export default function CompareSizesModal({ onClose }: Props) {
               key={id}
               className={`csm__tab${id === active ? ' csm__tab--active' : ''}`}
               onClick={() => setActive(id)}
+              onMouseEnter={() => setHovered(id)}
+              onMouseLeave={() => setHovered(null)}
             >
               {BOOK_LABELS[id]}
             </button>

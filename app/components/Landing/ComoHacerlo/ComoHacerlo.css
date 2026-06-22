@@ -78,7 +78,7 @@
 .como__number {
   font-family: "forma-djr-display", sans-serif;
   font-weight: 500;
-  font-size: 12px;
+  font-size: 14px;
   letter-spacing: 0.48px;
   color: var(--color-black);
   margin-top: 2px;
@@ -175,7 +175,7 @@
   }
 
   .como__number {
-    font-size: 10px;
+    font-size: 13px;
     letter-spacing: 0.4px;
     margin-top: 0;
   }

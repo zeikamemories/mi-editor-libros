@@ -61,11 +61,11 @@
 
 .faqs__num {
   font-family: "forma-djr-display", sans-serif;
-  font-weight: 400;
+  font-weight: 500;
   font-size: 10px;
   letter-spacing: 0.4px;
   text-transform: uppercase;
-  color: var(--color-black);
+  color: rgba(25, 25, 25, 0.65);
   flex-shrink: 0;
   line-height: normal;
 }

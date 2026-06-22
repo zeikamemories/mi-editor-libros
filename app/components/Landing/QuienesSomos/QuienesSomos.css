@@ -51,7 +51,6 @@
   height: 279px;
   flex-shrink: 0;
   position: relative;
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
   overflow: hidden;
 }
 
@@ -185,7 +184,7 @@
   font-size: 28px;
   line-height: 0.95;
   letter-spacing: -0.56px;
-  color: var(--color-black);
+  color: var(--color-blue);
   text-align: center;
   margin: 0;
 }
@@ -325,11 +324,10 @@
     width: 430px;
     height: 491px;
     flex-shrink: 0;
-    box-shadow: 0 12px 32px rgba(0, 0, 0, 0.18);
   }
 
   .qs__founder-letter {
-    width: 600px;
+    width: 700px;
     height: 308px;
     justify-content: flex-end;
     align-items: flex-end;

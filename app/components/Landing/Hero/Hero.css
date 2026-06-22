@@ -56,7 +56,7 @@
   bottom: 20px;
   left: 20px;
   right: 20px;
-  z-index: 200;
+  z-index: 50;
   display: block;
   background: var(--color-blue);
   color: var(--color-white);
