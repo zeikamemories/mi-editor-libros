@@ -230,7 +230,7 @@
 .mp-badge--entregado         { background: #808080; }
 .mp-badge--confirmado        { background: #e03535; }
 .mp-badge--material_recibido { background: #528ED6; }
-.mp-badge--pendiente_pago    { background: #808080; }
+.mp-badge--pendiente_pago    { background: #e03535; }
 
 /* ── New project link ────────────────────────────────────────────────────── */
 
@@ -337,7 +337,7 @@
 .mpd-status-badge--entregado         { background: #808080; }
 .mpd-status-badge--confirmado        { background: #e03535; }
 .mpd-status-badge--material_recibido { background: #528ED6; }
-.mpd-status-badge--pendiente_pago    { background: #808080; }
+.mpd-status-badge--pendiente_pago    { background: #e03535; }
 
 /* Accordions */
 .mpd-accordions {

@@ -32,8 +32,9 @@ function ConfirmadoContent() {
       const newStatus = status === 'pending' ? 'pendiente_pago' : 'confirmado'
       const now       = new Date().toISOString()
 
-      const [{ data: orderData }] = await Promise.all([
+      const [{ data: orderData }, { data: { user } }] = await Promise.all([
         supabase.from('orders').select('book_name, size').eq('id', orderId!).single(),
+        supabase.auth.getUser(),
         supabase.from('orders').update({
           status:       newStatus,
           status_dates: { confirmado: now },
@@ -71,14 +72,31 @@ function ConfirmadoContent() {
 
             setIsReorder(true)
           } else {
-            await supabase.from('projects').insert({
-              name:          orderData.book_name ?? 'Sin título',
-              book_size:     orderData.size ?? 'vertical',
-              total_spreads: 13,
-              photos:        [],
-              spreads:       {},
-              order_id:      orderId,
+            const folderName = `Zeika - ${orderData.book_name ?? 'Sin título'} - ${orderId!.slice(0, 8).toUpperCase()}`
+            const driveRes = await fetch('/api/create-drive-folder', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                folderName,
+                clientEmail: user?.email ?? null,
+              }),
             })
+            const driveData = driveRes.ok ? await driveRes.json() : {}
+            const driveLink = driveData.folderUrl ?? null
+
+            await Promise.all([
+              supabase.from('projects').insert({
+                name:          orderData.book_name ?? 'Sin título',
+                book_size:     orderData.size ?? 'vertical',
+                total_spreads: 13,
+                photos:        [],
+                spreads:       {},
+                order_id:      orderId,
+              }),
+              driveLink
+                ? supabase.from('orders').update({ drive_link: driveLink }).eq('id', orderId!)
+                : Promise.resolve(),
+            ])
           }
         }
       }

@@ -24,7 +24,7 @@ const SIZE_SHORT: Record<string, string> = {
 }
 
 const STATUS_LABEL: Record<string, string> = {
-  pendiente_pago:    'Pago pendiente',
+  pendiente_pago:    'Cargar material',
   confirmado:        'Cargar material',
   material_recibido: 'Material Cargado',
   en_diseno:         'En diseño',
