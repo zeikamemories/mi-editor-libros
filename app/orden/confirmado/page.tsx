@@ -149,9 +149,9 @@ function ConfirmadoContent() {
             <>
               <p className="conf__steps-label">Próximos pasos</p>
               <div className="conf__steps">
-                {(isReorder ? STEPS_REORDER : STEPS).map((step, i) => (
-                  {step.arrow ? (
-                    <a className="conf__step conf__step--link" href={orderId ? `/mis-proyectos/${orderId}?open=material` : '/mis-proyectos'} key={i}>
+                {(isReorder ? STEPS_REORDER : STEPS).map((step, i) =>
+                  step.arrow ? (
+                    <a key={i} className="conf__step conf__step--link" href={orderId ? `/mis-proyectos/${orderId}?open=material` : '/mis-proyectos'}>
                       <div className="conf__step-num">{i + 1}</div>
                       <div className="conf__step-text">
                         <span className="conf__step-main">{step.main}</span>
@@ -160,15 +160,15 @@ function ConfirmadoContent() {
                       <span className="conf__step-arrow">›</span>
                     </a>
                   ) : (
-                    <div className="conf__step" key={i}>
+                    <div key={i} className="conf__step">
                       <div className="conf__step-num">{i + 1}</div>
                       <div className="conf__step-text">
                         <span className="conf__step-main">{step.main}</span>
                         {step.sub && <span className="conf__step-sub">{step.sub}</span>}
                       </div>
                     </div>
-                  )}
-                ))}
+                  )
+                )}
               </div>
             </>
           )}
