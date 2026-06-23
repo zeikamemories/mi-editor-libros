@@ -464,13 +464,20 @@ export default function ProyectoPage() {
               <div className="mpd-mat-header">
                 <span className="mpd-mat-header__label">Fotos / Google Drive</span>
               </div>
-              <input
-                className="mpd-mat-input"
-                placeholder="Pegá el link de tu carpeta"
-                value={driveLink}
-                onChange={e => setDriveLink(e.target.value)}
-                onBlur={e => saveLinkSilently('drive_link', e.target.value)}
-              />
+              <div className="mpd-mat-input-row">
+                <input
+                  className="mpd-mat-input"
+                  placeholder="Pegá el link de tu carpeta"
+                  value={driveLink}
+                  onChange={e => setDriveLink(e.target.value)}
+                  onBlur={e => saveLinkSilently('drive_link', e.target.value)}
+                />
+                {driveLink && (
+                  <a className="mpd-mat-open-btn" href={driveLink} target="_blank" rel="noopener noreferrer">
+                    Abrir carpeta →
+                  </a>
+                )}
+              </div>
             </div>
 
             {/* Textos / Google Docs */}

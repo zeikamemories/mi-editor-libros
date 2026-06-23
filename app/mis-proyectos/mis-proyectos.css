@@ -1352,6 +1352,27 @@
   text-transform: none;
 }
 
+.mpd-mat-input-row {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.mpd-mat-open-btn {
+  font-family: "forma-djr-display", sans-serif;
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  color: var(--color-blue);
+  text-decoration: none;
+  align-self: flex-start;
+  padding: 0 2px;
+}
+
+.mpd-mat-open-btn:hover {
+  text-decoration: underline;
+}
+
 .mpd-mat-input {
   width: 100%;
   border: 1px solid #7b7a78;
