@@ -41,7 +41,7 @@ function ConfirmadoContent() {
         }).eq('id', orderId!),
       ])
 
-      if (newStatus === 'confirmado' && orderData) {
+      if (orderData) {
         const { data: existing } = await supabase
           .from('projects').select('id').eq('order_id', orderId!).maybeSingle()
 
@@ -150,20 +150,30 @@ function ConfirmadoContent() {
               <p className="conf__steps-label">Próximos pasos</p>
               <div className="conf__steps">
                 {(isReorder ? STEPS_REORDER : STEPS).map((step, i) => (
-                  <div className="conf__step" key={i}>
-                    <div className="conf__step-num">{i + 1}</div>
-                    <div className="conf__step-text">
-                      <span className="conf__step-main">{step.main}</span>
-                      {step.sub && <span className="conf__step-sub">{step.sub}</span>}
+                  {step.arrow ? (
+                    <a className="conf__step conf__step--link" href={orderId ? `/mis-proyectos/${orderId}?open=material` : '/mis-proyectos'} key={i}>
+                      <div className="conf__step-num">{i + 1}</div>
+                      <div className="conf__step-text">
+                        <span className="conf__step-main">{step.main}</span>
+                        {step.sub && <span className="conf__step-sub">{step.sub}</span>}
+                      </div>
+                      <span className="conf__step-arrow">›</span>
+                    </a>
+                  ) : (
+                    <div className="conf__step" key={i}>
+                      <div className="conf__step-num">{i + 1}</div>
+                      <div className="conf__step-text">
+                        <span className="conf__step-main">{step.main}</span>
+                        {step.sub && <span className="conf__step-sub">{step.sub}</span>}
+                      </div>
                     </div>
-                    {step.arrow && <span className="conf__step-arrow">›</span>}
-                  </div>
+                  )}
                 ))}
               </div>
             </>
           )}
 
-          <a className="conf__cta" href={orderId ? `/mis-proyectos/${orderId}` : '/mis-proyectos'}>IR A MI PROYECTO</a>
+          <a className="conf__cta" href={orderId ? `/mis-proyectos/${orderId}?open=material` : '/mis-proyectos'}>IR A MI PROYECTO</a>
         </div>
       )}
     </div>

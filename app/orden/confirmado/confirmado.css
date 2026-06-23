@@ -95,6 +95,19 @@
   border-bottom: 1px solid var(--color-border);
 }
 
+.conf__step--link {
+  text-decoration: none;
+  cursor: pointer;
+}
+
+.conf__step--link:hover .conf__step-main {
+  color: var(--color-blue);
+}
+
+.conf__step--link:hover .conf__step-arrow {
+  color: var(--color-blue);
+}
+
 .conf__step-num {
   width: 38px;
   height: 38px;

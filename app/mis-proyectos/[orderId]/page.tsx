@@ -187,27 +187,33 @@ export default function ProyectoPage() {
   const [confirmingDelivery, setConfirmingDelivery]  = useState(false)
 
   useEffect(() => {
-    supabase.auth.getSession().then(({ data: { session } }) => {
+    async function init() {
+      let { data: { session } } = await supabase.auth.getSession()
+      if (!session?.user) {
+        // Session may not be restored yet after MP redirect — wait and retry
+        await new Promise(r => setTimeout(r, 800))
+        ;({ data: { session } } = await supabase.auth.getSession())
+      }
       if (!session?.user) { router.replace('/orden'); return }
       setUserId(session.user.id)
       const meta = session.user.user_metadata
       setUserName(meta?.full_name || meta?.name || session.user.email?.split('@')[0] || '')
       setUserEmail(session.user.email ?? '')
 
-      Promise.all([
+      const [{ data: o }, { data: n }, { data: p }] = await Promise.all([
         supabase.from('orders').select('*').eq('id', orderId).eq('user_id', session.user.id).single(),
         supabase.from('order_notes').select('id, content, type, created_at').eq('order_id', orderId).order('created_at'),
         supabase.from('projects').select('cover_thumbnail').eq('order_id', orderId).maybeSingle(),
-      ]).then(([{ data: o }, { data: n }, { data: p }]) => {
-        if (!o) { router.replace('/mis-proyectos'); return }
-        setOrder(o as Order)
-        setDriveLink(o.drive_link ?? '')
-        setDocsLink(o.docs_link ?? '')
-        setNotes((n ?? []) as Note[])
-        if (p?.cover_thumbnail) setCoverThumbnail(p.cover_thumbnail)
-        setLoading(false)
-      })
-    })
+      ])
+      if (!o) { router.replace('/mis-proyectos'); return }
+      setOrder(o as Order)
+      setDriveLink(o.drive_link ?? '')
+      setDocsLink(o.docs_link ?? '')
+      setNotes((n ?? []) as Note[])
+      if (p?.cover_thumbnail) setCoverThumbnail(p.cover_thumbnail)
+      setLoading(false)
+    }
+    init()
   }, [orderId, router])
 
   async function saveLinkSilently(field: 'drive_link' | 'docs_link', value: string) {
