@@ -1,4 +1,5 @@
 import type { Metadata } from 'next'
+import Script from 'next/script'
 import './globals.css'
 import { LanguageProvider } from './context/LanguageContext'
 
@@ -23,7 +24,7 @@ export default function RootLayout({
       </head>
       <body suppressHydrationWarning>
         <LanguageProvider>{children}</LanguageProvider>
-        <script dangerouslySetInnerHTML={{ __html: `
+        <Script id="scroll-back-product" strategy="afterInteractive" dangerouslySetInnerHTML={{ __html: `
           (function(){
             try {
               if (sessionStorage.getItem('zeika_back_product')) {

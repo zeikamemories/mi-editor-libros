@@ -31,7 +31,7 @@ export default function ProductCard({ sizeId, name, price, dimensions, onOpen }:
         />
         {hovered && (
           <div className="product-card__overlay" onClick={onOpen}>
-            <span>Más información</span>
+            <span>Me interesa</span>
           </div>
         )}
       </div>
@@ -46,7 +46,7 @@ export default function ProductCard({ sizeId, name, price, dimensions, onOpen }:
       </div>
 
       {/* Mobile-only button */}
-      <button className="product-card__mobile-btn" onClick={onOpen}>Más información</button>
+      <button className="product-card__mobile-btn" onClick={onOpen}>Me interesa</button>
     </article>
   )
 }

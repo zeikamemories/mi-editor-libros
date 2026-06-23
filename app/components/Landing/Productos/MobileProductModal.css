@@ -19,6 +19,7 @@
   flex: 1;
   overflow-y: auto;
   -webkit-overflow-scrolling: touch;
+  letter-spacing: 0.56px;
 }
 
 /* ── Close button ───────────────────────────────────────────────────────────── */
@@ -124,7 +125,7 @@
   font-weight: 500;
   font-size: 30px;
   line-height: 1;
-  letter-spacing: 0.04em;
+  letter-spacing: 0.04em !important;
   color: var(--color-blue);
   white-space: nowrap;
   flex-shrink: 0;
@@ -206,7 +207,7 @@
 .mpm__card-top {
   font-family: "forma-djr-display", sans-serif;
   font-weight: 700;
-  font-size: 11px;
+  font-size: 13px;
   letter-spacing: 0.22px;
   color: var(--color-black);
 }
@@ -214,7 +215,7 @@
 .mpm__card-bot {
   font-family: "forma-djr-display", sans-serif;
   font-weight: 500;
-  font-size: 11px;
+  font-size: 12px;
   letter-spacing: 0.44px;
   color: #666;
 }
