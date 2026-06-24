@@ -38,6 +38,77 @@ import './editor.css'
 
 type SpreadSnapshot = { left: PageData; right: PageData }
 
+// ─── Page options per book size ──────────────────────────────────────────────
+
+const PAGE_OPTIONS: Record<string, number[]> = {
+  chico: [20, 32, 40],
+}
+const DEFAULT_PAGE_OPTIONS = [20, 30, 40]
+
+function getPageOptions(sizeId: string): number[] {
+  return PAGE_OPTIONS[sizeId] ?? DEFAULT_PAGE_OPTIONS
+}
+
+// ─── AddPagesModal ───────────────────────────────────────────────────────────
+
+function AddPagesModal({
+  currentPages,
+  defaultSelected,
+  sizeId,
+  onConfirm,
+  onClose,
+}: {
+  currentPages: number
+  defaultSelected: number
+  sizeId: string
+  onConfirm: (pages: number) => void
+  onClose: () => void
+}) {
+  const pageOpts = getPageOptions(sizeId)
+  const [selected, setSelected] = useState<number>(
+    pageOpts.includes(defaultSelected) ? defaultSelected : pageOpts[0]
+  )
+  const opts = pageOpts.map(p => ({ pages: p, carillas: p * 2 }))
+  const isReducing = selected < currentPages
+
+  return (
+    <div className="add-pages-overlay" onClick={onClose}>
+      <div className="add-pages-modal" onClick={e => e.stopPropagation()}>
+        <button className="add-pages-close" onClick={onClose} aria-label="Cerrar">×</button>
+        <h2 className="add-pages-title">Páginas del libro</h2>
+        <div className="add-pages-current">
+          Actualmente: <strong>{currentPages} páginas</strong> · {currentPages * 2} carillas
+        </div>
+        <div className="add-pages-opts">
+          {opts.map(o => (
+            <button
+              key={o.pages}
+              className={`add-pages-opt${selected === o.pages ? ' add-pages-opt--active' : ''}`}
+              onClick={() => setSelected(o.pages)}
+            >
+              <span className="add-pages-opt-num">{o.pages}</span>
+              <span className="add-pages-opt-label">páginas</span>
+              <span className="add-pages-opt-sub">{o.carillas} carillas</span>
+            </button>
+          ))}
+        </div>
+        {isReducing && (
+          <p className="add-pages-warning">
+            Reducir páginas eliminará los spreads del final del libro.
+          </p>
+        )}
+        <button
+          className="add-pages-confirm"
+          onClick={() => onConfirm(selected)}
+          disabled={selected === currentPages}
+        >
+          {selected === currentPages ? 'Sin cambios' : `Aplicar ${selected} páginas`}
+        </button>
+      </div>
+    </div>
+  )
+}
+
 // ─── Component ──────────────────────────────────────────────────────────────
 
 export default function EditorPage() {
@@ -65,6 +136,8 @@ export default function EditorPage() {
   const [projectName,  setProjectName]  = useState('')
   const [orderIdForNr, setOrderIdForNr] = useState<string | null>(null)
   const saveStatusTimerRef       = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const [addPagesModalOpen, setAddPagesModalOpen] = useState(false)
+  const [orderedPages,      setOrderedPages]      = useState<number | null>(null)
 
   // ── Preview ────────────────────────────────────────────────────────────────
   const [previewOpen,     setPreviewOpen]     = useState(false)
@@ -237,6 +310,14 @@ export default function EditorPage() {
           if (data.order_id) {
             setOrderIdForNr(data.order_id)
             sessionStorage.setItem('zeika_return_path', `/dashboard/pedidos/${data.order_id}`)
+            supabase.from('orders').select('pages_base, extra_pages').eq('id', data.order_id).single()
+              .then(({ data: od }) => {
+                if (od) {
+                  const total = (od.pages_base ?? 20) + (od.extra_pages ?? 0)
+                  const opts  = [20, 30, 40]
+                  setOrderedPages(opts.reduce((a, b) => Math.abs(b - total) < Math.abs(a - total) ? b : a))
+                }
+              })
           }
         }
         dbLoadedRef.current = true
@@ -747,6 +828,52 @@ export default function EditorPage() {
     await handleSpreadSelect(target)
   }, [totalContentSpreads, handleSpreadSelect])
 
+  // ── Set total page count (opens from AddPages modal) ─────────────────────
+  const handleSetPageCount = useCallback((targetPages: number) => {
+    const targetCS   = targetPages - 1  // totalContentSpreads for this page count
+    const diff       = targetCS - totalContentSpreads
+    if (diff === 0) { setAddPagesModalOpen(false); return }
+
+    const oldLastIdx = totalContentSpreads + 2
+    const newLastIdx = targetCS + 2
+
+    // Move the Zeika-logo last spread to its new position
+    const lastData = spreadsData.current[oldLastIdx]
+    delete spreadsData.current[oldLastIdx]
+    if (lastData) spreadsData.current[newLastIdx] = lastData
+
+    const blank: SpreadSnapshot = {
+      left:  { background: '#ffffff', pageW: PAGE_W, pageH: PAGE_H, objects: [] },
+      right: { background: '#ffffff', pageW: PAGE_W, pageH: PAGE_H, objects: [] },
+    }
+
+    if (diff > 0) {
+      for (let i = oldLastIdx; i < newLastIdx; i++) {
+        if (!spreadsData.current[i]) spreadsData.current[i] = blank
+      }
+      setThumbnails(prev => {
+        const next = { ...prev }
+        for (let i = oldLastIdx; i < newLastIdx; i++) {
+          next[i] = { left: blankThumbRef.current, right: blankThumbRef.current }
+        }
+        next[newLastIdx] = prev[oldLastIdx] ?? { left: logoThumbRef.current, right: noEditThumbRef.current }
+        return next
+      })
+    } else {
+      for (let i = newLastIdx + 1; i < oldLastIdx; i++) delete spreadsData.current[i]
+      setThumbnails(prev => {
+        const next = { ...prev }
+        next[newLastIdx] = prev[oldLastIdx] ?? { left: logoThumbRef.current, right: noEditThumbRef.current }
+        for (let i = newLastIdx + 1; i <= oldLastIdx; i++) delete next[i]
+        return next
+      })
+      if (currentSpreadRef.current > newLastIdx) handleSpreadSelect(newLastIdx)
+    }
+
+    setTotalContentSpreads(targetCS)
+    setAddPagesModalOpen(false)
+  }, [totalContentSpreads, handleSpreadSelect])
+
   // ── Layout drop on PageStrip spread (always applies to left page) ─────────
   const handleLayoutDrop = useCallback(async (spreadIndex: number, layoutId: string) => {
     await handleSpreadSelect(spreadIndex)
@@ -1226,7 +1353,7 @@ export default function EditorPage() {
                 pageW={PAGE_W}
                 pageH={PAGE_H}
                 onSpreadSelect={handleSpreadSelect}
-                onAddSpread={handleAddSpread}
+                onAddSpread={() => setAddPagesModalOpen(true)}
                 onDeleteSpread={handleDeleteSpread}
                 onLayoutDrop={handleLayoutDrop}
                 thumbnails={thumbnails}
@@ -1259,6 +1386,23 @@ export default function EditorPage() {
     )}
 
     <OnboardingTour open={tourOpen} onClose={() => setTourOpen(false)} />
+
+    {/* ── Add Pages Modal ──────────────────────────────────────────────────── */}
+    {addPagesModalOpen && (() => {
+      const currentPages = totalContentSpreads + 1
+      const opts = getPageOptions(bookSize.id)
+      const defaultSel = orderedPages ?? opts.reduce((a, b) =>
+        Math.abs(b - currentPages) < Math.abs(a - currentPages) ? b : a, opts[0])
+      return (
+        <AddPagesModal
+          currentPages={currentPages}
+          defaultSelected={defaultSel}
+          sizeId={bookSize.id}
+          onConfirm={handleSetPageCount}
+          onClose={() => setAddPagesModalOpen(false)}
+        />
+      )
+    })()}
 
 
     {textModal && (

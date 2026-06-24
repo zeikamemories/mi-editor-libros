@@ -28,3 +28,20 @@ export async function GET() {
 
   return NextResponse.json(enriched)
 }
+
+export async function DELETE(req: Request) {
+  const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY
+  if (!serviceKey) return NextResponse.json({ error: 'Not configured' }, { status: 500 })
+
+  const { ids } = await req.json() as { ids: string[] }
+  if (!Array.isArray(ids) || ids.length === 0) return NextResponse.json({ error: 'No ids' }, { status: 400 })
+
+  const admin = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, serviceKey, {
+    auth: { autoRefreshToken: false, persistSession: false },
+  })
+
+  const { error } = await admin.from('orders').delete().in('id', ids)
+  if (error) return NextResponse.json({ error: error.message }, { status: 500 })
+
+  return NextResponse.json({ ok: true })
+}

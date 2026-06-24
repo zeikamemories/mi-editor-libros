@@ -452,17 +452,34 @@
   box-shadow: 0 4px 16px rgba(0,0,0,0.1);
 }
 
+.dash-grid-thumb-wrap {
+  position: relative;
+}
+
+.dash-grid-badge {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  font-size: 10px !important;
+  padding: 3px 7px !important;
+}
+
 .dash-grid-thumb {
   width: 100%;
-  aspect-ratio: 2 / 1.35;
+  aspect-ratio: 5 / 3;
   display: flex;
-  background: #f0eeea;
+  align-items: center;
+  justify-content: center;
+  background: #fff;
+  padding: 12px;
+  box-sizing: border-box;
+  overflow: hidden;
 }
 
 .dash-grid-thumb-page {
   width: 50%;
-  height: 100%;
-  object-fit: cover;
+  height: auto;
+  max-height: 100%;
   display: block;
 }
 
@@ -474,6 +491,7 @@
 
 .dash-grid-info {
   padding: 10px 12px;
+  border-top: 1px solid #f0f0f0;
 }
 
 .dash-grid-name {

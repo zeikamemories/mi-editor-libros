@@ -126,6 +126,18 @@ export const translations = {
     lastPage:        'Última página',
     // SpreadsView
     interna:         'Interna',
+    // OnboardingTour
+    tourStep1Title:  'Subir fotos',
+    tourStep1Desc:   'Subí tus fotos desde la computadora, filtralas y arrastralas al canvas.',
+    tourStep2Title:  'Panel de layouts',
+    tourStep2Desc:   'Arrastrá tu layout preferido al canvas. También podés elegir un fondo o decoración.',
+    tourStep3Title:  'Barra de herramientas',
+    tourStep3Desc:   'Usá la barra para agregar texto, grillas, marcos, reglas, colores de fondo y más.',
+    tourStep4Title:  'Tira de páginas',
+    tourStep4Desc:   'Visualizá todas tus páginas y agregá nuevas con el botón +.',
+    tourStep5Title:  'Barra superior',
+    tourStep5Desc:   'Previsualizá, compartí, guardá e imprimí tu libro.',
+    tourGotIt:       'Entendido',
   },
   en: {
     // Topbar
@@ -254,6 +266,18 @@ export const translations = {
     lastPage:        'Last page',
     // SpreadsView
     interna:         'Inside',
+    // OnboardingTour
+    tourStep1Title:  'Upload images',
+    tourStep1Desc:   'Upload images from your computer, then filter and arrange them on the canvas. You can drag them.',
+    tourStep2Title:  'Layout Panel',
+    tourStep2Desc:   'Drag your preferred layout onto the canvas. Choose a background or decoration too.',
+    tourStep3Title:  'Tool Bar',
+    tourStep3Desc:   'Use the toolbar to add text, custom grids, photo frames, rulers, color backgrounds, and more.',
+    tourStep4Title:  'Page Strip',
+    tourStep4Desc:   'View all your pages and add new ones using the + button.',
+    tourStep5Title:  'Top Bar',
+    tourStep5Desc:   'Preview, share, save, and print your book.',
+    tourGotIt:       'Got it',
   },
 }
 

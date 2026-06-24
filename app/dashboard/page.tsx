@@ -140,7 +140,8 @@ export default function DashboardPage() {
 
   async function deleteOrder(id: string, bookName: string) {
     if (!window.confirm(`¿Eliminar el pedido "${bookName}"? Esta acción no se puede deshacer.`)) return
-    await supabase.from('orders').delete().eq('id', id)
+    const res = await fetch('/api/admin/orders', { method: 'DELETE', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ ids: [id] }) })
+    if (!res.ok) { alert('Error al eliminar'); return }
     setOrders(prev => prev.filter(o => o.id !== id))
   }
 
@@ -164,7 +165,8 @@ export default function DashboardPage() {
     if (!window.confirm(`¿Eliminar ${selected.size} pedido${selected.size > 1 ? 's' : ''}? Esta acción no se puede deshacer.`)) return
     setDeleting(true)
     const ids = Array.from(selected)
-    await supabase.from('orders').delete().in('id', ids)
+    const res = await fetch('/api/admin/orders', { method: 'DELETE', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ ids }) })
+    if (!res.ok) { setDeleting(false); alert('Error al eliminar'); return }
     setOrders(prev => prev.filter(o => !ids.includes(o.id)))
     setSelected(new Set())
     setEditMode(false)
@@ -290,16 +292,23 @@ export default function DashboardPage() {
                   onClick={() => toggleSelect(order.id)}
                 >
                   <div className="dash-grid-checkbox">{isSelected ? '✓' : ''}</div>
-                  <div className="dash-grid-thumb">
-                    {proj?.cover_thumbnail ? (
-                      <>
-                        {/* eslint-disable-next-line @next/next/no-img-element */}
-                        <img src={proj.cover_thumbnail.left}  alt="" className="dash-grid-thumb-page" />
-                        {/* eslint-disable-next-line @next/next/no-img-element */}
-                        <img src={proj.cover_thumbnail.right} alt="" className="dash-grid-thumb-page" />
-                      </>
-                    ) : (
-                      <div className="dash-grid-thumb-empty" />
+                  <div className="dash-grid-thumb-wrap">
+                    <div className="dash-grid-thumb">
+                      {proj?.cover_thumbnail ? (
+                        <>
+                          {/* eslint-disable-next-line @next/next/no-img-element */}
+                          <img src={proj.cover_thumbnail.left}  alt="" className="dash-grid-thumb-page" />
+                          {/* eslint-disable-next-line @next/next/no-img-element */}
+                          <img src={proj.cover_thumbnail.right} alt="" className="dash-grid-thumb-page" />
+                        </>
+                      ) : (
+                        <div className="dash-grid-thumb-empty" />
+                      )}
+                    </div>
+                    {order.status && (
+                      <span className={`dash-badge dash-badge--${order.status} dash-grid-badge`}>
+                        {STATUS_LABEL[order.status] ?? order.status}
+                      </span>
                     )}
                   </div>
                   <div className="dash-grid-info">
@@ -309,16 +318,23 @@ export default function DashboardPage() {
                 </div>
               ) : (
                 <Link key={order.id} href={`/dashboard/pedidos/${order.id}`} className="dash-grid-card">
-                  <div className="dash-grid-thumb">
-                    {proj?.cover_thumbnail ? (
-                      <>
-                        {/* eslint-disable-next-line @next/next/no-img-element */}
-                        <img src={proj.cover_thumbnail.left}  alt="" className="dash-grid-thumb-page" />
-                        {/* eslint-disable-next-line @next/next/no-img-element */}
-                        <img src={proj.cover_thumbnail.right} alt="" className="dash-grid-thumb-page" />
-                      </>
-                    ) : (
-                      <div className="dash-grid-thumb-empty" />
+                  <div className="dash-grid-thumb-wrap">
+                    <div className="dash-grid-thumb">
+                      {proj?.cover_thumbnail ? (
+                        <>
+                          {/* eslint-disable-next-line @next/next/no-img-element */}
+                          <img src={proj.cover_thumbnail.left}  alt="" className="dash-grid-thumb-page" />
+                          {/* eslint-disable-next-line @next/next/no-img-element */}
+                          <img src={proj.cover_thumbnail.right} alt="" className="dash-grid-thumb-page" />
+                        </>
+                      ) : (
+                        <div className="dash-grid-thumb-empty" />
+                      )}
+                    </div>
+                    {order.status && (
+                      <span className={`dash-badge dash-badge--${order.status} dash-grid-badge`}>
+                        {STATUS_LABEL[order.status] ?? order.status}
+                      </span>
                     )}
                   </div>
                   <div className="dash-grid-info">

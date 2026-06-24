@@ -1,40 +1,24 @@
 'use client'
 
 import { useState, useEffect, useCallback, useRef } from 'react'
+import { useLang } from '../../context/LanguageContext'
 import './OnboardingTour.css'
 
-const STEPS = [
-  {
-    title: 'Upload images',
-    desc:  'Upload images from your computer, then filter and arrange them on the canvas. You can drag them.',
-    target: '.photo-panel',
-  },
-  {
-    title: 'Layout Panel',
-    desc:  'Drag your preferred layout onto the canvas. Choose a background or decoration too.',
-    target: '.layout-panel',
-  },
-  {
-    title: 'Tool Bar',
-    desc:  'Use the toolbar to add text, custom grids, photo frames, rulers, color backgrounds, and more.',
-    target: '.toolbar',
-  },
-  {
-    title: 'Page Strip',
-    desc:  'View all your pages and add new ones using the + button.',
-    target: '.page-strip',
-  },
-  {
-    title: 'Top Bar',
-    desc:  'Preview, share, save, and print your book.',
-    target: '.topbar',
-  },
-]
+const STEP_TARGETS = ['.photo-panel', '.layout-panel', '.toolbar', '.page-strip', '.topbar']
 
 interface Rect { x: number; y: number; w: number; h: number }
 interface Props { open: boolean; onClose: () => void }
 
 export default function OnboardingTour({ open, onClose }: Props) {
+  const { t } = useLang()
+
+  const STEPS = [
+    { title: t.tourStep1Title, desc: t.tourStep1Desc, target: STEP_TARGETS[0] },
+    { title: t.tourStep2Title, desc: t.tourStep2Desc, target: STEP_TARGETS[1] },
+    { title: t.tourStep3Title, desc: t.tourStep3Desc, target: STEP_TARGETS[2] },
+    { title: t.tourStep4Title, desc: t.tourStep4Desc, target: STEP_TARGETS[3] },
+    { title: t.tourStep5Title, desc: t.tourStep5Desc, target: STEP_TARGETS[4] },
+  ]
   const [step,      setStep]      = useState(0)
   const [spot,      setSpot]      = useState<Rect>({ x: 0, y: 0, w: 0, h: 0 })
   const [cardPos,   setCardPos]   = useState<{ top: number; left: number }>({ top: 70, left: 0 })
@@ -143,7 +127,7 @@ export default function OnboardingTour({ open, onClose }: Props) {
             </button>
             {isLast ? (
               <button className="tour-nav-btn tour-nav-btn--gotit" onClick={handleClose}>
-                Got it
+                {t.tourGotIt}
               </button>
             ) : (
               <button className="tour-nav-btn" onClick={() => setStep(s => s + 1)} aria-label="Next">

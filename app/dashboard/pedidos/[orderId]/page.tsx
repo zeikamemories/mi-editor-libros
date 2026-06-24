@@ -545,26 +545,23 @@ export default function PedidoAdminPage() {
         )}
 
         {/* ── Anotaciones + pedidos de cambio ─────────────────────── */}
-        {(previewAnnotations.length > 0 || changeRequests.length > 0) && (
+        {(() => {
+          const comments = previewAnnotations.filter(a => a.type === 'comment')
+          return (comments.length > 0 || changeRequests.length > 0) && (
           <div className="pedido-card pedido-aside-card">
             <h3 className="pedido-card-title">
               Anotaciones del cliente
-              <span className="pedido-badge">{previewAnnotations.length + changeRequests.length}</span>
+              <span className="pedido-badge">{comments.length + changeRequests.length}</span>
             </h3>
-            {previewAnnotations.map(a => (
+            {comments.map(a => (
               <div key={a.id} className="pedido-note pedido-note--change">
                 <span className="pedido-note-date">
-                  {a.type === 'drawing' ? 'Dibujo' : 'Comentario'} · Página {a.page_number + 1} · {fmtDate(a.created_at)}
+                  Comentario · Página {a.page_number + 1} · {fmtDate(a.created_at)}
                 </span>
-                {a.type === 'drawing' ? (
-                  // eslint-disable-next-line @next/next/no-img-element
-                  <img src={a.content} alt="Dibujo del cliente" className="pedido-annot-drawing" />
-                ) : (
-                  <p className="pedido-note-content">{a.content}</p>
-                )}
+                <p className="pedido-note-content">{a.content}</p>
               </div>
             ))}
-            {changeRequests.length > 0 && previewAnnotations.length > 0 && (
+            {changeRequests.length > 0 && comments.length > 0 && (
               <hr className="pedido-divider" />
             )}
             {changeRequests.map(n => (
@@ -574,7 +571,7 @@ export default function PedidoAdminPage() {
               </div>
             ))}
           </div>
-        )}
+        )})()}
       </aside>
       </div>
     </div>
