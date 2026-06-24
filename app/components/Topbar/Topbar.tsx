@@ -16,10 +16,30 @@ interface TopbarProps {
   onTourOpen?: () => void
   saveStatus?: 'saving' | 'saved' | 'idle'
   onBack?: () => void
+  projectName?: string
+  bookSizeLabel?: string
+  orderId?: string | null
 }
 
-export default function Topbar({ onPreview, onExportJpg, onExportPdf, isExporting, projectId, onShare, onTourOpen, saveStatus, onBack }: TopbarProps) {
+export default function Topbar({ onPreview, onExportJpg, onExportPdf, isExporting, projectId, onShare, onTourOpen, saveStatus, onBack, projectName, bookSizeLabel, orderId }: TopbarProps) {
   const { lang, t, toggleLang } = useLang()
+
+  // ── Info popover ───────────────────────────────────────────────────────────
+  const [infoOpen, setInfoOpen] = useState(false)
+  const infoRef = useRef<HTMLDivElement>(null)
+
+  useEffect(() => {
+    if (!infoOpen) return
+    const onPointerDown = (e: PointerEvent) => {
+      if (infoRef.current && !infoRef.current.contains(e.target as Node)) setInfoOpen(false)
+    }
+    document.addEventListener('pointerdown', onPointerDown)
+    return () => document.removeEventListener('pointerdown', onPointerDown)
+  }, [infoOpen])
+
+  const orderNumber = orderId
+    ? `ZK-${new Date().getFullYear()}-${orderId.substring(0, 6).toUpperCase()}`
+    : null
 
   // ── Export dropdown ────────────────────────────────────────────────────────
   const [exportOpen, setExportOpen] = useState(false)
@@ -96,9 +116,41 @@ export default function Topbar({ onPreview, onExportJpg, onExportPdf, isExportin
       <div className="topbar-spacer" />
 
       <div className="topbar-actions">
-        <button className="topbar-action-btn" data-tour-trigger onClick={onTourOpen}>
-          <Info size={20} strokeWidth={1.5} />
-          <span className="topbar-label">{t.description}</span>
+        {/* Info popover */}
+        <div className="topbar-info-wrap" ref={infoRef}>
+          <button
+            className={`topbar-action-btn${infoOpen ? ' topbar-action-btn--active' : ''}`}
+            onClick={() => setInfoOpen(v => !v)}
+          >
+            <Info size={20} strokeWidth={1.5} />
+            <span className="topbar-label">{t.description}</span>
+          </button>
+          {infoOpen && (
+            <div className="topbar-info-popover">
+              <div className="topbar-info-row">
+                <span className="topbar-info-key">Nombre</span>
+                <span className="topbar-info-val">{projectName || '—'}</span>
+              </div>
+              {orderNumber && (
+                <div className="topbar-info-row">
+                  <span className="topbar-info-key">Número</span>
+                  <span className="topbar-info-val">{orderNumber}</span>
+                </div>
+              )}
+              {bookSizeLabel && (
+                <div className="topbar-info-row">
+                  <span className="topbar-info-key">Tamaño</span>
+                  <span className="topbar-info-val">{bookSizeLabel}</span>
+                </div>
+              )}
+            </div>
+          )}
+        </div>
+
+        {/* Tour / help button */}
+        <button className="topbar-action-btn topbar-help-btn" data-tour-trigger onClick={onTourOpen}>
+          <span className="topbar-help-icon">?</span>
+          <span className="topbar-label">Ayuda</span>
         </button>
 
         {/* Share button + popover */}

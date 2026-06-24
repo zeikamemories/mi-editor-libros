@@ -302,7 +302,6 @@ function NuevoContent() {
   const router       = useRouter()
   const searchParams = useSearchParams()
 
-  const [step,         setStep]         = useState(1)
   const [adminUserId,  setAdminUserId]  = useState<string | null>(null)
   const SIZE_MAP: Record<string, string> = {
     chico_h: 'chico', mediano_h: 'mediano', grande_h: 'grande',
@@ -312,6 +311,7 @@ function NuevoContent() {
   const [selectedSize, setSelectedSize] = useState<string | null>(
     rawSize ? (SIZE_MAP[rawSize] ?? rawSize) : null
   )
+  const [step, setStep] = useState(rawSize ? 2 : 1)
   const [details,      setDetails]      = useState<BookDetails>({
     nombre:     searchParams.get('name') ?? '',
     disenadora: 'Maika',

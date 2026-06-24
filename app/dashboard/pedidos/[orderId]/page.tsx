@@ -25,6 +25,7 @@ const SIZE_NAMES: Record<string, string> = {
 
 interface Project {
   id: string
+  book_size: string | null
   cover_thumbnail: { left: string; right: string } | null
   created_at: string
 }
@@ -131,7 +132,7 @@ export default function PedidoAdminPage() {
       Promise.all([
         supabase.from('orders').select('*').eq('id', orderId).single(),
         supabase.from('order_notes').select('id, content, type, created_at').eq('order_id', orderId).order('created_at'),
-        supabase.from('projects').select('id, cover_thumbnail, created_at').eq('order_id', orderId).maybeSingle(),
+        supabase.from('projects').select('id, book_size, cover_thumbnail, created_at').eq('order_id', orderId).maybeSingle(),
       ]).then(([{ data: o }, { data: n }, { data: p }]) => {
         if (!o) { router.replace('/dashboard'); return }
         const ord = o as Order
@@ -229,7 +230,8 @@ export default function PedidoAdminPage() {
       chico_h: 'chico', mediano_h: 'mediano', grande_h: 'grande',
       vertical: 'vertical', cuadrado: 'cuadrado',
     }
-    const bookSizeId = SIZE_MAP[order?.size ?? ''] ?? 'vertical'
+    // Use the project's own book_size (set when designed), NOT the order's size
+    const bookSizeId = project.book_size ?? SIZE_MAP[order?.size ?? ''] ?? 'vertical'
     sessionStorage.setItem('zeika_project_id', project.id)
     sessionStorage.setItem('zeika_book_size', bookSizeId)
     sessionStorage.setItem('zeika_return_path', `/dashboard/pedidos/${orderId}`)

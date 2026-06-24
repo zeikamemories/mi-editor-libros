@@ -576,30 +576,37 @@ export default function ProyectoPage() {
             ) : (
               <>
                 <div className="mpd-preview-row">
-                  <div className="mpd-preview-frame-box">
-                    {coverThumbnail && (
-                      <div className="mpd-preview-spread">
-                        {coverThumbnail.left && (
-                          // eslint-disable-next-line @next/next/no-img-element
-                          <img src={coverThumbnail.left} alt="Portada izquierda" className="mpd-preview-spread__page" />
-                        )}
-                        {coverThumbnail.right && (
-                          // eslint-disable-next-line @next/next/no-img-element
-                          <img src={coverThumbnail.right} alt="Portada derecha" className="mpd-preview-spread__page" />
-                        )}
-                      </div>
-                    )}
+                  <div className="mpd-preview-card">
+                    <div className="mpd-preview-thumb">
+                      {coverThumbnail ? (
+                        <>
+                          {coverThumbnail.left && (
+                            // eslint-disable-next-line @next/next/no-img-element
+                            <img src={coverThumbnail.left} alt="Portada izquierda" className="mpd-preview-thumb-page" />
+                          )}
+                          {coverThumbnail.right && (
+                            // eslint-disable-next-line @next/next/no-img-element
+                            <img src={coverThumbnail.right} alt="Portada derecha" className="mpd-preview-thumb-page" />
+                          )}
+                        </>
+                      ) : (
+                        <div className="mpd-preview-thumb-empty" />
+                      )}
+                    </div>
+                    <div className="mpd-preview-card-info">
+                      <div className="mpd-preview-card-name">{order.book_name}</div>
+                      {order.preview_url ? (
+                        <a
+                          className="mpd-preview-link"
+                          href={`${order.preview_url}?orderId=${order.id}`}
+                        >
+                          Ver el libro completo ›
+                        </a>
+                      ) : (
+                        <span className="mpd-preview-pending">Preview no disponible aún</span>
+                      )}
+                    </div>
                   </div>
-                  {order.preview_url ? (
-                    <a
-                      className="mpd-preview-link"
-                      href={`${order.preview_url}?orderId=${order.id}`}
-                    >
-                      Ver el libro completo ›
-                    </a>
-                  ) : (
-                    <span className="mpd-preview-pending">Preview no disponible aún</span>
-                  )}
                 </div>
 
                 {canApprove && (

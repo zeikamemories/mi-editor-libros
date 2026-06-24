@@ -40,28 +40,39 @@ function fmt(n: number) {
 
 export default function MisProyectosPage() {
   const router = useRouter()
-  const [orders,    setOrders]    = useState<Order[]>([])
-  const [loading,   setLoading]   = useState(true)
-  const [userName,  setUserName]  = useState('')
-  const [userEmail, setUserEmail] = useState('')
+  const [orders,     setOrders]     = useState<Order[]>([])
+  const [projectMap, setProjectMap] = useState<Record<string, { left?: string; right?: string }>>({})
+  const [loading,    setLoading]    = useState(true)
+  const [userName,   setUserName]   = useState('')
+  const [userEmail,  setUserEmail]  = useState('')
 
   useEffect(() => {
-    supabase.auth.getSession().then(({ data: { session } }) => {
+    supabase.auth.getSession().then(async ({ data: { session } }) => {
       if (!session?.user) { router.replace('/orden'); return }
-      const meta  = session.user.user_metadata
-      const name  = meta?.full_name || meta?.name || session.user.email?.split('@')[0] || ''
-      setUserName(name)
+      const meta = session.user.user_metadata
+      setUserName(meta?.full_name || meta?.name || session.user.email?.split('@')[0] || '')
       setUserEmail(session.user.email ?? '')
 
-      supabase
-        .from('orders')
-        .select('id, book_name, size, status, price_total, created_at')
-        .eq('user_id', session.user.id)
-        .order('created_at', { ascending: false })
-        .then(({ data }) => {
-          setOrders((data ?? []) as Order[])
-          setLoading(false)
-        })
+      const [{ data: ordersData }, { data: projectsData }] = await Promise.all([
+        supabase
+          .from('orders')
+          .select('id, book_name, size, status, price_total, created_at')
+          .eq('user_id', session.user.id)
+          .order('created_at', { ascending: false }),
+        supabase
+          .from('projects')
+          .select('order_id, cover_thumbnail')
+          .not('order_id', 'is', null),
+      ])
+
+      setOrders((ordersData ?? []) as Order[])
+
+      const map: Record<string, { left?: string; right?: string }> = {}
+      for (const p of projectsData ?? []) {
+        if (p.order_id && p.cover_thumbnail) map[p.order_id] = p.cover_thumbnail
+      }
+      setProjectMap(map)
+      setLoading(false)
     })
   }, [router])
 
@@ -75,7 +86,6 @@ export default function MisProyectosPage() {
     <div className="mp-root">
       <Navbar hideLinks />
 
-      {/* User strip */}
       <div className="mp-user-strip">
         <div className="mp-user-strip__initial">{firstName[0]?.toUpperCase() ?? '?'}</div>
         <div className="mp-user-strip__info">
@@ -87,30 +97,43 @@ export default function MisProyectosPage() {
       <main className="mp-main">
         <h1 className="mp-title">Mis proyectos</h1>
 
-        <div className="mp-list">
+        <div className="mp-grid">
           {orders.map(order => {
-            const delivered = order.status === 'entregado'
+            const thumb = projectMap[order.id]
             return (
               <a
                 key={order.id}
                 href={`/mis-proyectos/${order.id}`}
-                className={`mp-card${delivered ? ' mp-card--delivered' : ''}`}
+                className={`mp-card${order.status === 'entregado' ? ' mp-card--delivered' : ''}`}
               >
-                <div className="mp-card__row1">
-                  <span className="mp-card__name">{order.book_name}</span>
-                  <div className="mp-card__row1-right">
-                    <span className={`mp-badge mp-badge--${order.status}`}>
-                      {STATUS_LABEL[order.status] ?? order.status}
-                    </span>
-                    <span className="mp-card__arrow">›</span>
+                <div className="mp-card__thumb-wrap">
+                  <div className="mp-card__thumb">
+                    {thumb ? (
+                      <>
+                        {thumb.left && (
+                          // eslint-disable-next-line @next/next/no-img-element
+                          <img src={thumb.left} alt="" className="mp-card__thumb-page" />
+                        )}
+                        {thumb.right && (
+                          // eslint-disable-next-line @next/next/no-img-element
+                          <img src={thumb.right} alt="" className="mp-card__thumb-page" />
+                        )}
+                      </>
+                    ) : (
+                      <div className="mp-card__thumb-empty" />
+                    )}
                   </div>
+                  <span className={`mp-badge mp-badge--${order.status} mp-card__badge`}>
+                    {STATUS_LABEL[order.status] ?? order.status}
+                  </span>
                 </div>
-                {!delivered && (
-                  <div className="mp-card__row2">
+                <div className="mp-card__info">
+                  <span className="mp-card__name">{order.book_name}</span>
+                  <div className="mp-card__info-bottom">
                     <span className="mp-card__format">{SIZE_SHORT[order.size] ?? order.size}</span>
                     <span className="mp-card__price-pill">{fmt(order.price_total)}</span>
                   </div>
-                )}
+                </div>
               </a>
             )
           })}

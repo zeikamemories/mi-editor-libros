@@ -61,7 +61,9 @@ export default function EditorPage() {
   const [dbLoaded,  setDbLoaded] = useState(false)
   const dbLoadedRef              = useRef(false)
   const supabaseSaveTimer        = useRef<ReturnType<typeof setTimeout> | null>(null)
-  const [saveStatus, setSaveStatus] = useState<'idle' | 'saving' | 'saved'>('idle')
+  const [saveStatus,   setSaveStatus]   = useState<'idle' | 'saving' | 'saved'>('idle')
+  const [projectName,  setProjectName]  = useState('')
+  const [orderIdForNr, setOrderIdForNr] = useState<string | null>(null)
   const saveStatusTimerRef       = useRef<ReturnType<typeof setTimeout> | null>(null)
 
   // ── Preview ────────────────────────────────────────────────────────────────
@@ -225,13 +227,17 @@ export default function EditorPage() {
       return
     }
     projectIdRef.current = id
-    supabase.from('projects').select('photos, spreads, total_spreads, order_id').eq('id', id).single()
+    supabase.from('projects').select('name, photos, spreads, total_spreads, order_id').eq('id', id).single()
       .then(({ data, error }) => {
         if (!error && data) {
+          if (data.name)   setProjectName(data.name)
           if (data.photos) setPhotos(data.photos as Photo[])
           if (data.spreads) spreadsData.current = data.spreads as Record<number, SpreadSnapshot>
           if (typeof data.total_spreads === 'number') setTotalContentSpreads(data.total_spreads)
-          if (data.order_id) sessionStorage.setItem('zeika_return_path', `/dashboard/pedidos/${data.order_id}`)
+          if (data.order_id) {
+            setOrderIdForNr(data.order_id)
+            sessionStorage.setItem('zeika_return_path', `/dashboard/pedidos/${data.order_id}`)
+          }
         }
         dbLoadedRef.current = true
         setDbLoaded(true)
@@ -1132,7 +1138,7 @@ export default function EditorPage() {
     <LanguageProvider>
     <>
     <div className="editor-root">
-      <Topbar onPreview={handleOpenPreview} onExportJpg={handleExportJpg} onExportPdf={handleExportPdf} isExporting={isExporting} projectId={projectIdRef.current ?? ''} onShare={handleShare} onTourOpen={() => setTourOpen(true)} saveStatus={saveStatus} onBack={handleBack} />
+      <Topbar onPreview={handleOpenPreview} onExportJpg={handleExportJpg} onExportPdf={handleExportPdf} isExporting={isExporting} projectId={projectIdRef.current ?? ''} onShare={handleShare} onTourOpen={() => setTourOpen(true)} saveStatus={saveStatus} onBack={handleBack} projectName={projectName} bookSizeLabel={bookSize.nombre} orderId={orderIdForNr} />
 
       <div className="editor-body">
         <PhotoPanel

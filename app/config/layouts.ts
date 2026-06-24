@@ -81,11 +81,14 @@ const layout_2_1: Layout = {
   nombre: 'Dos columnas retrato',
   photoCount: 2,
   orientation: 'any',
-  // 2 cols × 1 row, portrait
-  frames: [
-    { x: cx(0, 2), y: M, w: fw(2), h: 1 - M * 2 },
-    { x: cx(1, 2), y: M, w: fw(2), h: 1 - M * 2 },
-  ],
+  frames: (() => {
+    const h = 0.56
+    const y = (1 - h) / 2
+    return [
+      { x: cx(0, 2), y, w: fw(2), h },
+      { x: cx(1, 2), y, w: fw(2), h },
+    ]
+  })(),
 };
 
 const layout_2_2: Layout = {
@@ -267,6 +270,244 @@ const layout_4_4: Layout = {
   })(),
 };
 
+// ─── 1 FOTO (editoriales) ──────────────────────────────────────────────────
+
+const layout_1_5: Layout = {
+  id: 'layout_1_5',
+  nombre: 'Cine',
+  photoCount: 1,
+  orientation: 'any',
+  // Full-bleed cinematic horizontal strip
+  frames: [{ x: 0, y: 0.27, w: 1, h: 0.46 }],
+}
+
+const layout_1_6: Layout = {
+  id: 'layout_1_6',
+  nombre: 'Sangría izquierda',
+  photoCount: 1,
+  orientation: 'any',
+  // Photo bleeds full left + vertical, white space on right
+  frames: [{ x: 0, y: 0, w: 0.70, h: 1 }],
+}
+
+const layout_1_7: Layout = {
+  id: 'layout_1_7',
+  nombre: 'Polaroid',
+  photoCount: 1,
+  orientation: 'any',
+  // Centered, big bottom white margin
+  frames: [{ x: 0.10, y: 0.07, w: 0.80, h: 0.68 }],
+}
+
+const layout_1_8: Layout = {
+  id: 'layout_1_8',
+  nombre: 'Sangría derecha',
+  photoCount: 1,
+  orientation: 'any',
+  // Photo bleeds full right + vertical, white space on left
+  frames: [{ x: 0.30, y: 0, w: 0.70, h: 1 }],
+}
+
+// ─── 2 FOTOS (editoriales) ─────────────────────────────────────────────────
+
+const layout_2_5: Layout = {
+  id: 'layout_2_5',
+  nombre: 'Asimétrico 62/38',
+  photoCount: 2,
+  orientation: 'any',
+  frames: (() => {
+    const avail = 1 - M * 2 - G
+    const leftW = avail * 0.62
+    const rightW = avail * 0.38
+    return [
+      { x: M,                y: M, w: leftW,  h: 1 - M * 2 },
+      { x: M + leftW + G,    y: M, w: rightW, h: 1 - M * 2 },
+    ]
+  })(),
+}
+
+const layout_2_6: Layout = {
+  id: 'layout_2_6',
+  nombre: 'Escalonado',
+  photoCount: 2,
+  orientation: 'any',
+  // Photo 1 top-left, Photo 2 bottom-right — diagonal feel
+  frames: (() => {
+    const colW  = fw(2)
+    const frameH = 0.56
+    return [
+      { x: cx(0, 2), y: M,                     w: colW, h: frameH },
+      { x: cx(1, 2), y: 1 - M - frameH,        w: colW, h: frameH },
+    ]
+  })(),
+}
+
+const layout_2_7: Layout = {
+  id: 'layout_2_7',
+  nombre: 'Díptico completo',
+  photoCount: 2,
+  orientation: 'any',
+  // Full bleed, no gap, exactly half each
+  frames: [
+    { x: 0,   y: 0, w: 0.5, h: 1 },
+    { x: 0.5, y: 0, w: 0.5, h: 1 },
+  ],
+}
+
+const layout_2_8: Layout = {
+  id: 'layout_2_8',
+  nombre: 'Grande + detalle',
+  photoCount: 2,
+  orientation: 'any',
+  // Big top, small bottom-right
+  frames: (() => {
+    const available = 1 - M * 2 - G
+    const bigH   = available * 0.68
+    const smallH = available * 0.32
+    const smallW = fw(2)
+    return [
+      { x: M,          y: M,               w: 1 - M * 2, h: bigH   },
+      { x: cx(1, 2),   y: M + bigH + G,    w: smallW,    h: smallH },
+    ]
+  })(),
+}
+
+// ─── 3 FOTOS (editoriales) ─────────────────────────────────────────────────
+
+const layout_3_5: Layout = {
+  id: 'layout_3_5',
+  nombre: 'Columna editorial',
+  photoCount: 3,
+  orientation: 'any',
+  // 1 large left + 2 stacked right (asymmetric widths)
+  frames: (() => {
+    const avail  = 1 - M * 2 - G
+    const leftW  = avail * 0.55
+    const rightW = avail * 0.45
+    const rx     = M + leftW + G
+    return [
+      { x: M,  y: M,        w: leftW,  h: 1 - M * 2 },
+      { x: rx, y: ry(0, 2), w: rightW, h: fh(2)     },
+      { x: rx, y: ry(1, 2), w: rightW, h: fh(2)     },
+    ]
+  })(),
+}
+
+const layout_3_6: Layout = {
+  id: 'layout_3_6',
+  nombre: 'T invertida',
+  photoCount: 3,
+  orientation: 'any',
+  // 2 small top + 1 wide bottom
+  frames: (() => {
+    const available = 1 - M * 2 - G
+    const topH = available * 0.38
+    const botH = available * 0.62
+    return [
+      { x: cx(0, 2), y: M,             w: fw(2),      h: topH },
+      { x: cx(1, 2), y: M,             w: fw(2),      h: topH },
+      { x: M,        y: M + topH + G,  w: 1 - M * 2,  h: botH },
+    ]
+  })(),
+}
+
+const layout_3_7: Layout = {
+  id: 'layout_3_7',
+  nombre: 'Franja + dos',
+  photoCount: 3,
+  orientation: 'any',
+  // Full-bleed strip top, 2 columns with margin below
+  frames: (() => {
+    const stripH = 0.42
+    const botY   = stripH + G
+    const botH   = 1 - botY - M
+    return [
+      { x: 0,          y: 0,   w: 1,    h: stripH },
+      { x: cx(0, 2),   y: botY, w: fw(2), h: botH  },
+      { x: cx(1, 2),   y: botY, w: fw(2), h: botH  },
+    ]
+  })(),
+}
+
+const layout_3_8: Layout = {
+  id: 'layout_3_8',
+  nombre: 'Tres columnas desiguales',
+  photoCount: 3,
+  orientation: 'any',
+  // Columns: narrow / wide / narrow — editorial magazine feel
+  frames: (() => {
+    const avail = 1 - M * 2 - G * 2
+    const w1 = avail * 0.24
+    const w2 = avail * 0.52
+    const w3 = avail * 0.24
+    return [
+      { x: M,                     y: M, w: w1, h: 1 - M * 2 },
+      { x: M + w1 + G,            y: M, w: w2, h: 1 - M * 2 },
+      { x: M + w1 + G + w2 + G,   y: M, w: w3, h: 1 - M * 2 },
+    ]
+  })(),
+}
+
+// ─── 4 FOTOS (editoriales) ─────────────────────────────────────────────────
+
+const layout_4_5: Layout = {
+  id: 'layout_4_5',
+  nombre: 'Tres pequeñas + grande',
+  photoCount: 4,
+  orientation: 'any',
+  // 3 small top + 1 wide bottom
+  frames: (() => {
+    const available = 1 - M * 2 - G
+    const topH = available * 0.36
+    const botH = available * 0.64
+    return [
+      { x: cx(0, 3), y: M,            w: fw(3),     h: topH },
+      { x: cx(1, 3), y: M,            w: fw(3),     h: topH },
+      { x: cx(2, 3), y: M,            w: fw(3),     h: topH },
+      { x: M,        y: M + topH + G, w: 1 - M * 2, h: botH },
+    ]
+  })(),
+}
+
+const layout_4_6: Layout = {
+  id: 'layout_4_6',
+  nombre: 'Banda + tres',
+  photoCount: 4,
+  orientation: 'any',
+  // Full-bleed strip top, 3 small with margin below
+  frames: (() => {
+    const stripH = 0.44
+    const botY   = stripH + G
+    const botH   = 1 - botY - M
+    return [
+      { x: 0,          y: 0,    w: 1,     h: stripH },
+      { x: cx(0, 3),   y: botY, w: fw(3), h: botH   },
+      { x: cx(1, 3),   y: botY, w: fw(3), h: botH   },
+      { x: cx(2, 3),   y: botY, w: fw(3), h: botH   },
+    ]
+  })(),
+}
+
+const layout_4_7: Layout = {
+  id: 'layout_4_7',
+  nombre: '1 grande + 3 apiladas',
+  photoCount: 4,
+  orientation: 'any',
+  // 1 large left + 3 stacked right
+  frames: (() => {
+    const avail  = 1 - M * 2 - G
+    const leftW  = avail * 0.52
+    const rightW = avail * 0.48
+    const rx     = M + leftW + G
+    return [
+      { x: M,  y: M,        w: leftW,  h: 1 - M * 2 },
+      { x: rx, y: ry(0, 3), w: rightW, h: fh(3)     },
+      { x: rx, y: ry(1, 3), w: rightW, h: fh(3)     },
+      { x: rx, y: ry(2, 3), w: rightW, h: fh(3)     },
+    ]
+  })(),
+}
+
 // ─── 5 FOTOS ───────────────────────────────────────────────────────────────
 
 const layout_5_1: Layout = {
@@ -333,19 +574,68 @@ const layout_5_3: Layout = {
   })(),
 };
 
+const layout_5_4: Layout = {
+  id: 'layout_5_4',
+  nombre: '1 grande + 4 en grilla',
+  photoCount: 5,
+  orientation: 'any',
+  // 1 large left + 2×2 grid right
+  frames: (() => {
+    const avail  = 1 - M * 2 - G
+    const leftW  = avail * 0.50
+    const rightW = avail * 0.50
+    const rx     = M + leftW + G
+    const cellW  = (rightW - G) / 2
+    const cellH  = (1 - M * 2 - G) / 2
+    return [
+      { x: M,             y: M,         w: leftW, h: 1 - M * 2 },
+      { x: rx,            y: ry(0, 2),  w: cellW, h: cellH      },
+      { x: rx + cellW + G,y: ry(0, 2),  w: cellW, h: cellH      },
+      { x: rx,            y: ry(1, 2),  w: cellW, h: cellH      },
+      { x: rx + cellW + G,y: ry(1, 2),  w: cellW, h: cellH      },
+    ]
+  })(),
+}
+
+const layout_5_5: Layout = {
+  id: 'layout_5_5',
+  nombre: 'Editorial 3+2',
+  photoCount: 5,
+  orientation: 'any',
+  // 3 cols full-bleed top + 2 cols full-bleed bottom (unequal heights)
+  frames: (() => {
+    const topH = (1 - G) * 0.52
+    const botH = (1 - G) * 0.48
+    const tw   = (1 - G * 2) / 3
+    const bw   = (1 - G) / 2
+    return [
+      { x: 0,            y: 0,        w: tw,  h: topH },
+      { x: tw + G,       y: 0,        w: tw,  h: topH },
+      { x: tw * 2 + G*2, y: 0,        w: tw,  h: topH },
+      { x: 0,            y: topH + G, w: bw,  h: botH },
+      { x: bw + G,       y: topH + G, w: bw,  h: botH },
+    ]
+  })(),
+}
+
 // ─── Array principal ────────────────────────────────────────────────────────
 
 export const LAYOUTS: Layout[] = [
   // 1 foto
   layout_1_1, layout_1_2, layout_1_3, layout_1_4,
+  layout_1_5, layout_1_6, layout_1_7, layout_1_8,
   // 2 fotos
   layout_2_1, layout_2_2, layout_2_3, layout_2_4,
+  layout_2_5, layout_2_6, layout_2_7, layout_2_8,
   // 3 fotos
   layout_3_1, layout_3_2, layout_3_3, layout_3_4,
+  layout_3_5, layout_3_6, layout_3_7, layout_3_8,
   // 4 fotos
   layout_4_1, layout_4_2, layout_4_3, layout_4_4,
+  layout_4_5, layout_4_6, layout_4_7,
   // 5 fotos
   layout_5_1, layout_5_2, layout_5_3,
+  layout_5_4, layout_5_5,
 ];
 
 export function getLayoutsByCantidad(cantidad: number): Layout[] {

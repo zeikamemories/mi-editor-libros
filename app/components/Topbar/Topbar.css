@@ -169,6 +169,65 @@
 
 /* ── Share popover ───────────────────────────────────────────────────────── */
 
+.topbar-info-wrap {
+  position: relative;
+}
+
+.topbar-info-popover {
+  position: absolute;
+  top: calc(100% + 8px);
+  left: 50%;
+  transform: translateX(-50%);
+  background: var(--color-white);
+  border: 1px solid #e0e0e0;
+  border-radius: 6px;
+  box-shadow: 0 4px 16px rgba(0,0,0,0.12);
+  padding: 12px 16px;
+  min-width: 220px;
+  z-index: 200;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.topbar-info-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 12px;
+}
+
+.topbar-info-key {
+  font-family: var(--font-body);
+  font-size: 10px;
+  font-weight: 500;
+  color: #999;
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+  white-space: nowrap;
+}
+
+.topbar-info-val {
+  font-family: var(--font-body);
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--color-black);
+  text-align: right;
+}
+
+.topbar-help-btn .topbar-help-icon {
+  font-family: var(--font-body);
+  font-size: 15px;
+  font-weight: 600;
+  line-height: 1;
+  display: block;
+  width: 20px;
+  height: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
 .topbar-share-wrap {
   position: relative;
 }
