@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState, useCallback } from 'react'
 import {
-  MessageSquare, Pencil,
+  MessageSquare, Pencil, Undo2,
   ChevronLeft, ChevronRight,
   ChevronsLeft, ChevronsRight,
 } from 'lucide-react'
@@ -31,10 +31,13 @@ interface Props {
   onPageChange?:  (page: number) => void
   // Annotation props — optional, only used on preview/[projectId] page
   annotations?:    Annotation[]
-  onCommentSave?:  (text: string, page: number) => Promise<Annotation | null>
-  onDrawingSave?:  (dataUrl: string, page: number) => Promise<Annotation | null>
+  onCommentSave?:    (content: string, page: number) => Promise<Annotation | null>
+  onCommentUpdate?:  (id: string, content: string) => Promise<boolean>
+  onCommentDelete?:  (id: string) => Promise<void>
+  onDrawingSave?:    (dataUrl: string, page: number) => Promise<Annotation | null>
+  onDrawingDelete?:  (ids: string[]) => Promise<void>
   // Change request — optional, shown when client views preview via orderId link
-  onSaveChanges?:  () => Promise<void>
+  onSaveChanges?:    () => Promise<void>
 }
 
 const TITLEBAR_H  = 50
@@ -80,7 +83,8 @@ function ensureTurnJs(cb: () => void) {
 
 export default function PreviewModal({
   spreadsData, totalSpreads, initialSpread, pageW, pageH, onClose, onPageChange,
-  annotations: initialAnnotations, onCommentSave, onDrawingSave, onSaveChanges,
+  annotations: initialAnnotations, onCommentSave, onCommentUpdate, onCommentDelete,
+  onDrawingSave, onDrawingDelete, onSaveChanges,
 }: Props) {
   const EMPTY_PAGE: PageData = { background: '#ffffff', pageW, pageH, objects: [] }
   const { t } = useLang()
@@ -98,37 +102,64 @@ export default function PreviewModal({
   const hasAnnotations                    = Boolean(onCommentSave)
   const [annotMode,     setAnnotMode]     = useState<'view' | 'comment' | 'draw'>('view')
   const [annotations,   setAnnotations]   = useState<Annotation[]>(initialAnnotations ?? [])
-  const [commentText,   setCommentText]   = useState('')
-  const [savingComment, setSavingComment] = useState(false)
-  const [drawColor,     setDrawColor]     = useState(DRAW_COLORS[0])
-  const [drawSize,      setDrawSize]      = useState(3)
-  const isDrawingRef    = useRef(false)
-  const [savingDrawing,  setSavingDrawing]  = useState(false)
-  const [drawSaveError,  setDrawSaveError]  = useState<string | null>(null)
+  const [commentText,    setCommentText]    = useState('')
+  const [savingComment,  setSavingComment]  = useState(false)
+  const [pendingComment,   setPendingComment]   = useState<{ x: number; y: number } | null>(null)
+  const [hoveredCommentId, setHoveredCommentId] = useState<string | null>(null)
+  const [activeCommentId,  setActiveCommentId]  = useState<string | null>(null)
+  const [editText,         setEditText]         = useState('')
+  const [savingEdit,       setSavingEdit]       = useState(false)
+  const [drawColor,      setDrawColor]      = useState(DRAW_COLORS[0])
+  const [drawSize,       setDrawSize]       = useState(3)
+  const isDrawingRef     = useRef(false)
   const [strokeCount,    setStrokeCount]    = useState(0)
+  const [drawAutoSaved,  setDrawAutoSaved]  = useState(false)
+  const [drawPanelOpen,  setDrawPanelOpen]  = useState(false)
   const drawCanvasRef   = useRef<HTMLCanvasElement>(null)
   const lastDrawPos     = useRef<{ x: number; y: number } | null>(null)
-  // Track strokes as vector data for SVG export (no image conversion needed)
+  // Track strokes as vector data for SVG export
   const strokesRef = useRef<Array<{ color: string; size: number; points: Array<{ x: number; y: number }> }>>([])
   const currentStrokeRef = useRef<{ color: string; size: number; points: Array<{ x: number; y: number }> } | null>(null)
+  const autoSaveTimer  = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const saveParamsRef  = useRef<{ w: number; h: number; page: number }>({ w: 0, h: 0, page: 0 })
 
   useEffect(() => {
     if (initialAnnotations) setAnnotations(initialAnnotations)
   }, [initialAnnotations])
 
-  // Reset stroke counter and errors when entering/leaving draw mode
+  // Reset on mode change
   useEffect(() => {
     setStrokeCount(0)
-    setDrawSaveError(null)
+    setDrawAutoSaved(false)
+    setDrawPanelOpen(annotMode === 'draw')
+    setPendingComment(null)
+    setActiveCommentId(null)
+    setHoveredCommentId(null)
+    setCommentText('')
+    setEditText('')
   }, [annotMode])
 
-  // Clear drawing canvas + strokes when page changes
+  // Clear drawing canvas + strokes when page changes (cancel pending auto-save)
   useEffect(() => {
+    if (autoSaveTimer.current) { clearTimeout(autoSaveTimer.current); autoSaveTimer.current = null }
     const c = drawCanvasRef.current
     if (c) c.getContext('2d')!.clearRect(0, 0, c.width, c.height)
     strokesRef.current = []
     currentStrokeRef.current = null
+    isDrawingRef.current = false
+    lastDrawPos.current  = null
+    setStrokeCount(0)
+    setDrawAutoSaved(false)
+    setPendingComment(null)
+    setActiveCommentId(null)
+    setHoveredCommentId(null)
+    setEditText('')
   }, [currentPage])
+
+  // Clean up timer on unmount
+  useEffect(() => () => {
+    if (autoSaveTimer.current) clearTimeout(autoSaveTimer.current)
+  }, [])
 
   // ── Scale ──────────────────────────────────────────────────────────────────
   useEffect(() => {
@@ -297,6 +328,8 @@ export default function PreviewModal({
 
   function onDrawStart(e: React.PointerEvent<HTMLCanvasElement>) {
     e.currentTarget.setPointerCapture(e.pointerId)
+    ;(e.currentTarget as any)._capturedPointerId = e.pointerId
+    setDrawPanelOpen(false)
     const pos = getDrawPos(e)
     lastDrawPos.current  = pos
     isDrawingRef.current = true
@@ -333,63 +366,165 @@ export default function PreviewModal({
       strokesRef.current.push(currentStrokeRef.current)
       currentStrokeRef.current = null
     }
+    // Auto-save strokes after 800ms of inactivity
+    if (onDrawingSave && strokesRef.current.length > 0) {
+      const canvas = drawCanvasRef.current
+      if (canvas) saveParamsRef.current = { w: canvas.width, h: canvas.height, page: currentPage }
+      if (autoSaveTimer.current) clearTimeout(autoSaveTimer.current)
+      autoSaveTimer.current = setTimeout(saveCurrentStrokes, 800)
+    }
   }
 
-  function clearDrawCanvas() {
+  async function saveCurrentStrokes() {
+    // Don't interrupt an active stroke — onDrawEnd will reschedule after pointer-up
+    if (isDrawingRef.current) return
+    if (!onDrawingSave || strokesRef.current.length === 0) return
+    const { w, h, page } = saveParamsRef.current
+    if (!w || !h) return
+
+    // Snapshot and atomically clear pending strokes before the async call
+    // so a concurrent stroke doesn't get wiped if the save takes time
+    const strokes = strokesRef.current.splice(0)
+
+    const paths = strokes.map(s => {
+      const pts = s.points
+      if (pts.length === 0) return ''
+      const d = pts.length === 1
+        ? `M${pts[0].x},${pts[0].y} l0.1,0.1`
+        : `M${pts[0].x},${pts[0].y} ` + pts.slice(1).map(p => `L${p.x},${p.y}`).join(' ')
+      return `<path d="${d}" stroke="${s.color}" stroke-width="${s.size}" fill="none" stroke-linecap="round" stroke-linejoin="round"/>`
+    }).join('')
+    const svg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${w} ${h}" preserveAspectRatio="none">${paths}</svg>`
+    const ann = await onDrawingSave(svg, page)
+    if (ann) {
+      setAnnotations(prev => [...prev, ann])
+      setStrokeCount(0)
+      setDrawAutoSaved(true)
+      // Only clear canvas if the user isn't mid-stroke during the async wait
+      if (!isDrawingRef.current) {
+        const c = drawCanvasRef.current
+        if (c) c.getContext('2d')!.clearRect(0, 0, c.width, c.height)
+      }
+    } else {
+      // Save failed — put strokes back so they aren't lost
+      strokesRef.current = [...strokes, ...strokesRef.current]
+    }
+  }
+
+  function redrawCanvas() {
     const c = drawCanvasRef.current
     if (!c) return
-    c.getContext('2d')!.clearRect(0, 0, c.width, c.height)
-    strokesRef.current       = []
-    currentStrokeRef.current = null
-    setStrokeCount(0)
+    const ctx = c.getContext('2d')!
+    ctx.clearRect(0, 0, c.width, c.height)
+    for (const s of strokesRef.current) {
+      if (s.points.length === 0) continue
+      ctx.strokeStyle = s.color
+      ctx.lineWidth   = s.size
+      ctx.lineCap     = 'round'
+      ctx.lineJoin    = 'round'
+      if (s.points.length === 1) {
+        ctx.beginPath()
+        ctx.arc(s.points[0].x, s.points[0].y, s.size / 2, 0, Math.PI * 2)
+        ctx.fillStyle = s.color
+        ctx.fill()
+      } else {
+        ctx.beginPath()
+        ctx.moveTo(s.points[0].x, s.points[0].y)
+        for (let i = 1; i < s.points.length; i++) ctx.lineTo(s.points[i].x, s.points[i].y)
+        ctx.stroke()
+      }
+    }
+  }
+
+  function undoLastStroke() {
+    if (autoSaveTimer.current) { clearTimeout(autoSaveTimer.current); autoSaveTimer.current = null }
+
+    if (strokesRef.current.length > 0) {
+      // Still unsaved strokes on canvas — undo the last one
+      strokesRef.current.pop()
+      setStrokeCount(n => Math.max(0, n - 1))
+      redrawCanvas()
+      // Reschedule auto-save if strokes remain
+      if (strokesRef.current.length > 0 && onDrawingSave) {
+        const canvas = drawCanvasRef.current
+        if (canvas) saveParamsRef.current = { w: canvas.width, h: canvas.height, page: currentPage }
+        autoSaveTimer.current = setTimeout(saveCurrentStrokes, 800)
+      }
+    } else {
+      // All strokes already saved as annotations — remove the last saved drawing
+      const lastDrawing = pageDrawings[pageDrawings.length - 1]
+      if (!lastDrawing) return
+      setAnnotations(prev => prev.filter(a => a.id !== lastDrawing.id))
+      onDrawingDelete?.([lastDrawing.id])
+      setDrawAutoSaved(false)
+    }
+  }
+
+  function parseComment(c: Annotation): { text: string; x: number; y: number } {
+    try {
+      if (c.content.startsWith('{')) {
+        const p = JSON.parse(c.content)
+        return { text: p.text ?? c.content, x: p.x ?? 0.5, y: p.y ?? 0.5 }
+      }
+    } catch {}
+    return { text: c.content, x: 0.5, y: 0.5 }
+  }
+
+  function handleBookClick(e: React.MouseEvent<HTMLDivElement>) {
+    if (annotMode !== 'comment' || pendingComment) return
+    const rect = e.currentTarget.getBoundingClientRect()
+    setPendingComment({
+      x: (e.clientX - rect.left) / rect.width,
+      y: (e.clientY - rect.top)  / rect.height,
+    })
+    setActiveCommentId(null)
   }
 
   async function handleSaveComment() {
-    if (!commentText.trim() || !onCommentSave) return
+    if (!commentText.trim() || !onCommentSave || !pendingComment) return
     setSavingComment(true)
-    const ann = await onCommentSave(commentText.trim(), currentPage)
+    const content = JSON.stringify({ text: commentText.trim(), x: pendingComment.x, y: pendingComment.y })
+    const ann = await onCommentSave(content, spreadLeftPage)
     if (ann) {
       setAnnotations(prev => [...prev, ann])
       setCommentText('')
-      setAnnotMode('view')
+      setPendingComment(null)
     }
     setSavingComment(false)
   }
 
-  async function handleSaveDrawing() {
-    if (!drawCanvasRef.current || !onDrawingSave || strokesRef.current.length === 0) return
-    setDrawSaveError(null)
-    setSavingDrawing(true)
-    try {
-      // Build SVG from vector strokes — transparent background, no Cloudinary needed
-      const w = drawCanvasRef.current.width
-      const h = drawCanvasRef.current.height
-      const paths = strokesRef.current.map(s => {
-        if (s.points.length === 0) return ''
-        const pts = s.points
-        const d = pts.length === 1
-          ? `M${pts[0].x},${pts[0].y} l0.1,0.1`
-          : `M${pts[0].x},${pts[0].y} ` + pts.slice(1).map(p => `L${p.x},${p.y}`).join(' ')
-        return `<path d="${d}" stroke="${s.color}" stroke-width="${s.size}" fill="none" stroke-linecap="round" stroke-linejoin="round"/>`
-      }).join('')
-      const svg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${w} ${h}" preserveAspectRatio="none">${paths}</svg>`
-
-      const ann = await onDrawingSave(svg, currentPage)
-      if (ann) {
-        setAnnotations(prev => [...prev, ann])
-        clearDrawCanvas()
-        setAnnotMode('view')
-      } else {
-        setDrawSaveError('No se pudo guardar. Revisá tu conexión.')
-      }
-    } catch (err: any) {
-      setDrawSaveError('Error: ' + (err?.message ?? 'desconocido'))
+  async function handleUpdateComment() {
+    if (!editText.trim() || !onCommentUpdate || !activeCommentId) return
+    setSavingEdit(true)
+    const existing = annotations.find(a => a.id === activeCommentId)
+    if (!existing) { setSavingEdit(false); return }
+    const { x, y } = parseComment(existing)
+    const newContent = JSON.stringify({ text: editText.trim(), x, y })
+    const ok = await onCommentUpdate(activeCommentId, newContent)
+    if (ok) {
+      setAnnotations(prev => prev.map(a => a.id === activeCommentId ? { ...a, content: newContent } : a))
+      setActiveCommentId(null)
+      setEditText('')
     }
-    setSavingDrawing(false)
+    setSavingEdit(false)
   }
 
-  const pageComments  = annotations.filter(a => a.page_number === currentPage && a.type === 'comment')
-  const pageDrawings  = annotations.filter(a => a.page_number === currentPage && a.type === 'drawing')
+  async function handleDeleteComment(id: string) {
+    if (onCommentDelete) await onCommentDelete(id)
+    setAnnotations(prev => prev.filter(a => a.id !== id))
+    setActiveCommentId(null)
+    setEditText('')
+  }
+
+// Turn.js can report either the left or right page of the spread depending on
+  // turn.js even pages (2, 4, 6…) are left pages; odd pages > 1 (3, 5, 7…) are right pages.
+  // Normalize to the left page. Cover (page 1) and back cover are single pages — no +1 pair.
+  const spreadLeftPage  = currentPage > 1 && currentPage % 2 === 1 ? currentPage - 1 : currentPage
+  const isSinglePage    = currentPage <= 1 || currentPage >= totalSpreads * 2
+  const spreadRightPage = isSinglePage ? spreadLeftPage : spreadLeftPage + 1
+  const onSpread        = (a: Annotation) => a.page_number === spreadLeftPage || a.page_number === spreadRightPage
+  const pageComments    = annotations.filter(a => onSpread(a) && a.type === 'comment')
+  const pageDrawings    = annotations.filter(a => onSpread(a) && a.type === 'drawing')
 
   // ── Sizes ──────────────────────────────────────────────────────────────────
   const canvasW = Math.round(pageW * scale)
@@ -398,9 +533,9 @@ export default function PreviewModal({
   const isLast  = currentPage >= totalSpreads * 2
 
   const pageLabel = (() => {
-    if (currentPage <= 1)                return t.cover
-    if (currentPage >= totalSpreads * 2) return t.back
-    const spreadNum = Math.floor((currentPage - 1) / 2)
+    if (spreadLeftPage <= 1)                  return t.cover
+    if (spreadLeftPage >= totalSpreads * 2)   return t.back
+    const spreadNum = Math.floor((spreadLeftPage - 1) / 2)
     return `${t.page} ${spreadNum * 2 + 1} — ${spreadNum * 2 + 2}`
   })()
 
@@ -471,60 +606,123 @@ export default function PreviewModal({
                 onPointerCancel={onDrawEnd}
               />
             )}
+
+            {/* Comment pins — always visible when there are comments on this page */}
+            {pageComments.map((c, i) => {
+              const { text, x, y } = parseComment(c)
+              const isActive  = activeCommentId === c.id
+              const isHovered = hoveredCommentId === c.id && !isActive
+              return (
+                <div key={c.id}>
+                  <div
+                    className={`preview-comment-pin${isActive ? ' preview-comment-pin--active' : ''}`}
+                    style={{ left: `${x * 100}%`, top: `${y * 100}%` }}
+                    onMouseEnter={() => setHoveredCommentId(c.id)}
+                    onMouseLeave={() => setHoveredCommentId(null)}
+                    onClick={e => {
+                      e.stopPropagation()
+                      if (isActive) { setActiveCommentId(null); setEditText('') }
+                      else { setActiveCommentId(c.id); setEditText(text); setPendingComment(null) }
+                    }}
+                  >
+                    {i + 1}
+                  </div>
+                  {isHovered && (
+                    <div className="preview-comment-tooltip" style={{ left: `${x * 100}%`, top: `${y * 100}%` }}>
+                      {text}
+                    </div>
+                  )}
+                  {isActive && (
+                    <div
+                      className="preview-comment-popup"
+                      style={{ left: `${x * 100}%`, top: `${y * 100}%` }}
+                      onClick={e => e.stopPropagation()}
+                    >
+                      <textarea
+                        className="preview-comment-popup-input"
+                        value={editText}
+                        onChange={e => setEditText(e.target.value)}
+                        onKeyDown={e => {
+                          if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); handleUpdateComment() }
+                          if (e.key === 'Escape') { setActiveCommentId(null); setEditText('') }
+                        }}
+                        autoFocus
+                        rows={2}
+                      />
+                      <div className="preview-comment-popup-actions">
+                        <button
+                          className="preview-comment-popup-delete"
+                          onClick={() => handleDeleteComment(c.id)}
+                          title="Eliminar"
+                        >🗑</button>
+                        <button
+                          className="preview-comment-popup-send"
+                          onClick={handleUpdateComment}
+                          disabled={!editText.trim() || savingEdit}
+                        >
+                          {savingEdit ? '…' : '↑'}
+                        </button>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              )
+            })}
+
+            {/* Comment mode extras: click overlay + pending popup */}
+            {annotMode === 'comment' && hasAnnotations && (
+              <>
+                <div className="preview-comment-overlay" onClick={handleBookClick} />
+                {pendingComment && (
+                  <div
+                    className="preview-comment-popup"
+                    style={{ left: `${pendingComment.x * 100}%`, top: `${pendingComment.y * 100}%` }}
+                    onClick={e => e.stopPropagation()}
+                  >
+                    <textarea
+                      className="preview-comment-popup-input"
+                      placeholder="Agregá un comentario..."
+                      value={commentText}
+                      onChange={e => setCommentText(e.target.value)}
+                      onKeyDown={e => {
+                        if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); handleSaveComment() }
+                        if (e.key === 'Escape') { setPendingComment(null); setCommentText('') }
+                      }}
+                      autoFocus
+                      rows={2}
+                    />
+                    <div className="preview-comment-popup-actions">
+                      <button className="preview-comment-popup-cancel" onClick={() => { setPendingComment(null); setCommentText('') }}>✕</button>
+                      <button
+                        className="preview-comment-popup-send"
+                        onClick={handleSaveComment}
+                        disabled={!commentText.trim() || savingComment}
+                      >
+                        {savingComment ? '…' : '↑'}
+                      </button>
+                    </div>
+                  </div>
+                )}
+              </>
+            )}
           </div>
         )}
       </div>
 
-      {/* ── Annotation sidebar — comment or draw mode ── */}
-      {hasAnnotations && annotMode !== 'view' && (
-        <div className="preview-annot-sidebar">
-          {annotMode === 'comment' && (
-            <>
-              <div className="preview-annot-section">
-                <span className="preview-annot-label">Comentario — {pageLabel}</span>
-                <textarea
-                  className="preview-comment-input"
-                  placeholder="Escribí tu comentario sobre esta página..."
-                  value={commentText}
-                  onChange={e => setCommentText(e.target.value)}
-                  autoFocus
-                />
-                <button
-                  className="preview-save-btn"
-                  onClick={handleSaveComment}
-                  disabled={!commentText.trim() || savingComment}
-                >
-                  {savingComment ? 'Guardando...' : 'Guardar comentario'}
-                </button>
-              </div>
-
-              {pageComments.length > 0 && (
-                <div className="preview-annot-section">
-                  <span className="preview-annot-label">Comentarios en esta página</span>
-                  {pageComments.map(c => (
-                    <div key={c.id} className="preview-comment-item">
-                      <p className="preview-comment-text">{c.content}</p>
-                      <span className="preview-comment-date">
-                        {new Date(c.created_at).toLocaleDateString('es-AR')}
-                      </span>
-                    </div>
-                  ))}
-                </div>
-              )}
-            </>
-          )}
+      {/* ── Draw panel sidebar ── */}
+      {hasAnnotations && annotMode === 'draw' && drawPanelOpen && (
+        <div className="preview-annot-sidebar preview-annot-sidebar--draw">
 
           {annotMode === 'draw' && (
             <div className="preview-annot-section">
               <span className="preview-annot-label">Dibujar — {pageLabel}</span>
               <span className="preview-annot-hint">
-                {strokeCount === 0
-                  ? 'Hacé click sobre el libro para dibujar'
-                  : `✓ ${strokeCount} trazo${strokeCount > 1 ? 's' : ''} — listo para guardar`}
+                {strokeCount === 0 && !drawAutoSaved
+                  ? 'Dibujá sobre el libro — se guarda solo'
+                  : drawAutoSaved
+                    ? '✓ Guardado'
+                    : `${strokeCount} trazo${strokeCount > 1 ? 's' : ''} — guardando...`}
               </span>
-              {drawSaveError && (
-                <span className="preview-draw-error">{drawSaveError}</span>
-              )}
               <div className="preview-color-row">
                 {DRAW_COLORS.map(c => (
                   <button
@@ -534,6 +732,14 @@ export default function PreviewModal({
                     onClick={() => setDrawColor(c)}
                   />
                 ))}
+                <button
+                  className="preview-undo-btn"
+                  onClick={undoLastStroke}
+                  disabled={strokeCount === 0 && pageDrawings.length === 0}
+                  title="Deshacer último trazo"
+                >
+                  <Undo2 size={15} strokeWidth={1.5} />
+                </button>
               </div>
               <div className="preview-size-row">
                 {[2, 4, 8].map(s => (
@@ -545,12 +751,6 @@ export default function PreviewModal({
                     <span style={{ width: s * 2.5, height: s * 2.5, borderRadius: '50%', background: drawColor, display: 'block' }} />
                   </button>
                 ))}
-              </div>
-              <div className="preview-draw-actions">
-                <button className="preview-clear-btn" onClick={clearDrawCanvas} disabled={savingDrawing}>Limpiar</button>
-                <button className="preview-save-btn" onClick={handleSaveDrawing} disabled={savingDrawing}>
-                  {savingDrawing ? 'Guardando...' : 'Guardar dibujo'}
-                </button>
               </div>
             </div>
           )}

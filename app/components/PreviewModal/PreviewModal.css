@@ -120,6 +120,11 @@
   flex-direction: column;
 }
 
+.preview-annot-sidebar--draw {
+  bottom: auto;
+  height: auto;
+}
+
 .preview-annot-section {
   padding: 16px 20px;
   border-bottom: 1px solid rgba(0, 0, 0, 0.07);
@@ -224,44 +229,145 @@
 
 .preview-size-btn--active { border-color: #282828; }
 
-.preview-draw-actions {
+.preview-undo-btn {
+  width: 24px;
+  height: 24px;
+  background: none;
+  border: none;
+  border-radius: 50%;
   display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  color: #282828;
+  margin-left: 6px;
+  flex-shrink: 0;
+}
+.preview-undo-btn:disabled { opacity: 0.3; cursor: default; }
+.preview-undo-btn:not(:disabled):hover { background: #ebebeb; }
+
+/* ─── Figma-style comment overlay ───────────────────────────────────────────── */
+
+.preview-comment-overlay {
+  position: absolute;
+  inset: 0;
+  z-index: 15;
+  cursor: crosshair;
+}
+
+.preview-comment-pin {
+  position: absolute;
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  background: var(--color-blue);
+  color: #fff;
+  font-family: var(--font-body);
+  font-size: 11px;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  z-index: 16;
+  transform: translate(-50%, -50%);
+  box-shadow: 0 2px 6px rgba(0,0,0,0.25);
+  transition: transform 0.12s;
+}
+
+.preview-comment-pin:hover,
+.preview-comment-pin--active {
+  transform: translate(-50%, -50%) scale(1.15);
+}
+
+.preview-comment-tooltip {
+  position: absolute;
+  z-index: 17;
+  background: #fff;
+  border-radius: 6px;
+  box-shadow: 0 3px 14px rgba(0,0,0,0.18);
+  padding: 8px 12px;
+  font-family: var(--font-body);
+  font-size: 12px;
+  color: #282828;
+  line-height: 1.5;
+  max-width: 200px;
+  white-space: pre-wrap;
+  transform: translate(14px, -50%);
+  pointer-events: none;
+}
+
+.preview-comment-popup {
+  position: absolute;
+  z-index: 20;
+  background: #fff;
+  border-radius: 8px;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.22);
+  padding: 10px;
+  width: 220px;
+  transform: translate(-50%, calc(-100% - 12px));
+  display: flex;
+  flex-direction: column;
   gap: 8px;
 }
 
-.preview-clear-btn {
-  flex: 1;
-  padding: 10px;
-  background: #fff;
-  border: 1px solid rgba(0, 0, 0, 0.15);
-  border-radius: 6px;
-  font-family: var(--font-body);
-  font-size: 12px;
-  cursor: pointer;
-}
-
-.preview-comment-item {
-  background: #f8f8f6;
-  border-radius: 6px;
-  padding: 10px 12px;
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-}
-
-.preview-comment-text {
+.preview-comment-popup-input {
   font-family: var(--font-body);
   font-size: 13px;
-  color: #282828;
-  margin: 0;
+  border: 1px solid #e0e0e0;
+  border-radius: 6px;
+  padding: 7px 10px;
+  resize: none;
+  outline: none;
+  width: 100%;
+  box-sizing: border-box;
   line-height: 1.5;
 }
 
-.preview-comment-date {
-  font-family: var(--font-body);
-  font-size: 10px;
-  color: #aaa;
+.preview-comment-popup-input:focus { border-color: var(--color-blue); }
+
+.preview-comment-popup-actions {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
 }
+
+.preview-comment-popup-cancel {
+  background: none;
+  border: none;
+  font-size: 14px;
+  color: #aaa;
+  cursor: pointer;
+  padding: 4px 6px;
+}
+
+.preview-comment-popup-send {
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  background: var(--color-blue);
+  color: #fff;
+  border: none;
+  cursor: pointer;
+  font-size: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: opacity 0.12s;
+}
+
+.preview-comment-popup-send:disabled { opacity: 0.35; cursor: default; }
+
+.preview-comment-popup-delete {
+  background: none;
+  border: none;
+  font-size: 14px;
+  cursor: pointer;
+  padding: 4px 6px;
+  opacity: 0.5;
+  transition: opacity 0.1s;
+}
+.preview-comment-popup-delete:hover { opacity: 1; }
 
 /* ─── Stage ──────────────────────────────────────────────────────────────────── */
 

@@ -88,6 +88,19 @@ export default function PreviewPage() {
     })
   }
 
+  async function handleCommentUpdate(id: string, content: string): Promise<boolean> {
+    const { error } = await supabase.from('preview_annotations').update({ content }).eq('id', id)
+    return !error
+  }
+
+  async function handleCommentDelete(id: string): Promise<void> {
+    await supabase.from('preview_annotations').delete().eq('id', id)
+  }
+
+  async function handleDrawingDelete(ids: string[]): Promise<void> {
+    await supabase.from('preview_annotations').delete().in('id', ids)
+  }
+
   async function handleDrawingSave(svgContent: string, page: number): Promise<Annotation | null> {
     const { data, error } = await supabase.from('preview_annotations').insert({
       project_id:  projectId,
@@ -123,7 +136,10 @@ export default function PreviewPage() {
       onClose={() => router.back()}
       annotations={annotations}
       onCommentSave={handleCommentSave}
+      onCommentUpdate={handleCommentUpdate}
+      onCommentDelete={handleCommentDelete}
       onDrawingSave={handleDrawingSave}
+      onDrawingDelete={handleDrawingDelete}
       onSaveChanges={orderId && userId ? handleSaveChanges : undefined}
     />
   )
