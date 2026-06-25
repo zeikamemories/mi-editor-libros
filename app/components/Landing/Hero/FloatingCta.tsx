@@ -3,21 +3,17 @@ import { useState, useEffect } from 'react'
 import './Hero.css'
 
 export default function FloatingCta() {
+  const [mounted,       setMounted]       = useState(false)
   const [pastHero,      setPastHero]      = useState(false)
   const [footerVisible, setFooterVisible] = useState(false)
 
   useEffect(() => {
-    const hero = document.querySelector('.hero') as HTMLElement | null
+    setMounted(true)
+    const onScroll = () => setPastHero(window.scrollY > 10)
+    window.addEventListener('scroll', onScroll, { passive: true })
+    onScroll()
+
     const footer = document.querySelector('footer') as HTMLElement | null
-
-    const heroObserver = hero
-      ? new IntersectionObserver(
-          ([entry]) => setPastHero(!entry.isIntersecting),
-          { threshold: 0 }
-        )
-      : null
-    heroObserver?.observe(hero!)
-
     const footerObserver = footer
       ? new IntersectionObserver(
           ([entry]) => setFooterVisible(entry.isIntersecting),
@@ -27,7 +23,7 @@ export default function FloatingCta() {
     footerObserver?.observe(footer!)
 
     return () => {
-      heroObserver?.disconnect()
+      window.removeEventListener('scroll', onScroll)
       footerObserver?.disconnect()
     }
   }, [])
@@ -35,7 +31,7 @@ export default function FloatingCta() {
   if (footerVisible) return null
 
   return (
-    <div className={`hero__cta-wrap${pastHero ? ' hero__cta-wrap--past-hero' : ''}`}>
+    <div className={`hero__cta-wrap${mounted && pastHero ? ' hero__cta-wrap--past-hero' : ''}`}>
       <button
         className="hero__cta"
         onClick={() => {
