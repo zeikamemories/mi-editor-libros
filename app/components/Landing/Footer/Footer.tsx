@@ -56,8 +56,6 @@ export default function Footer() {
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img src="/icons/social/facebook.svg"  alt="Facebook"  className="footer__social-icon" />
             {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img src="/icons/social/twitter.svg"   alt="Twitter"   className="footer__social-icon" />
-            {/* eslint-disable-next-line @next/next/no-img-element */}
             <img src="/icons/social/instagram.svg" alt="Instagram" className="footer__social-icon" />
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img src="/icons/social/whatsapp.svg"  alt="WhatsApp"  className="footer__social-icon" />
@@ -68,8 +66,6 @@ export default function Footer() {
         <div className="footer__desktop-socials">
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img src="/icons/social/facebook.svg"  alt="Facebook"  className="footer__desktop-social-icon" />
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img src="/icons/social/twitter.svg"   alt="Twitter"   className="footer__desktop-social-icon" />
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img src="/icons/social/instagram.svg" alt="Instagram" className="footer__desktop-social-icon" />
           {/* eslint-disable-next-line @next/next/no-img-element */}

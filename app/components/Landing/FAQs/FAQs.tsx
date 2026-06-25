@@ -8,12 +8,12 @@ const FAQS = [
   {
     num: '[01]',
     q: '¿Cuánto tarda en estar listo?',
-    a: 'Desde el momento en que confirmás el diseño, el libro se imprime en 3 días hábiles aproximadamente.  Para el envío estimamos entre 2 y 7 días hábiles según el destino. Si preferís, también podés retirar tu libro directamente en la fábrica (Concepción Arenal 4501, Chacarita) una vez que esté impreso.',
+    a: 'El libro está listo para ser retirado por fábrica en 5 días hábiles. A eso hay que sumarle el tiempo de envío, que depende de tu dirección, pero se estiman entre 2 y 7 días hábiles para la entrega.',
   },
   {
     num: '[02]',
     q: '¿Cuántas fotos entran?',
-    a: 'Nuestros libros tienen entre 12 y 14 páginas base dependiendo del tamaño, y recomendamos 60 fotos para cubrirlas. Se pueden agregar hasta 40 páginas.',
+    a: 'Sugerimos entre 40 y 200 fotos, pero podés subir las que quieras — nosotras nos encargamos de organizarlas.',
   },
   {
     num: '[03]',
@@ -23,7 +23,7 @@ const FAQS = [
   {
     num: '[04]',
     q: '¿Hacen descuentos por cantidad?',
-    a: 'Sí. Si pedís tres o más copias del mismo diseño, te hacemos un 20% de descuento desde la tercera unidad. Si los diseños son diferentes, el descuento es del 10% a partir del tercer libro.',
+    a: 'Sí. Si pedís tres o más copias del mismo libro, aplicamos un 25% de descuento a partir de la tercera unidad, inclusive.',
   },
   {
     num: '[05]',
@@ -33,7 +33,7 @@ const FAQS = [
   {
     num: '[06]',
     q: '¿Cómo funciona el pago?',
-    a: 'Aceptamos tarjeta de crédito (Visa, Mastercard y más) en 1, 3, 6 o 12 cuotas según tu banco, tarjeta de débito, y transferencia bancaria por CVU/CBU desde cualquier banco o billetera virtual. También podés pagar con saldo de Mercado Pago. El pago se divide en dos momentos: el 50% al confirmar el pedido, y el 50% restante cuando aprobás el diseño final.',
+    a: 'Cobramos a través de Mercado Pago, así que podés pagar con tarjeta de crédito o débito, transferencia, o saldo de MP — lo que te resulte más cómodo. El pago se divide en dos: el 50% al confirmar el pedido, y el otro 50% cuando aprobás el diseño final.',
   },
 ]
 

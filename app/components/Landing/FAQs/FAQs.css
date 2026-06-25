@@ -73,9 +73,9 @@
 .faqs__q-text {
   font-family: "forma-djr-display", sans-serif;
   font-weight: 600;
-  font-size: 12px;
+  font-size: 14px;
   line-height: 0.9;
-  letter-spacing: 0.12px;
+  letter-spacing: 0.56px;
   color: var(--color-black);
   flex: 1;
   text-align: left;
@@ -84,9 +84,9 @@
 .faqs__answer {
   font-family: "forma-djr-display", sans-serif;
   font-weight: 500;
-  font-size: 12px;
+  font-size: 13px;
   line-height: 1.1;
-  letter-spacing: 0.12px;
+  letter-spacing: 0.56px;
   color: var(--color-black);
   opacity: 0.6;
   margin: 0;
