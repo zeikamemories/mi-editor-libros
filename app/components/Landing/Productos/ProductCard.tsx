@@ -4,15 +4,16 @@ import { useState } from 'react'
 import './Productos.css'
 
 export type ProductData = {
-  sizeId:     string
-  name:       string
-  price:      string
-  dimensions: string
+  sizeId:      string
+  name:        string
+  mobileLabel?: string
+  price:       string
+  dimensions:  string
 }
 
 type Props = ProductData & { onOpen?: () => void }
 
-export default function ProductCard({ sizeId, name, price, dimensions, onOpen }: Props) {
+export default function ProductCard({ sizeId, name, mobileLabel, price, dimensions, onOpen }: Props) {
   const [hovered, setHovered] = useState(false)
 
   return (
@@ -39,7 +40,14 @@ export default function ProductCard({ sizeId, name, price, dimensions, onOpen }:
       {/* Details */}
       <div className="product-card__details">
         <div className="product-card__name-price">
-          <span className="product-card__name">{name}</span>
+          {mobileLabel ? (
+            <>
+              <span className="product-card__name product-card__name--desktop">{name}</span>
+              <span className="product-card__name product-card__name--mobile">{mobileLabel}</span>
+            </>
+          ) : (
+            <span className="product-card__name">{name}</span>
+          )}
           <span className="product-card__price">{price}</span>
         </div>
         <span className="product-card__dims">{dimensions}</span>

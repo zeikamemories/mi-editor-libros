@@ -6,7 +6,7 @@
   gap: 20px;
   padding: 40px 0;
   width: 100%;
-  background: #FAF8F4;
+  background: var(--color-blue);
 }
 
 .como__label {
@@ -15,7 +15,7 @@
   font-size: 16px;
   letter-spacing: 0.64px;
   text-transform: uppercase;
-  color: var(--color-black);
+  color: var(--color-white);
   text-align: center;
   margin: 0;
   padding: 0 20px;
@@ -33,16 +33,17 @@
 .como__card {
   width: 353px;
   border: 0.5px solid var(--color-border);
-  padding: 20px;
+  background: #FAF8F4;
+  padding: 14px 20px;
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 20px;
+  gap: 12px;
 }
 
 .como__icon-wrap {
-  width: 43px;
-  height: 43px;
+  width: 34px;
+  height: 34px;
   border-radius: 100px;
   display: flex;
   align-items: center;
@@ -51,20 +52,20 @@
 }
 
 .como__icon {
-  width: 26px;
-  height: 26px;
+  width: 20px;
+  height: 20px;
 }
 
 .como__icon--large {
-  width: 34px;
-  height: 34px;
+  width: 26px;
+  height: 26px;
 }
 
 .como__content {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 10px;
+  gap: 6px;
   width: 100%;
 }
 
@@ -87,7 +88,7 @@
 .como__title {
   font-family: "Times New Roman", Times, serif;
   font-weight: 400;
-  font-size: 28px;
+  font-size: 22px;
   line-height: 0.95;
   letter-spacing: -0.56px;
   color: var(--color-black);
@@ -99,12 +100,13 @@
 .como__body {
   font-family: "forma-djr-display", sans-serif;
   font-weight: 500;
-  font-size: 16px;
+  font-size: 14px;
   letter-spacing: 0.64px;
   color: var(--color-black);
   margin: 0;
   text-align: center;
-  width: 292px;
+  width: 100%;
+  max-width: 320px;
   line-height: normal;
 }
 
@@ -113,6 +115,7 @@
 @media (min-width: 1024px) {
   .como {
     padding: 60px 0;
+    background: #FAF8F4;
   }
 
   .como__label {
@@ -120,6 +123,11 @@
     letter-spacing: 0.88px;
     text-align: left;
     padding: 0 50px;
+    color: var(--color-black);
+  }
+
+  .como__card {
+    background: transparent;
   }
 
   /* Horizontal row */

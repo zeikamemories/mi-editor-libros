@@ -14,12 +14,14 @@ const navLinks = [
 ]
 
 export default function Navbar({ hideLinks }: { hideLinks?: boolean } = {}) {
+  const [mounted,   setMounted]   = useState(false)
   const [open,      setOpen]      = useState(false)
   const [user,      setUser]      = useState<{ name: string; initial: string } | null>(null)
   const [dropOpen,  setDropOpen]  = useState(false)
   const dropRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
+    setMounted(true)
     supabase.auth.getSession().then(({ data: { session } }) => {
       if (session?.user) {
         const meta  = session.user.user_metadata
@@ -77,7 +79,7 @@ export default function Navbar({ hideLinks }: { hideLinks?: boolean } = {}) {
 
           {/* Desktop auth */}
           <div className="navbar__auth">
-            {user ? (
+            {mounted && user ? (
               <div className="navbar__user" ref={dropRef}>
                 <button
                   className="navbar__user-btn"
@@ -98,12 +100,12 @@ export default function Navbar({ hideLinks }: { hideLinks?: boolean } = {}) {
                   </div>
                 )}
               </div>
-            ) : (
+            ) : mounted ? (
               <>
                 <a href="/login?mode=signup" className="navbar__auth-link">Registrarse</a>
                 <a href="/login" className="navbar__auth-link">Iniciar Sesión</a>
               </>
-            )}
+            ) : null}
           </div>
 
           {/* Mobile hamburger */}
@@ -134,7 +136,7 @@ export default function Navbar({ hideLinks }: { hideLinks?: boolean } = {}) {
           <div className="navbar__overlay-footer">
             <hr className="navbar__overlay-divider" />
             <div className="navbar__overlay-auth">
-              {user ? (
+              {mounted && user ? (
                 <>
                   <a href="/mis-proyectos" className="navbar__overlay-auth-link" onClick={() => setOpen(false)}>
                     Mis proyectos
@@ -143,12 +145,12 @@ export default function Navbar({ hideLinks }: { hideLinks?: boolean } = {}) {
                     Cerrar sesión
                   </button>
                 </>
-              ) : (
+              ) : mounted ? (
                 <>
                   <a href="/login?mode=signup" className="navbar__overlay-auth-link" onClick={() => setOpen(false)}>Registrarse</a>
                   <a href="/login" className="navbar__overlay-auth-link" onClick={() => setOpen(false)}>Iniciar Sesión</a>
                 </>
-              )}
+              ) : null}
             </div>
             <div className="navbar__overlay-socials">
               {/* eslint-disable-next-line @next/next/no-img-element */}
