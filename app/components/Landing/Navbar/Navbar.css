@@ -226,9 +226,8 @@
   }
 
   .navbar__auth-link:hover {
-    text-decoration: underline;
-    text-decoration-color: var(--color-blue);
-    text-underline-offset: 4px;
+    text-decoration: none;
+    color: #3a6fad;
   }
   .navbar__auth-link--btn {
     font-family: "forma-djr-display", sans-serif;
@@ -282,7 +281,7 @@
     min-width: 180px;
     background: #fff;
     border: 1px solid var(--color-border);
-    border-radius: 8px;
+    border-radius: 0;
     box-shadow: 0 4px 20px rgba(0,0,0,0.10);
     overflow: hidden;
     z-index: 300;
@@ -291,7 +290,7 @@
   .navbar__dropdown-item {
     display: block;
     width: 100%;
-    padding: 12px 18px;
+    padding: 8px 18px;
     font-family: "forma-djr-display", sans-serif;
     font-size: 14px;
     font-weight: 500;
