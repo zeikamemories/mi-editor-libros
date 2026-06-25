@@ -73,6 +73,13 @@
   grid-column: 1 / -1;
 }
 
+/* Mobile order: chico, mediano, vertical, cuadrado, grande */
+.product-card--chico    { order: 1; }
+.product-card--mediano  { order: 2; }
+.product-card--vertical { order: 3; }
+.product-card--cuadrado { order: 4; }
+.product-card--grande   { order: 5; }
+
 /* Image area — height driven by per-card aspect ratio */
 .product-card__img-wrap {
   position: relative;
@@ -194,11 +201,11 @@
    * Row 1: proportional — fills container edge-to-edge so Grande aligns with Comparar button
    * Row 2: fixed pixel widths — intentionally leave empty space on the right (per Figma)
    */
-  .product-card--chico    { flex: 0 0 calc(24.848% - 4.970px); width: calc(24.848% - 4.970px); }
-  .product-card--mediano  { flex: 0 0 calc(33.333% - 6.667px); width: calc(33.333% - 6.667px); }
-  .product-card--grande   { flex: 0 0 calc(41.818% - 8.364px); width: calc(41.818% - 8.364px); }
-  .product-card--vertical { flex: 0 0 328px; width: 328px; }
-  .product-card--cuadrado { flex: 0 0 327px; width: 327px; }
+  .product-card--chico    { order: 0; flex: 0 0 calc(24.848% - 4.970px); width: calc(24.848% - 4.970px); }
+  .product-card--mediano  { order: 0; flex: 0 0 calc(33.333% - 6.667px); width: calc(33.333% - 6.667px); }
+  .product-card--grande   { order: 0; flex: 0 0 calc(41.818% - 8.364px); width: calc(41.818% - 8.364px); }
+  .product-card--vertical { order: 0; flex: 0 0 328px; width: 328px; }
+  .product-card--cuadrado { order: 0; flex: 0 0 327px; width: 327px; }
 
   /* Details: 14px, tracking 0.56px */
   .product-card__details {
