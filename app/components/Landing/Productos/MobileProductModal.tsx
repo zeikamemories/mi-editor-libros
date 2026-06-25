@@ -22,14 +22,14 @@ const PRICES_BY_PAGES: Record<string, [number, number, number]> = {
 }
 
 const PAGE_OPTIONS_SMALL = [
-  { photos: '20-100',  pages: 20 },
-  { photos: '101-180', pages: 30 },
-  { photos: '180-240', pages: 40 },
+  { photos: 'hasta ~100 fotos',  pages: 20 },
+  { photos: 'hasta ~180 fotos',  pages: 30 },
+  { photos: 'hasta ~240 fotos',  pages: 40 },
 ]
 const PAGE_OPTIONS_LARGE = [
-  { photos: '20-160',  pages: 20 },
-  { photos: '161-240', pages: 30 },
-  { photos: '241-350', pages: 40 },
+  { photos: 'hasta ~160 fotos',  pages: 20 },
+  { photos: 'hasta ~240 fotos',  pages: 30 },
+  { photos: 'hasta ~350 fotos',  pages: 40 },
 ]
 
 const BOOK_DIMS: Record<string, [number, number]> = {
@@ -203,7 +203,7 @@ export default function MobileProductModal({ product, onClose }: Props) {
 
           {/* Page options */}
           <div className="mpm__section">
-            <p className="mpm__section-label">CANTIDAD DE FOTOS A SUBIR</p>
+            <p className="mpm__section-label">CANTIDAD DE PÁGINAS</p>
             <div className="mpm__cards">
               {pageOptions.map((opt, i) => (
                 <button
@@ -211,13 +211,13 @@ export default function MobileProductModal({ product, onClose }: Props) {
                   className={`mpm__card${pageIdx === i ? ' mpm__card--selected' : ''}`}
                   onClick={() => setPageIdx(i)}
                 >
-                  <span className="mpm__card-top">{opt.photos} fotos</span>
-                  <span className="mpm__card-bot">{opt.pages} páginas</span>
+                  <span className="mpm__card-top">{opt.pages} páginas</span>
+                  <span className="mpm__card-bot">{opt.photos}</span>
                 </button>
               ))}
             </div>
             <p className="mpm__section-note">
-              La cantidad de fotos es una recomendación ya que calculamos 3 fotos por carilla pero se puede adaptar a lo que buscás.
+              Podés subir la cantidad de fotos que quieras — estas son solo orientativas basadas en ~3 fotos por carilla.
             </p>
           </div>
 
@@ -242,6 +242,9 @@ export default function MobileProductModal({ product, onClose }: Props) {
               {/* empty third slot to match card width */}
               <div />
             </div>
+            <p className="mpm__section-note">
+              <strong>1 texto:</strong> tapa, dedicatoria o pie de foto. <strong>Textos varios:</strong> cartas y anotaciones elaboradas en múltiples páginas.
+            </p>
           </div>
 
           {/* Book name */}
@@ -269,6 +272,7 @@ export default function MobileProductModal({ product, onClose }: Props) {
                     placeholder="Código postal"
                     value={cp}
                     maxLength={4}
+                    inputMode="numeric"
                     onChange={e => setCp(e.target.value.replace(/\D/g, '').slice(0, 4))}
                   />
                   {shippingLoading && <span className="mpm__cp-status mpm__cp-status--loading">Calculando...</span>}
@@ -321,7 +325,10 @@ export default function MobileProductModal({ product, onClose }: Props) {
         </button>
       </div>
 
-      {/* Close button */}
+      {/* Back arrow (top-left) */}
+      <button className="mpm__back" onClick={onClose} aria-label="Volver">←</button>
+
+      {/* Close button (top-right) */}
       <button className="mpm__close" onClick={onClose} aria-label="Cerrar">×</button>
 
       {/* Comparar overlay */}

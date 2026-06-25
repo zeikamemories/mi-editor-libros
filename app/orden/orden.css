@@ -21,7 +21,7 @@
   width: 36px;
   height: 36px;
   border: 3px solid #d8d6d0;
-  border-top-color: var(--color-black);
+  border-top-color: var(--color-blue);
   border-radius: 50%;
   animation: spin 0.7s linear infinite;
 }

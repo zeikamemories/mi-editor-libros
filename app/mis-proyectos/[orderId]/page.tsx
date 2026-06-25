@@ -484,15 +484,21 @@ export default function ProyectoPage() {
             <div className="mpd-mat-row">
               <div className="mpd-mat-header">
                 <span className="mpd-mat-header__label">Textos / Google Docs</span>
-                <span className="mpd-mat-header__opt">(Opcional)</span>
               </div>
-              <input
-                className="mpd-mat-input"
-                placeholder="Pegá el link de tu carpeta"
-                value={docsLink}
-                onChange={e => setDocsLink(e.target.value)}
-                onBlur={e => saveLinkSilently('docs_link', e.target.value)}
-              />
+              {docsLink ? (
+                <a className="mpd-mat-link-btn" href={docsLink} target="_blank" rel="noopener noreferrer">
+                  Abrir documento de textos →
+                </a>
+              ) : (
+                <input
+                  className="mpd-mat-input"
+                  placeholder="El documento se genera automáticamente al confirmar el pago"
+                  value={docsLink}
+                  onChange={e => setDocsLink(e.target.value)}
+                  onBlur={e => saveLinkSilently('docs_link', e.target.value)}
+                  readOnly
+                />
+              )}
             </div>
 
             {/* Referencias de diseño */}

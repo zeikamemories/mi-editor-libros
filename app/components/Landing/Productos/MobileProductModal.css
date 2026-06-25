@@ -24,6 +24,23 @@
 
 /* ── Close button ───────────────────────────────────────────────────────────── */
 
+.mpm__back {
+  position: absolute;
+  top: 12px;
+  left: 15px;
+  width: 40px;
+  height: 40px;
+  background: none;
+  border: none;
+  font-size: 24px;
+  cursor: pointer;
+  color: var(--color-black);
+  z-index: 10;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
 .mpm__close {
   position: absolute;
   top: 12px;

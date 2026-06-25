@@ -27,7 +27,7 @@
   width: 32px;
   height: 32px;
   border: 2px solid rgba(25,25,25,0.15);
-  border-top-color: var(--color-black);
+  border-top-color: var(--color-blue);
   border-radius: 50%;
   animation: prev-spin 0.7s linear infinite;
 }

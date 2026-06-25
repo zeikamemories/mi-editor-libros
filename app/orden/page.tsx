@@ -220,6 +220,7 @@ export default function OrdenPage() {
             className="orden__input orden__input--phone"
             placeholder="11 1234 5678"
             value={whatsapp}
+            inputMode="numeric"
             onChange={e => { setWhatsapp(e.target.value); if (e.target.value.trim()) setWhatsappError(false) }}
           />
         </div>

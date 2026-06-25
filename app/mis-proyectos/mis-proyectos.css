@@ -12,7 +12,7 @@
   width: 32px;
   height: 32px;
   border: 2px solid rgba(25,25,25,0.15);
-  border-top-color: var(--color-black);
+  border-top-color: var(--color-blue);
   border-radius: 50%;
   animation: mp-spin 0.7s linear infinite;
 }
@@ -1413,6 +1413,22 @@
   color: #7b7a78;
   opacity: 0.5;
 }
+
+.mpd-mat-link-btn {
+  display: inline-block;
+  padding: 10px 16px;
+  background: var(--color-blue);
+  color: #fff;
+  font-family: var(--font-body);
+  font-size: 14px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-decoration: none;
+  border-radius: 0;
+  transition: opacity 0.15s;
+}
+
+.mpd-mat-link-btn:hover { opacity: 0.85; }
 
 .mpd-mat-textarea {
   width: 100%;

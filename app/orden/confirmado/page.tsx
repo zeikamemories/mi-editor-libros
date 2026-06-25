@@ -33,7 +33,7 @@ function ConfirmadoContent() {
       const now       = new Date().toISOString()
 
       const [{ data: orderData }, { data: { user } }] = await Promise.all([
-        supabase.from('orders').select('book_name, size').eq('id', orderId!).single(),
+        supabase.from('orders').select('book_name, size, extra_text').eq('id', orderId!).single(),
         supabase.auth.getUser(),
         supabase.from('orders').update({
           status:       newStatus,
@@ -73,29 +73,44 @@ function ConfirmadoContent() {
             setIsReorder(true)
           } else {
             const folderName = `Zeika - ${orderData.book_name ?? 'Sin título'} - ${orderId!.slice(0, 8).toUpperCase()}`
-            const driveRes = await fetch('/api/create-drive-folder', {
+            const bookName   = orderData.book_name ?? 'Sin título'
+            const clientEmail = user?.email ?? null
+
+            // Create Drive folder first, then Doc inside it
+            const driveRes  = await fetch('/api/create-drive-folder', {
               method: 'POST',
               headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({
-                folderName,
-                clientEmail: user?.email ?? null,
-              }),
+              body: JSON.stringify({ folderName, clientEmail }),
             })
             const driveData = driveRes.ok ? await driveRes.json() : {}
             const driveLink = driveData.folderUrl ?? null
+            const folderId  = driveData.folderId  ?? null
+
+            const docsRes  = await fetch('/api/create-docs', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                bookName,
+                clientEmail,
+                extraText: orderData.extra_text ?? false,
+                folderId,
+              }),
+            })
+            const docsLink = docsRes.ok ? (await docsRes.json()).docsUrl ?? null : null
 
             await Promise.all([
               supabase.from('projects').insert({
-                name:          orderData.book_name ?? 'Sin título',
+                name:          bookName,
                 book_size:     orderData.size ?? 'vertical',
                 total_spreads: 13,
                 photos:        [],
                 spreads:       {},
                 order_id:      orderId,
               }),
-              driveLink
-                ? supabase.from('orders').update({ drive_link: driveLink }).eq('id', orderId!)
-                : Promise.resolve(),
+              supabase.from('orders').update({
+                ...(driveLink ? { drive_link: driveLink } : {}),
+                ...(docsLink  ? { docs_link:  docsLink  } : {}),
+              }).eq('id', orderId!),
             ])
           }
         }
