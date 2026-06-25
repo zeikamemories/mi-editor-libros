@@ -6,6 +6,7 @@ import { supabase } from '../../../lib/supabase'
 import './Navbar.css'
 
 const navLinks = [
+  { label: 'Inicio',         href: '#'               },
   { label: 'Productos',      href: '#productos'      },
   { label: 'Cómo hacerlo',   href: '#como-hacerlo'   },
   { label: 'Quienes somos',  href: '#quienes-somos'  },
@@ -68,7 +69,7 @@ export default function Navbar({ hideLinks }: { hideLinks?: boolean } = {}) {
           {/* Desktop links */}
           {!hideLinks && (
             <nav className="navbar__links">
-              {navLinks.map(l => (
+              {navLinks.filter(l => l.label !== 'Inicio').map(l => (
                 <a key={l.href} href={l.href} className="navbar__link">{l.label}</a>
               ))}
             </nav>

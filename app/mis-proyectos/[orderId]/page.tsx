@@ -745,6 +745,19 @@ export default function ProyectoPage() {
           </div>
         )}
       </div>
+
+      {/* WhatsApp floating button */}
+      {order && (
+        <a
+          className="mpd-wa-fab"
+          href={`https://wa.me/5491133521921?text=${encodeURIComponent(`Hola! Te escribo por mi fotolibro *${order.book_name}* (pedido #${orderId.slice(0, 8).toUpperCase()})`)}`}
+          target="_blank"
+          rel="noopener noreferrer"
+          aria-label="Contactar por WhatsApp"
+        >
+          <img src="/icons/social/whatsapp.svg" alt="WhatsApp" />
+        </a>
+      )}
     </div>
   )
 }
