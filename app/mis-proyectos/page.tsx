@@ -16,9 +16,9 @@ interface Order {
 }
 
 const SIZE_SHORT: Record<string, string> = {
-  chico_h:   'Chico Horizontal 21×14,8 cm',
-  mediano_h: 'Mediano Horizontal 28×21,6 cm',
-  grande_h:  'Grande Horizontal 41×29 cm',
+  chico_h:   'Chico H 21×14,8 cm',
+  mediano_h: 'Mediano H 28×21,6 cm',
+  grande_h:  'Grande H 41×29 cm',
   vertical:  'Vertical 28×21,6 cm',
   cuadrado:  'Cuadrado 29×29 cm',
 }

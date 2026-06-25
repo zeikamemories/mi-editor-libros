@@ -61,7 +61,7 @@
   font-family: "forma-djr-display", sans-serif;
   font-weight: 600;
   font-size: 14px;
-  letter-spacing: 0.02em;
+  letter-spacing: 0.56px;
   color: white;
   margin: 0;
 }
@@ -70,7 +70,7 @@
   font-family: "forma-djr-display", sans-serif;
   font-weight: 400;
   font-size: 12px;
-  letter-spacing: 0.02em;
+  letter-spacing: 0.8px;
   color: rgba(255,255,255,0.75);
   margin: 0;
 }
@@ -95,18 +95,24 @@
 .mp-title {
   font-family: "Times New Roman", Times, serif;
   font-weight: 400;
-  font-size: 42px;
+  font-size: 40px;
   letter-spacing: -0.02em;
   color: var(--color-black);
   margin: 0 0 28px;
   text-align: center;
 }
 
+@media (min-width: 1024px) {
+  .mp-title {
+    font-size: 42px;
+  }
+}
+
 /* ── Project grid ────────────────────────────────────────────────────────── */
 
 .mp-grid {
   display: grid;
-  grid-template-columns: 1fr;
+  grid-template-columns: repeat(2, 1fr);
   gap: 16px;
   margin-bottom: 32px;
 }
@@ -183,17 +189,17 @@
 
 /* info section */
 .mp-card__info {
-  padding: 7px 12px 8px;
+  padding: 5px 10px 6px;
   border-top: 1px solid #f0f0f0;
   display: flex;
   flex-direction: column;
-  gap: 3px;
+  gap: 2px;
 }
 
 .mp-card__name {
   font-family: "forma-djr-display", sans-serif;
   font-weight: 500;
-  font-size: 14px;
+  font-size: 13px;
   letter-spacing: 0.04em;
   color: var(--color-black);
   flex: 1;
@@ -211,8 +217,8 @@
 
 .mp-card__format {
   font-family: "forma-djr-display", sans-serif;
-  font-weight: 400;
-  font-size: 12px;
+  font-weight: 500;
+  font-size: 11px;
   letter-spacing: 0.04em;
   color: #7b7a78;
 }
@@ -307,6 +313,12 @@
   gap: 6px;
 }
 
+@media (min-width: 1024px) {
+  .mpd-hero {
+    padding: 30px 50px 40px;
+  }
+}
+
 .mpd-back {
   align-self: flex-start;
   font-family: "forma-djr-display", sans-serif;
@@ -361,7 +373,136 @@
 .mpd-status-badge--material_recibido { background: #528ED6; }
 .mpd-status-badge--pendiente_pago    { background: #e03535; }
 
-/* Accordions */
+/* ── Mobile / desktop visibility ─────────────────────────────────────────── */
+
+.mpd-mobile-only { display: flex; flex-direction: column; }
+.mpd-desktop-only { display: none; }
+
+@media (min-width: 1024px) {
+  .mpd-mobile-only { display: none; }
+  .mpd-desktop-only { display: block; }
+}
+
+/* ── Desktop two-panel layout ────────────────────────────────────────────── */
+
+.mpd-desktop-layout {
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  gap: 0;
+  padding: 20px 50px 40px;
+}
+
+.mpd-desktop-left {
+  width: 327px;
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.mpd-desktop-divider {
+  width: 1px;
+  background: #c0bfbc;
+  align-self: stretch;
+  margin: 0 50px;
+  flex-shrink: 0;
+}
+
+.mpd-desktop-right {
+  flex: 0 1 687px;
+  min-height: 200px;
+}
+
+.mpd-desktop-panel {
+  background: white;
+  display: flex;
+  flex-direction: column;
+}
+
+.mpd-desktop-panel .mpd-timeline-row,
+.mpd-desktop-panel .mpd-mat-row,
+.mpd-desktop-panel .mpd-mat-header,
+.mpd-desktop-panel .mpd-rounds-row,
+.mpd-desktop-panel .mpd-preview-row,
+.mpd-desktop-panel .mpd-preview-approved,
+.mpd-desktop-panel .mpd-mat-save-wrap,
+.mpd-desktop-panel .mpd-preview-unready,
+.mpd-desktop-panel .mpd-change-btn-row {
+  background: white;
+}
+
+.mpd-desktop-panel__header {
+  padding: 20px;
+  border-bottom: 0.3px solid #7b7a78;
+}
+
+.mpd-desktop-panel__title {
+  font-family: "forma-djr-display", sans-serif;
+  font-size: 14px;
+  font-weight: 500;
+  letter-spacing: 0.56px;
+  text-transform: uppercase;
+  color: var(--color-black);
+}
+
+/* ── Desktop tab buttons ─────────────────────────────────────────────────── */
+
+.mpd-tab-btn {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 20px;
+  background: white;
+  border: 1px solid transparent;
+  cursor: pointer;
+  text-align: left;
+}
+
+.mpd-tab-btn--active {
+  background: var(--color-cream-dark);
+  border: 2px solid var(--color-blue);
+}
+
+.mpd-tab-btn--disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+
+.mpd-tab-btn__label {
+  font-family: "forma-djr-display", sans-serif;
+  font-size: 14px;
+  font-weight: 600;
+  letter-spacing: 0.56px;
+  text-transform: uppercase;
+  color: var(--color-black);
+}
+
+.mpd-tab-btn__icon {
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  background: var(--color-blue);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+/* ── Desktop left panel: approve + buy ───────────────────────────────────── */
+
+@media (min-width: 1024px) {
+  .mpd-desktop-left .mpd-accept-check {
+    width: 100%;
+  }
+  .mpd-desktop-left .mpd-cta-wrap {
+    width: 100%;
+    padding-top: 12px;
+  }
+}
+
+/* Accordions (mobile) */
 .mpd-accordions {
   display: flex;
   flex-direction: column;
@@ -376,15 +517,6 @@
   gap: 20px;
 }
 
-@media (min-width: 1024px) {
-  .mpd-accordions {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 40px;
-    padding: 0 50px 20px;
-  }
-}
-
 .mpd-accordion {
   background: white;
 }
@@ -393,7 +525,8 @@
   background: #fff;
 }
 
-.mpd-accordion__body .mpd-row {
+.mpd-accordion__body .mpd-row,
+.mpd-desktop-panel .mpd-row {
   background: #fff;
 }
 
@@ -549,7 +682,7 @@
   font-family: "forma-djr-display", sans-serif;
   font-weight: 500;
   font-size: 12px;
-  letter-spacing: 0.04em;
+  letter-spacing: 0.56px;
   color: #7b7a78;
   text-align: center;
   margin: 0;
@@ -1576,25 +1709,30 @@
 }
 
 .mpd-preview-row {
-  padding: 16px 20px 20px 0;
+  padding: 16px 20px 20px;
   background: var(--color-cream);
+  display: flex;
+  justify-content: center;
 }
 
 .mpd-preview-card {
   border: 1px solid #e0e0e0;
   background: #fff;
   overflow: hidden;
+  width: 75%;
+  max-width: 340px;
 }
 
 @media (min-width: 1024px) {
   .mpd-preview-card {
+    width: 100%;
     max-width: 60%;
   }
 }
 
 .mpd-preview-thumb {
   width: 100%;
-  aspect-ratio: 5 / 3;
+  aspect-ratio: 4 / 3;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -1627,7 +1765,7 @@
 
 .mpd-preview-card-name {
   font-family: "forma-djr-display", sans-serif;
-  font-size: 13px;
+  font-size: 14px;
   font-weight: 500;
   color: #1b1b1b;
   white-space: nowrap;
@@ -1637,7 +1775,7 @@
 
 .mpd-preview-link {
   font-family: "forma-djr-display", sans-serif;
-  font-size: 12px;
+  font-size: 14px;
   font-weight: 500;
   letter-spacing: 0.04em;
   color: var(--color-blue);
@@ -1723,10 +1861,10 @@
 
 .mpd-rounds-desc {
   font-family: "forma-djr-display", sans-serif;
-  font-size: 12px;
-  letter-spacing: 0.04em;
+  font-size: 13px;
+  font-weight: 500;
+  letter-spacing: 0.56px;
   color: #7b7a78;
-  max-width: 260px;
   line-height: 1.5;
   margin: 0;
 }
@@ -2904,4 +3042,61 @@
   width: 30px;
   height: 30px;
   filter: brightness(0) invert(1);
+}
+
+/* ── Inline pagar panel (desktop right panel) ────────────────────────────── */
+
+.mpd-pagar-panel {
+  background: white;
+  display: flex;
+  flex-direction: column;
+}
+
+.mpd-pagar-panel .mpd-row {
+  background: white;
+}
+
+.mpd-pagar-panel .mpag-copies-section,
+.mpd-pagar-panel .mpag-entrega-section,
+.mpd-pagar-panel .mpag-resumen-section {
+  background: white;
+  margin: 0;
+}
+
+.mpag-cta-wrap {
+  padding: 20px;
+  background: white;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.mpag-cta-wrap .mpd-cta-btn {
+  width: 100%;
+}
+
+.mpag-cta-wrap .mpd-legal {
+  margin: 0;
+  text-align: center;
+}
+
+/* ── Inline confirmado panel ─────────────────────────────────────────────── */
+
+.mpd-confirmado-panel {
+  background: white;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 20px;
+  padding: 40px 30px;
+  text-align: center;
+}
+
+.mpd-confirmado-panel .mpconf2-title {
+  font-size: 30px;
+}
+
+.mpd-confirmado-panel .mpconf2-wpp-box {
+  background: var(--color-cream);
+  width: 100%;
 }

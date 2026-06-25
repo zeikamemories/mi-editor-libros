@@ -242,7 +242,7 @@ export default function OrdenPage() {
 
         {/* Left column: back (left of photo) + product image */}
         <div className="orden__left-col">
-          <a className="orden__back-link orden__back-link--side" href="/">‹ Atrás</a>
+          <a className="orden__back-link orden__back-link--side" href="/">←</a>
           <div className="orden__product-frame">
             {PRODUCT_IMAGES[sizeId] && (
               <img src={PRODUCT_IMAGES[sizeId]} alt={selectedSize.name} className={`orden__product-img orden__product-img--${sizeId}`} />
@@ -270,7 +270,7 @@ export default function OrdenPage() {
       {/* ── Mobile: single-column scroll + fixed CTA ── */}
       <div className="orden__scroll">
         <div className="orden__content orden__content--summary">
-          <a className="orden__back-link" href="/">‹ Atrás</a>
+          <a className="orden__back-link" href="/">←</a>
           <h1 className="orden__title">Contar mi historia</h1>
           <p className="orden__subtitle-blue">
             Una vez abonado se crea una carpeta dentro de tu perfil donde podés cargás el material
