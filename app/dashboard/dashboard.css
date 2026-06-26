@@ -54,6 +54,50 @@
   flex-shrink: 0;
 }
 
+/* ── User widget ──────────────────────────────────────────────────────────── */
+
+.dash-user-widget {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  cursor: pointer;
+  padding: 4px 0;
+  user-select: none;
+}
+
+.dash-user-dropdown {
+  position: absolute;
+  top: calc(100% + 8px);
+  right: 0;
+  min-width: 160px;
+  background: #fff;
+  border: 1px solid #c0bfbc;
+  box-shadow: 0 4px 16px rgba(0,0,0,0.10);
+  z-index: 300;
+  overflow: hidden;
+}
+
+.dash-user-dropdown-item {
+  display: block;
+  width: 100%;
+  padding: 10px 16px;
+  font-family: "forma-djr-display", sans-serif;
+  font-size: 14px;
+  font-weight: 500;
+  letter-spacing: 0.04em;
+  color: #191919;
+  background: none;
+  border: none;
+  text-align: left;
+  cursor: pointer;
+  transition: background 0.12s;
+}
+
+.dash-user-dropdown-item:hover {
+  background: rgba(0,0,0,0.04);
+}
+
 /* ── Right sidebar ────────────────────────────────────────────────────────── */
 
 .dash-sidebar-right {

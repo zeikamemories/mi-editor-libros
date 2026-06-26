@@ -82,6 +82,7 @@ export default function DashboardPage() {
   const [selected, setSelected]           = useState<Set<string>>(new Set())
   const [deleting, setDeleting]           = useState(false)
   const [designerPopup, setDesignerPopup] = useState<string | null>(null)
+  const [userMenuOpen, setUserMenuOpen]   = useState(false)
 
   useEffect(() => {
     if (!designerPopup) return
@@ -89,6 +90,18 @@ export default function DashboardPage() {
     window.addEventListener('click', close)
     return () => window.removeEventListener('click', close)
   }, [designerPopup])
+
+  useEffect(() => {
+    if (!userMenuOpen) return
+    const close = () => setUserMenuOpen(false)
+    window.addEventListener('click', close)
+    return () => window.removeEventListener('click', close)
+  }, [userMenuOpen])
+
+  async function handleSignOut() {
+    await supabase.auth.signOut()
+    router.replace('/login')
+  }
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
@@ -198,8 +211,17 @@ export default function DashboardPage() {
       <header className="dash-topbar">
         <Image src="/LogoZeika.png" alt="Zeika" width={36} height={36} />
         <span className="dash-topbar-spacer" />
-        <span className="dash-topbar-username">MAIKA</span>
-        <div className="dash-avatar">M</div>
+        <div className="dash-user-widget" onClick={e => { e.stopPropagation(); setUserMenuOpen(o => !o) }}>
+          <span className="dash-topbar-username">MAIKA</span>
+          <div className="dash-avatar">M</div>
+          {userMenuOpen && (
+            <div className="dash-user-dropdown" onClick={e => e.stopPropagation()}>
+              <button className="dash-user-dropdown-item" onClick={handleSignOut}>
+                Cerrar sesión
+              </button>
+            </div>
+          )}
+        </div>
       </header>
 
       {/* ── Sidebar ────────────────────────────── */}
