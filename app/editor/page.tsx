@@ -109,6 +109,35 @@ function AddPagesModal({
   )
 }
 
+// ─── AutoCreateConfirmModal ──────────────────────────────────────────────────
+
+function AutoCreateConfirmModal({
+  emptyPages, photos, onConfirm, onClose,
+}: { emptyPages: number; photos: number; onConfirm: () => void; onClose: () => void }) {
+  const shortage = emptyPages - photos
+  return (
+    <div className="add-pages-overlay" onClick={onClose}>
+      <div className="add-pages-modal" onClick={e => e.stopPropagation()}>
+        <button className="add-pages-close" onClick={onClose} aria-label="Cerrar">×</button>
+        <h2 className="add-pages-title">Armar libro automáticamente</h2>
+        <p className="add-pages-current">
+          Se van a distribuir <strong>{photos} fotos</strong> en <strong>{emptyPages} páginas vacías</strong>.
+          <br /><br />
+          Las páginas que ya tienen fotos no se van a tocar.
+        </p>
+        {shortage > 0 && (
+          <p className="add-pages-warning">
+            Las fotos no alcanzan para todas las páginas — {shortage} {shortage === 1 ? 'página quedará vacía' : 'páginas quedarán vacías'}, distribuidas a lo largo del libro.
+          </p>
+        )}
+        <button className="add-pages-confirm" onClick={onConfirm}>
+          Armar libro
+        </button>
+      </div>
+    </div>
+  )
+}
+
 // ─── Component ──────────────────────────────────────────────────────────────
 
 export default function EditorPage() {
@@ -138,6 +167,7 @@ export default function EditorPage() {
   const saveStatusTimerRef       = useRef<ReturnType<typeof setTimeout> | null>(null)
   const [addPagesModalOpen, setAddPagesModalOpen] = useState(false)
   const [orderedPages,      setOrderedPages]      = useState<number | null>(null)
+  const [autoCreateInfo,    setAutoCreateInfo]    = useState<{ emptyPages: number; photos: number } | null>(null)
 
   // ── Preview ────────────────────────────────────────────────────────────────
   const [previewOpen,     setPreviewOpen]     = useState(false)
@@ -910,8 +940,6 @@ export default function EditorPage() {
 
     const total = allPhotos.length
     const pages = available.length
-    const base  = Math.floor(total / pages)
-    const extra = total % pages
 
     const blankPage = (): PageData => ({ background: '#FFFFFF', pageW: PAGE_W, pageH: PAGE_H, objects: [] })
 
@@ -920,7 +948,12 @@ export default function EditorPage() {
     for (let i = 0; i < available.length; i++) {
       if (photoIdx >= total) break
 
-      const count = Math.min(5, Math.max(1, i < extra ? base + 1 : base))
+      // Bresenham distribution: spreads extras (and empty slots) evenly across all pages
+      const count = Math.min(5,
+        Math.floor(total * (i + 1) / pages) - Math.floor(total * i / pages)
+      )
+      if (count === 0) continue  // not enough photos for this slot — leave page empty and move on
+
       const { spreadIndex, side } = available[i]
 
       const matching = LAYOUTS.filter((l) => l.photoCount === count)
@@ -970,6 +1003,32 @@ export default function EditorPage() {
     captureThumbnail(currentSpreadRef.current)
     regenerateThumbnails(currentSpreadRef.current, totalContentSpreads + 3)
   }, [totalContentSpreads, recomputeUsedPhotos, handleSpreadSelect, captureThumbnail, regenerateThumbnails])
+
+  const requestAutoCreate = useCallback(async () => {
+    const allPhotos = photosRef.current
+    if (allPhotos.length === 0) return
+
+    const pageHasPhoto = (page: PageData | undefined) =>
+      page?.objects !== undefined
+        ? page.objects.some(o => o.kind === 'photo')
+        : page?.frames?.some(f => !f.isEmpty) ?? false
+
+    let emptyPages = 0
+    if (!pageHasPhoto(spreadsData.current[1]?.right)) emptyPages++
+    for (let si = 2; si <= totalContentSpreads + 1; si++) {
+      const saved = spreadsData.current[si]
+      if (!pageHasPhoto(saved?.left))  emptyPages++
+      if (!pageHasPhoto(saved?.right)) emptyPages++
+    }
+    if (emptyPages === 0) return
+
+    setAutoCreateInfo({ emptyPages, photos: allPhotos.length })
+  }, [totalContentSpreads])
+
+  const confirmAutoCreate = useCallback(async () => {
+    setAutoCreateInfo(null)
+    await handleAutoCreate()
+  }, [handleAutoCreate])
 
   // ── Zoom ───────────────────────────────────────────────────────────────────
   const handleZoomChange = useCallback((z: number) => setZoom(z), [])
@@ -1274,7 +1333,7 @@ export default function EditorPage() {
           onUpload={handlePhotoUpload}
           onPhotoClick={handlePhotoClick}
           onDelete={handlePhotoDelete}
-          autoCreateDisabled
+          onAutoCreate={requestAutoCreate}
         />
 
         <div className="editor-center">
@@ -1404,6 +1463,15 @@ export default function EditorPage() {
       )
     })()}
 
+
+    {autoCreateInfo && (
+      <AutoCreateConfirmModal
+        emptyPages={autoCreateInfo.emptyPages}
+        photos={autoCreateInfo.photos}
+        onConfirm={confirmAutoCreate}
+        onClose={() => setAutoCreateInfo(null)}
+      />
+    )}
 
     {textModal && (
       <TextModal
