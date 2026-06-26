@@ -6,12 +6,14 @@ import SizeComparison from './SizeComparison'
 import type { ProductData } from './ProductCard'
 import './ProductModal.css'
 
+const SHARED_DESK = ['/fotos/foto2-desk.jpg', '/fotos/foto3-desk.jpg', '/fotos/foto4-desk.jpg', '/fotos/foto5-desk.jpg']
+
 const IMAGES: Record<string, string[]> = {
-  chico:    ['/fotos/chico2.jpg',    '', '', ''],
-  mediano:  ['/fotos/mediano2.jpg',  '', '', ''],
-  grande:   ['/fotos/grande2.jpg',   '', '', ''],
-  vertical: ['/fotos/vertical2.jpg', '', '', ''],
-  cuadrado: ['/fotos/cuadrado2.jpg', '', '', ''],
+  chico:    ['/fotos/chico2.jpg',    ...SHARED_DESK],
+  mediano:  ['/fotos/mediano2.jpg',  ...SHARED_DESK],
+  grande:   ['/fotos/grande2.jpg',   ...SHARED_DESK],
+  vertical: ['/fotos/vertical2.jpg', ...SHARED_DESK],
+  cuadrado: ['/fotos/cuadrado2.jpg', ...SHARED_DESK],
 }
 
 // [20 pag, 30 pag, 40 pag]
@@ -131,8 +133,8 @@ export default function ProductModal({ product, onClose }: Props) {
     return () => { if (debounceRef.current) clearTimeout(debounceRef.current) }
   }, [cp])
 
-  function prev() { setSlide(s => (s + 3) % 4) }
-  function next() { setSlide(s => (s + 1) % 4) }
+  function prev() { setSlide(s => (s - 1 + images.length) % images.length) }
+  function next() { setSlide(s => (s + 1) % images.length) }
 
   function toggleComp() {
     setShowComp(v => !v)
@@ -158,7 +160,7 @@ export default function ProductModal({ product, onClose }: Props) {
               <button className="pm__arrow pm__arrow--prev" onClick={prev} aria-label="Anterior">&#8249;</button>
               <button className="pm__arrow pm__arrow--next" onClick={next} aria-label="Siguiente">&#8250;</button>
               <div className="pm__dots">
-                {[0, 1, 2, 3].map(i => (
+                {images.map((_, i) => (
                   <button
                     key={i}
                     className={`pm__dot${i === slide ? ' pm__dot--active' : ''}`}

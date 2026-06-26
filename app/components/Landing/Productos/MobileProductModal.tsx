@@ -5,12 +5,14 @@ import { supabase } from '../../../lib/supabase'
 import type { ProductData } from './ProductCard'
 import './MobileProductModal.css'
 
+const SHARED_MOBILE = ['/fotos/foto2-mobile.jpg', '/fotos/foto3-mobile.jpg', '/fotos/foto4-mobile.jpg', '/fotos/foto5-mobile.jpg']
+
 const IMAGES: Record<string, string[]> = {
-  chico:    ['/fotos/chico-mobile.jpg',    '', '', ''],
-  mediano:  ['/fotos/mediano-mobile.jpg',  '', '', ''],
-  grande:   ['/fotos/grande-mobile.jpg',   '', '', ''],
-  vertical: ['/fotos/vertical-mobile.jpg', '', '', ''],
-  cuadrado: ['/fotos/cuadrado-mobile.jpg', '', '', ''],
+  chico:    ['/fotos/chico-mobile.jpg',    ...SHARED_MOBILE],
+  mediano:  ['/fotos/mediano-mobile.jpg',  ...SHARED_MOBILE],
+  grande:   ['/fotos/grande-mobile.jpg',   ...SHARED_MOBILE],
+  vertical: ['/fotos/vertical-mobile.jpg', ...SHARED_MOBILE],
+  cuadrado: ['/fotos/cuadrado-mobile.jpg', ...SHARED_MOBILE],
 }
 
 const PRICES_BY_PAGES: Record<string, [number, number, number]> = {
