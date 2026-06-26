@@ -31,40 +31,58 @@ export default function PreviewPage() {
   const [project,     setProject]     = useState<SavedProject | null>(null)
   const [notFound,    setNotFound]    = useState(false)
   const [userId,      setUserId]      = useState<string | null>(null)
+  const [isOwner,     setIsOwner]     = useState(false)
   const [annotations, setAnnotations] = useState<Annotation[]>([])
 
   useEffect(() => {
     if (!projectId) return
 
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      setUserId(session?.user?.id ?? null)
-    })
+    supabase.auth.getSession().then(async ({ data: { session } }) => {
+      const uid = session?.user?.id ?? null
+      setUserId(uid)
 
-    supabase.from('projects').select('spreads, total_spreads, book_size')
-      .eq('id', projectId).single()
-      .then(({ data, error }) => {
-        if (!error && data?.spreads) {
-          setProject({
-            spreadsData:  data.spreads as Record<number, SpreadData>,
-            totalSpreads: data.total_spreads ?? 16,
-            bookSizeId:   data.book_size ?? 'vertical',
-          })
-          supabase.from('preview_annotations')
-            .select('id, type, page_number, content, created_at')
-            .eq('project_id', projectId)
-            .order('created_at')
-            .then(({ data: ann }) => setAnnotations((ann ?? []) as Annotation[]))
-          return
+      // Fetch project — also get order_id to check ownership
+      const { data, error } = await supabase
+        .from('projects')
+        .select('spreads, total_spreads, book_size, order_id')
+        .eq('id', projectId)
+        .single()
+
+      if (!error && data?.spreads) {
+        setProject({
+          spreadsData:  data.spreads as Record<number, SpreadData>,
+          totalSpreads: data.total_spreads ?? 16,
+          bookSizeId:   data.book_size ?? 'vertical',
+        })
+
+        // Check if the logged-in user owns this project's order
+        if (uid && data.order_id) {
+          const { data: order } = await supabase
+            .from('orders')
+            .select('user_id')
+            .eq('id', data.order_id)
+            .single()
+          setIsOwner(order?.user_id === uid)
         }
-        // Fallback to localStorage
-        try {
-          const raw = localStorage.getItem(`zeika_project_${projectId}`)
-          if (!raw) { setNotFound(true); return }
-          setProject(JSON.parse(raw) as SavedProject)
-        } catch {
-          setNotFound(true)
-        }
-      })
+
+        const { data: ann } = await supabase
+          .from('preview_annotations')
+          .select('id, type, page_number, content, created_at')
+          .eq('project_id', projectId)
+          .order('created_at')
+        setAnnotations((ann ?? []) as Annotation[])
+        return
+      }
+
+      // Fallback to localStorage (no auth, no ownership)
+      try {
+        const raw = localStorage.getItem(`zeika_project_${projectId}`)
+        if (!raw) { setNotFound(true); return }
+        setProject(JSON.parse(raw) as SavedProject)
+      } catch {
+        setNotFound(true)
+      }
+    })
   }, [projectId])
 
   async function handleCommentSave(text: string, page: number): Promise<Annotation | null> {
@@ -135,12 +153,13 @@ export default function PreviewPage() {
       pageH={size.heightPx}
       onClose={() => router.back()}
       annotations={annotations}
-      onCommentSave={handleCommentSave}
-      onCommentUpdate={handleCommentUpdate}
-      onCommentDelete={handleCommentDelete}
-      onDrawingSave={handleDrawingSave}
-      onDrawingDelete={handleDrawingDelete}
-      onSaveChanges={orderId && userId ? handleSaveChanges : undefined}
+      // Annotation tools only available to the project owner (the client who ordered)
+      onCommentSave={isOwner ? handleCommentSave : undefined}
+      onCommentUpdate={isOwner ? handleCommentUpdate : undefined}
+      onCommentDelete={isOwner ? handleCommentDelete : undefined}
+      onDrawingSave={isOwner ? handleDrawingSave : undefined}
+      onDrawingDelete={isOwner ? handleDrawingDelete : undefined}
+      onSaveChanges={orderId && isOwner ? handleSaveChanges : undefined}
     />
   )
 }
