@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useCallback, useState } from 'react'
 import * as fabric from 'fabric'
-import { X, AlignStartVertical, AlignCenterVertical, AlignEndVertical, AlignVerticalJustifyStart, AlignCenterHorizontal, AlignVerticalJustifyEnd, AlignVerticalSpaceAround, AlignHorizontalSpaceAround } from 'lucide-react'
+import { X, RotateCcw, RotateCw, FlipHorizontal2, AlignStartVertical, AlignCenterVertical, AlignEndVertical, AlignVerticalJustifyStart, AlignCenterHorizontal, AlignVerticalJustifyEnd, AlignVerticalSpaceAround, AlignHorizontalSpaceAround } from 'lucide-react'
 import { dropPhotoOnFrame, dropPhotoFree, dropTextureOnPage, dropStickerOnPage, findFrameAtPoint, findPhotoAtPoint, replacePhotoInFrame, restoreEmptyFrame, createFrameAtPx, makeClipRect } from './fabricHelpers'
 import { useLang } from '../../context/LanguageContext'
 import './Canvas.css'
@@ -546,6 +546,82 @@ export default function Canvas({
   const [multiSel, setMultiSel]     = useState<MultiSel>(null)
   const suppressMultiSelRef = useRef(false)
 
+  // ── Photo selection toolbar ────────────────────────────────────────────────
+  type PhotoSel = {
+    side: 'left' | 'right'
+    frameX: number; frameY: number; frameW: number; frameH: number
+    editScale: number
+  } | null
+  const [photoSel, setPhotoSel] = useState<PhotoSel>(null)
+  const activePhotoRef = useRef<{ img: fabric.FabricImage; fc: fabric.Canvas } | null>(null)
+
+  const rotateActivePhoto = useCallback((dir: 1 | -1) => {
+    const ref = activePhotoRef.current
+    if (!ref) return
+    const { img, fc } = ref
+    type PD = { frameX: number; frameY: number; frameW: number; frameH: number; naturalW: number; naturalH: number; coverScale: number; editScale?: number; type: string }
+    const pd = (img as unknown as { data: PD }).data
+    if (!pd || pd.type !== 'photo') return
+
+    const newAngle = ((img.angle ?? 0) + dir * 90 + 360) % 360
+    const is90     = newAngle % 180 !== 0
+    const { naturalW: nW, naturalH: nH, frameW: fw, frameH: fh } = pd
+    const editScale = pd.editScale ?? 1
+
+    const newCoverScale = is90 ? Math.max(fw / nH, fh / nW) : Math.max(fw / nW, fh / nH)
+    const totalScale    = newCoverScale * editScale
+
+    // At 90°/270°: img.width (local-X) → canvas HEIGHT; img.height (local-Y) → canvas WIDTH.
+    // At 0°/180°:  img.width → canvas WIDTH;  img.height → canvas HEIGHT.
+    // Set width/height so the image EXACTLY covers the frame in its new orientation,
+    // then center-crop within the natural source dimensions.
+    const imgW = is90 ? fh / totalScale : fw / totalScale
+    const imgH = is90 ? fw / totalScale : fh / totalScale
+
+    img.set({
+      angle:   newAngle,
+      scaleX:  totalScale,
+      scaleY:  totalScale,
+      width:   imgW,
+      height:  imgH,
+      cropX:   Math.max(0, (nW - imgW) / 2),
+      cropY:   Math.max(0, (nH - imgH) / 2),
+      left:    pd.frameX + fw / 2,
+      top:     pd.frameY + fh / 2,
+      originX: 'center',
+      originY: 'center',
+    })
+    // Recreate clip after rotation — Fabric.js v7 loses absolutePositioned when angle changes.
+    img.clipPath = makeClipRect(pd.frameX, pd.frameY, fw, fh)
+    ;(img as unknown as { data: PD }).data = { ...pd, coverScale: newCoverScale }
+
+    fc.requestRenderAll()
+    fc.fire('object:modified', { target: img })
+  }, [])
+
+  const flipActivePhoto = useCallback(() => {
+    const ref = activePhotoRef.current
+    if (!ref) return
+    const { img, fc } = ref
+    type PD = { frameX: number; frameY: number; frameW: number; frameH: number }
+    const pd = (img as unknown as { data: PD }).data
+    if (!pd) return
+
+    // Keep cropX/cropY — they already center the image correctly (set by
+    // buildPageFromLayout or rotateActivePhoto). Only toggle flipX.
+    img.set({
+      flipX:   !img.flipX,
+      left:    pd.frameX + pd.frameW / 2,
+      top:     pd.frameY + pd.frameH / 2,
+      originX: 'center',
+      originY: 'center',
+    })
+    img.clipPath = makeClipRect(pd.frameX, pd.frameY, pd.frameW, pd.frameH)
+
+    fc.requestRenderAll()
+    fc.fire('object:modified', { target: img })
+  }, [])
+
   // ── Context menu ─────────────────────────────────────────────────────────
   type CtxMenu = { x: number; y: number; obj: fabric.FabricObject; fc: fabric.Canvas } | null
   const [ctxMenu, setCtxMenu] = useState<CtxMenu>(null)
@@ -909,13 +985,25 @@ export default function Canvas({
           naturalW: number; naturalH: number; coverScale: number; editScale: number
         } }).data
         const scaleXY  = pd.coverScale * (pd.editScale ?? 1)
-        const virtW    = pd.frameW / scaleXY
-        const virtH    = pd.frameH / scaleXY
-        // Convert img.left/top back to cropX/cropY for virtual-dims normal mode
         const panX     = (img.left ?? pd.frameX + pd.frameW / 2) - (pd.frameX + pd.frameW / 2)
         const panY     = (img.top  ?? pd.frameY + pd.frameH / 2) - (pd.frameY + pd.frameH / 2)
-        const rawCropX = (pd.naturalW - virtW) / 2 - panX / scaleXY
-        const rawCropY = (pd.naturalH - virtH) / 2 - panY / scaleXY
+        const angle    = ((img.angle ?? 0) % 360 + 360) % 360
+        // At 90°/270° the frame W/H swap roles relative to img.width/height.
+        // Also the canvas pan axes map differently to source crop axes.
+        const is90     = angle === 90 || angle === 270
+        const virtW    = is90 ? pd.frameH / scaleXY : pd.frameW / scaleXY
+        const virtH    = is90 ? pd.frameW / scaleXY : pd.frameH / scaleXY
+        let rawCropX: number, rawCropY: number
+        if (angle === 90) {
+          rawCropX = (pd.naturalW - virtW) / 2 - panY / scaleXY
+          rawCropY = (pd.naturalH - virtH) / 2 + panX / scaleXY
+        } else if (angle === 270) {
+          rawCropX = (pd.naturalW - virtW) / 2 + panY / scaleXY
+          rawCropY = (pd.naturalH - virtH) / 2 - panX / scaleXY
+        } else {
+          rawCropX = (pd.naturalW - virtW) / 2 - panX / scaleXY
+          rawCropY = (pd.naturalH - virtH) / 2 - panY / scaleXY
+        }
         const cropX    = Math.max(0, Math.min(rawCropX, pd.naturalW - virtW))
         const cropY    = Math.max(0, Math.min(rawCropY, pd.naturalH - virtH))
         img.set({
@@ -962,6 +1050,24 @@ export default function Canvas({
         setTextSel({ side, top: br.top, left: br.left, width: br.width })
       } else {
         setTextSel(null)
+      }
+    }
+
+    const updatePhotoSel = (obj: fabric.FabricObject | null | undefined, fcInner: fabric.Canvas, sideInner: 'left' | 'right') => {
+      const data = (obj as unknown as { data?: { type: string; frameX?: number; frameY?: number; frameW?: number; frameH?: number; editScale?: number } } | undefined)?.data
+      if (obj && data?.type === 'photo') {
+        setPhotoSel({
+          side:       sideInner,
+          frameX:     data.frameX ?? 0,
+          frameY:     data.frameY ?? 0,
+          frameW:     data.frameW ?? 0,
+          frameH:     data.frameH ?? 0,
+          editScale:  data.editScale ?? 1,
+        })
+        activePhotoRef.current = { img: obj as fabric.FabricImage, fc: fcInner }
+      } else {
+        setPhotoSel(null)
+        activePhotoRef.current = null
       }
     }
 
@@ -1057,13 +1163,28 @@ export default function Canvas({
       } }).data
 
       const scaleXY  = pd.coverScale * (pd.editScale ?? 1)
-      const virtW    = pd.frameW / scaleXY
-      const virtH    = pd.frameH / scaleXY
       const cropX    = img.cropX ?? 0
       const cropY    = img.cropY ?? 0
-      // Convert current cropX/cropY to natural-dims img.left/top so the same source region stays centered
-      const initLeft = pd.frameX + pd.frameW / 2 + (pd.naturalW / 2 - cropX - virtW / 2) * scaleXY
-      const initTop  = pd.frameY + pd.frameH / 2 + (pd.naturalH / 2 - cropY - virtH / 2) * scaleXY
+      const imgW     = img.width  ?? pd.frameW / scaleXY  // current virtual width (axis-aware)
+      const imgH     = img.height ?? pd.frameH / scaleXY
+      const cx       = pd.frameX + pd.frameW / 2
+      const cy       = pd.frameY + pd.frameH / 2
+      const angle    = ((img.angle ?? 0) % 360 + 360) % 360
+      // Convert cropX/cropY → canvas initLeft/initTop accounting for image rotation.
+      // At 0°/180°: local X → canvas X, local Y → canvas Y.
+      // At 90°:     local X → canvas Y, local Y → canvas −X.
+      // At 270°:    local X → canvas −Y, local Y → canvas X.
+      let initLeft: number, initTop: number
+      if (angle === 90) {
+        initLeft = cx + (cropY + imgH / 2 - pd.naturalH / 2) * scaleXY
+        initTop  = cy + (pd.naturalW / 2 - cropX - imgW / 2) * scaleXY
+      } else if (angle === 270) {
+        initLeft = cx - (cropY + imgH / 2 - pd.naturalH / 2) * scaleXY
+        initTop  = cy - (pd.naturalW / 2 - cropX - imgW / 2) * scaleXY
+      } else {
+        initLeft = cx + (pd.naturalW / 2 - cropX - imgW / 2) * scaleXY
+        initTop  = cy + (pd.naturalH / 2 - cropY - imgH / 2) * scaleXY
+      }
 
       isPanMode.current    = true
       panTargetRef.current = img
@@ -1361,6 +1482,7 @@ export default function Canvas({
         applyTextControls(e.selected?.[0])
         syncMultiSel(fc, side)
         updateSpanSel(e.selected?.[0])
+        updatePhotoSel(e.selected?.[0], fc, side)
       })
       fc.on('selection:updated', (e) => {
         onObjectSelectedRef.current(e.selected?.[0] ?? null)
@@ -1368,11 +1490,14 @@ export default function Canvas({
         applyTextControls(e.selected?.[0])
         syncMultiSel(fc, side)
         updateSpanSel(e.selected?.[0])
+        updatePhotoSel(e.selected?.[0], fc, side)
       })
       fc.on('selection:cleared', () => {
         onObjectSelectedRef.current(null)
         setTextSel(null)
         if (!suppressMultiSelRef.current) setMultiSel(null)
+        setPhotoSel(null)
+        activePhotoRef.current = null
         if (currentSpanSel?.masterCanvas === fc) {
           currentSpanSel = null
           const otherFc = side === 'left' ? rc : lc
@@ -2247,6 +2372,16 @@ export default function Canvas({
                   {tfOverlays.filter(o => o.side === 'left').map(o => (
                     <span key={o.id} className="canvas-tf-cursor" style={{ top: o.y + 6, left: o.x + 6 }} aria-hidden="true" />
                   ))}
+                  {photoSel?.side === 'left' && !panModeActive && (
+                    <div className="canvas-align-toolbar canvas-photo-toolbar" style={{ top: photoSel.frameY + photoSel.frameH + 8, left: photoSel.frameX + photoSel.frameW / 2 }}>
+                      <span className="canvas-photo-toolbar-pct">{Math.round(photoSel.editScale * 100)}%</span>
+                      <div className="canvas-align-sep" />
+                      <button className="canvas-align-btn" onClick={() => rotateActivePhoto(-1)} title="Rotar izquierda"><RotateCcw size={16} strokeWidth={1.5} /></button>
+                      <button className="canvas-align-btn" onClick={() => rotateActivePhoto(1)}  title="Rotar derecha"><RotateCw  size={16} strokeWidth={1.5} /></button>
+                      <div className="canvas-align-sep" />
+                      <button className="canvas-align-btn" onClick={flipActivePhoto} title="Espejar"><FlipHorizontal2 size={16} strokeWidth={1.5} /></button>
+                    </div>
+                  )}
                   {multiSel?.side === 'left' && (
                     <div className="canvas-align-toolbar" style={{ top: multiSel.selBottom + 8, left: multiSel.selLeft + multiSel.selWidth / 2 }}>
                       <button className="canvas-align-btn" onClick={() => applyAlignment('left')}      aria-label={t.alignLeft}><AlignStartVertical size={18} strokeWidth={1.5} /></button>
@@ -2307,6 +2442,16 @@ export default function Canvas({
                   {tfOverlays.filter(o => o.side === 'right').map(o => (
                     <span key={o.id} className="canvas-tf-cursor" style={{ top: o.y + 6, left: o.x + 6 }} aria-hidden="true" />
                   ))}
+                  {photoSel?.side === 'right' && !panModeActive && (
+                    <div className="canvas-align-toolbar canvas-photo-toolbar" style={{ top: photoSel.frameY + photoSel.frameH + 8, left: photoSel.frameX + photoSel.frameW / 2 }}>
+                      <span className="canvas-photo-toolbar-pct">{Math.round(photoSel.editScale * 100)}%</span>
+                      <div className="canvas-align-sep" />
+                      <button className="canvas-align-btn" onClick={() => rotateActivePhoto(-1)} title="Rotar izquierda"><RotateCcw size={16} strokeWidth={1.5} /></button>
+                      <button className="canvas-align-btn" onClick={() => rotateActivePhoto(1)}  title="Rotar derecha"><RotateCw  size={16} strokeWidth={1.5} /></button>
+                      <div className="canvas-align-sep" />
+                      <button className="canvas-align-btn" onClick={flipActivePhoto} title="Espejar"><FlipHorizontal2 size={16} strokeWidth={1.5} /></button>
+                    </div>
+                  )}
                   {multiSel?.side === 'right' && (
                     <div className="canvas-align-toolbar" style={{ top: multiSel.selBottom + 8, left: multiSel.selLeft + multiSel.selWidth / 2 }}>
                       <button className="canvas-align-btn" onClick={() => applyAlignment('left')}      aria-label={t.alignLeft}><AlignStartVertical size={18} strokeWidth={1.5} /></button>

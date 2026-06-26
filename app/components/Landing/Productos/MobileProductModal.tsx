@@ -6,11 +6,11 @@ import type { ProductData } from './ProductCard'
 import './MobileProductModal.css'
 
 const IMAGES: Record<string, string[]> = {
-  chico:    ['/fotos/chico2.jpg',    '', '', ''],
-  mediano:  ['/fotos/mediano2.jpg',  '', '', ''],
-  grande:   ['/fotos/grande2.jpg',   '', '', ''],
-  vertical: ['/fotos/vertical2.jpg', '', '', ''],
-  cuadrado: ['/fotos/cuadrado2.jpg', '', '', ''],
+  chico:    ['/fotos/chico-mobile.jpg',    '', '', ''],
+  mediano:  ['/fotos/mediano-mobile.jpg',  '', '', ''],
+  grande:   ['/fotos/grande-mobile.jpg',   '', '', ''],
+  vertical: ['/fotos/vertical-mobile.jpg', '', '', ''],
+  cuadrado: ['/fotos/cuadrado-mobile.jpg', '', '', ''],
 }
 
 const PRICES_BY_PAGES: Record<string, [number, number, number]> = {

@@ -2118,6 +2118,9 @@
     margin: 0 auto;
     width: 100%;
   }
+  .mpd-reorder-mobile {
+    display: none;
+  }
 }
 
 /* ── Pagar page (mpag = mis-proyectos/pagar) ────────────────────────────── */

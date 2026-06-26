@@ -365,6 +365,24 @@
   flex-shrink: 0;
 }
 
+/* ─── Photo toolbar ─────────────────────────────────────────────────────────── */
+
+.canvas-photo-toolbar {
+  gap: 2px;
+}
+
+.canvas-photo-toolbar-pct {
+  font-family: var(--font-ui);
+  font-size: 13px;
+  font-weight: 500;
+  letter-spacing: 0.02em;
+  color: var(--color-black);
+  padding: 0 6px;
+  min-width: 42px;
+  text-align: center;
+  flex-shrink: 0;
+}
+
 /* ─── Viewport pan overlay ───────────────────────────────────────────────────── */
 
 .canvas-vp-overlay {
