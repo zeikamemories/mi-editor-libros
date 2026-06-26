@@ -1,11 +1,11 @@
 'use client'
 
 import { useState, useRef, useCallback, useEffect, Suspense } from 'react'
-import Image from 'next/image'
 import Link from 'next/link'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { Monitor } from 'lucide-react'
 import { supabase } from '../lib/supabase'
+import Navbar from '../components/Landing/Navbar/Navbar'
 import './nuevo.css'
 
 // ── Types ────────────────────────────────────────────────────────────────────
@@ -29,6 +29,7 @@ interface BookSize {
 interface BookDetails {
   nombre:    string
   disenadora: string
+  paginas:    string
   tapa:       string
   acabado:    string
 }
@@ -36,11 +37,11 @@ interface BookDetails {
 // ── Data ─────────────────────────────────────────────────────────────────────
 
 const BOOK_SIZES: BookSize[] = [
-  { id: 'chico',    nombre: 'CHICO HORIZONTAL',  dims: '21 x 14,8 CM', price: '$75.500',  img: '/chico.png'    },
-  { id: 'mediano',  nombre: 'MEDIANO HORIZONTAL', dims: '28 x 21,6 CM', price: '$81.500',  img: '/mediano.png'  },
-  { id: 'grande',   nombre: 'GRANDE HORIZONTAL',  dims: '41 x 29 CM',   price: '$100.000', img: '/grande.png'   },
-  { id: 'vertical', nombre: 'VERTICAL',           dims: '21,6 x 28 CM', price: '$81.500',  img: '/vertical.png' },
-  { id: 'cuadrado', nombre: 'CUADRADO',           dims: '29 x 29 CM',   price: '$97.000',  img: '/cuadrado.png' },
+  { id: 'chico',    nombre: 'CHICO HORIZONTAL',  dims: '21 x 14,8 CM', price: '$75.500',  img: '/fotos/chico-mobile.jpg'    },
+  { id: 'mediano',  nombre: 'MEDIANO HORIZONTAL', dims: '28 x 21,6 CM', price: '$81.500',  img: '/fotos/mediano-mobile.jpg'  },
+  { id: 'grande',   nombre: 'GRANDE HORIZONTAL',  dims: '41 x 29 CM',   price: '$100.000', img: '/fotos/grande-mobile.jpg'   },
+  { id: 'vertical', nombre: 'VERTICAL',           dims: '21,6 x 28 CM', price: '$81.500',  img: '/fotos/vertical-mobile.jpg' },
+  { id: 'cuadrado', nombre: 'CUADRADO',           dims: '29 x 29 CM',   price: '$97.000',  img: '/fotos/cuadrado-mobile.jpg' },
 ]
 
 // ── Upload helper (mirrors PhotoPanel logic) ──────────────────────────────────
@@ -52,19 +53,6 @@ async function uploadFile(file: File): Promise<Photo> {
   const data = await res.json() as { url?: string; width?: number; height?: number; error?: string }
   if (!res.ok || !data.url) throw new Error(data.error ?? 'Upload failed')
   return { id: crypto.randomUUID(), src: data.url, name: file.name, width: data.width ?? 0, height: data.height ?? 0 }
-}
-
-// ── Shared Topbar ─────────────────────────────────────────────────────────────
-
-function NuevoTopbar() {
-  return (
-    <header className="nuevo-topbar">
-      <Image src="/LogoZeika.png" alt="Zeika" width={36} height={36} />
-      <span className="nuevo-topbar-spacer" />
-      <span className="nuevo-topbar-username">MAIKA</span>
-      <div className="nuevo-avatar">M</div>
-    </header>
-  )
 }
 
 // ── Shared Footer ─────────────────────────────────────────────────────────────
@@ -102,7 +90,7 @@ function Step1({ selected, onSelect }: { selected: string | null; onSelect: (id:
           >
             <div className="nuevo-size-card-img-wrap">
               {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img src={book.img} alt={book.nombre} className={`nuevo-size-card-img${book.id === 'vertical' ? ' nuevo-size-card-img--vertical' : ''}`} />
+              <img src={book.img} alt={book.nombre} className="nuevo-size-card-img" />
             </div>
             <div className="nuevo-size-card-info">
               <div className="nuevo-size-card-name-row">
@@ -181,7 +169,13 @@ interface Step2Props {
   onChange:     (k: keyof BookDetails, v: string) => void
 }
 
+const PAGE_OPTIONS: Record<string, string[]> = {
+  chico: ['20', '32', '40'],
+}
+const DEFAULT_PAGE_OPTIONS = ['20', '30', '40']
+
 function Step2({ selectedBook, details, onChange }: Step2Props) {
+  const pageOptions = (selectedBook && PAGE_OPTIONS[selectedBook.id]) ?? DEFAULT_PAGE_OPTIONS
   return (
     <div className="nuevo-body">
       <h1 className="nuevo-step-title">2. DETALLES DEL PEDIDO</h1>
@@ -202,6 +196,16 @@ function Step2({ selectedBook, details, onChange }: Step2Props) {
             <label className="nuevo-label">DISEÑADORA</label>
             <DesignerSelect value={details.disenadora} onChange={(v) => onChange('disenadora', v)} />
           </div>
+          <div className="nuevo-field">
+            <label className="nuevo-label">PÁGINAS</label>
+            <select
+              className="nuevo-select"
+              value={details.paginas}
+              onChange={(e) => onChange('paginas', e.target.value)}
+            >
+              {pageOptions.map(p => <option key={p} value={p}>{p}</option>)}
+            </select>
+          </div>
         </div>
 
         {/* Preview — same structure as Step 1 cards */}
@@ -213,7 +217,7 @@ function Step2({ selectedBook, details, onChange }: Step2Props) {
                 <img
                   src={selectedBook.img}
                   alt={selectedBook.nombre}
-                  className={`nuevo-size-card-img${selectedBook.id === 'vertical' ? ' nuevo-size-card-img--vertical' : ''}`}
+                  className="nuevo-size-card-img"
                 />
               </div>
               <div className="nuevo-size-card-info">
@@ -315,6 +319,7 @@ function NuevoContent() {
   const [details,      setDetails]      = useState<BookDetails>({
     nombre:     searchParams.get('name') ?? '',
     disenadora: 'Maika',
+    paginas:    '20',
     tapa:       'Tapa Dura',
     acabado:    'Laminado Mate',
   })
@@ -331,6 +336,12 @@ function NuevoContent() {
   const selectedBook = BOOK_SIZES.find((b) => b.id === selectedSize) ?? null
 
   const handleDetailChange = (k: keyof BookDetails, v: string) => setDetails((d) => ({ ...d, [k]: v }))
+
+  useEffect(() => {
+    if (!selectedSize) return
+    const opts = PAGE_OPTIONS[selectedSize] ?? DEFAULT_PAGE_OPTIONS
+    setDetails((d) => ({ ...d, paginas: opts.includes(d.paginas) ? d.paginas : opts[0] }))
+  }, [selectedSize])
 
   const handleUpload = useCallback(async (files: FileList) => {
     const arr = Array.from(files)
@@ -370,9 +381,10 @@ function NuevoContent() {
           .from('projects').select('id').eq('order_id', linkedOrderId).maybeSingle()
         if (existing?.id) {
           await supabase.from('projects').update({
-            name:      details.nombre || 'Sin título',
+            name:          details.nombre || 'Sin título',
             photos,
-            book_size: selectedSize ?? 'vertical',
+            book_size:     selectedSize ?? 'vertical',
+            total_spreads: (parseInt(details.paginas) || 20) - 1,
           }).eq('id', existing.id)
           projectId = existing.id
         }
@@ -389,7 +401,7 @@ function NuevoContent() {
           user_id:     adminUserId,
           book_name:   details.nombre || 'Sin título',
           size:        SIZE_TO_DB[selectedSize ?? 'vertical'] ?? selectedSize,
-          pages_base:  20,
+          pages_base:  parseInt(details.paginas) || 20,
           extra_pages: 0,
           extra_text:  false,
           price_total: 0,
@@ -407,7 +419,7 @@ function NuevoContent() {
             photos,
             spreads:       {},
             book_size:     selectedSize ?? 'vertical',
-            total_spreads: 13,
+            total_spreads: (parseInt(details.paginas) || 20) - 1,
             ...(returnOrderId ? { order_id: returnOrderId } : {}),
           })
           .select('id')
@@ -446,7 +458,7 @@ function NuevoContent() {
 
   return (
     <div className="nuevo-root">
-      <NuevoTopbar />
+      <Navbar hideLinks hideMisProyectos />
 
       {step === 1 && (
         <Step1 selected={selectedSize} onSelect={setSelectedSize} />

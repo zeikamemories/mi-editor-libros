@@ -337,10 +337,14 @@ export default function EditorPage() {
       ctx.drawImage(img, (W - logoW) / 2, (H - logoH) / 2, logoW, logoH)
       const logoDataUrl = c.toDataURL('image/jpeg', 0.85)
       logoThumbRef.current = logoDataUrl
-      setThumbnails(prev => ({
-        ...prev,
-        [lastIdx]: { ...prev[lastIdx], left: logoDataUrl },
-      }))
+      // Place logo on the current last spread (may differ from the stale lastIdx
+      // captured in this closure if DB loaded a larger total_spreads).
+      setThumbnails(prev => {
+        const currentLast = totalContentSpreadsRef.current + 3 - 1
+        const next = { ...prev }
+        next[currentLast] = { left: logoDataUrl, right: noEditThumbRef.current }
+        return next
+      })
     }
     img.src = '/LogoZeika.jpg'
   }, []) // eslint-disable-line react-hooks/exhaustive-deps
@@ -405,6 +409,35 @@ export default function EditorPage() {
   // ── Keep photosRef and totalContentSpreadsRef current ────────────────────
   useEffect(() => { photosRef.current = photos }, [photos])
   useEffect(() => { totalContentSpreadsRef.current = totalContentSpreads }, [totalContentSpreads])
+
+  // ── Fill blank thumbnails when total spread count changes (e.g. after DB load) ──
+  // Without this, spreads beyond the initial default of 13 render as grey rects.
+  useEffect(() => {
+    if (!blankThumbRef.current) return  // not yet initialized
+    const total    = totalContentSpreads + 3
+    const lastIdx  = total - 1
+    setThumbnails(prev => {
+      const next = { ...prev }
+      for (let i = 0; i < total; i++) {
+        if (!next[i]) next[i] = { left: blankThumbRef.current, right: blankThumbRef.current }
+      }
+      // Always keep logo+noEdit on the actual last spread
+      const logo = logoThumbRef.current || blankThumbRef.current
+      next[lastIdx] = { left: logo, right: noEditThumbRef.current }
+      // Clear logo/noEdit from any spread that is no longer the last one.
+      // The logo can end up on an old lastIdx if the image loaded before the DB
+      // response (race condition: img.onload uses a stale totalContentSpreadsRef).
+      for (let i = 0; i < lastIdx; i++) {
+        const e = next[i]
+        if (!e) continue
+        const newE = { ...e }
+        if (e.right === noEditThumbRef.current) newE.right = blankThumbRef.current
+        if (logoThumbRef.current && e.left === logoThumbRef.current) newE.left = blankThumbRef.current
+        next[i] = newE
+      }
+      return next
+    })
+  }, [totalContentSpreads]) // eslint-disable-line react-hooks/exhaustive-deps
 
   // ── Save total_spreads to Supabase when spread count changes ─────────────
   // canvas onChange doesn't fire when spreads are added/removed, so we need this.

@@ -5,49 +5,9 @@
   flex-direction: column;
   min-height: 100vh;
   background: var(--color-white);
-  font-family: var(--font-body);
+  font-family: "forma-djr-display", sans-serif;
 }
 
-/* ── Topbar ───────────────────────────────────────────────────────────────── */
-
-.nuevo-topbar {
-  height: 50px;
-  background: #fefefe;
-  border-bottom: 1px solid #cfcfcf;
-  display: flex;
-  align-items: center;
-  padding: 0 24px;
-  gap: 12px;
-  flex-shrink: 0;
-  position: sticky;
-  top: 0;
-  z-index: 100;
-}
-
-.nuevo-topbar-spacer   { flex: 1; }
-
-.nuevo-topbar-username {
-  font-family: var(--font-body);
-  font-size: 14px;
-  font-weight: 400;
-  letter-spacing: 0.3px;
-  color: #282828;
-}
-
-.nuevo-avatar {
-  width: 32px;
-  height: 32px;
-  border-radius: 50%;
-  background: var(--color-blue);
-  color: var(--color-white);
-  font-family: var(--font-body);
-  font-weight: 500;
-  font-size: 15px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  flex-shrink: 0;
-}
 
 /* ── Body / content area ─────────────────────────────────────────────────── */
 
@@ -63,11 +23,11 @@
 }
 
 .nuevo-step-title {
-  font-family: var(--font-body);
+  font-family: "forma-djr-display", sans-serif;
   font-size: 22px;
   font-weight: 600;
   color: var(--color-black);
-  letter-spacing: 0.5px;
+  letter-spacing: 0.9px;
   margin-bottom: 48px;
 }
 
@@ -88,10 +48,10 @@
 
 .nuevo-btn {
   padding: 9px 22px;
-  font-family: var(--font-body);
+  font-family: "forma-djr-display", sans-serif;
   font-size: 13px;
-  font-weight: 500;
-  letter-spacing: 0.26px;
+  font-weight: 600;
+  letter-spacing: 1.1px;
   cursor: pointer;
   border-radius: 2px;
   transition: opacity 0.15s;
@@ -154,21 +114,15 @@
   width: 100%;
   height: 240px;
   overflow: hidden;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 20px 16px 16px 16px;
   flex-shrink: 0;
 }
 
 .nuevo-size-card-img {
-  max-width: 100%;
-  max-height: 100%;
-  object-fit: contain;
-}
-
-.nuevo-size-card-img--vertical {
-  transform: scale(1.35);
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center;
+  display: block;
 }
 
 /* Info section: name+dims above divider, price below */
@@ -185,19 +139,19 @@
 }
 
 .nuevo-size-card-name {
-  font-family: var(--font-body);
+  font-family: "forma-djr-display", sans-serif;
   font-size: 15px;
   font-weight: 600;
   color: #212121;
-  letter-spacing: 0.27px;
+  letter-spacing: 0.6px;
 }
 
 .nuevo-size-card-dims {
-  font-family: var(--font-body);
+  font-family: "forma-djr-display", sans-serif;
   font-size: 10px;
   font-weight: 400;
   color: #464646;
-  letter-spacing: 0.18px;
+  letter-spacing: 0.5px;
   white-space: nowrap;
   flex-shrink: 0;
 }
@@ -210,11 +164,11 @@
 
 .nuevo-size-card-price {
   display: block;
-  font-family: var(--font-body);
+  font-family: "forma-djr-display", sans-serif;
   font-size: 15px;
   font-weight: 600;
   color: #212121;
-  letter-spacing: 0.26px;
+  letter-spacing: 0.6px;
 }
 
 /* ── Step 2: form + preview ───────────────────────────────────────────────── */
@@ -229,10 +183,10 @@
 .nuevo-form {
   display: flex;
   flex-direction: column;
-  gap: 60px;
+  gap: 28px;
   max-width: 550px;
   margin-right: 80px;
-  margin-top: 130px;
+  margin-top: 60px;
 }
 
 .nuevo-field {
@@ -243,11 +197,11 @@
 }
 
 .nuevo-label {
-  font-family: var(--font-body);
+  font-family: "forma-djr-display", sans-serif;
   font-size: 18px;
-  font-weight: 400;
+  font-weight: 600;
   color: #303030;
-  letter-spacing: 0.27px;
+  letter-spacing: 0.6px;
   white-space: nowrap;
 }
 
@@ -257,9 +211,9 @@
   background: #f8fafc;
   border: 1px solid #a1a1a1;
   padding: 0 10px;
-  font-family: var(--font-body);
+  font-family: "forma-djr-display", sans-serif;
   font-size: 16px;
-  font-weight: 400;
+  font-weight: 600;
   color: #191919;
   width: 100%;
   max-width: 350px;
@@ -302,7 +256,7 @@
 /* Scale up the shared card internals for the preview */
 .nuevo-preview-card .nuevo-size-card-img-wrap {
   height: 350px;
-  padding: 20px 16px 16px 16px;
+  padding: 0;
 }
 
 .nuevo-preview-card .nuevo-size-card-info {
@@ -315,12 +269,12 @@
 
 .nuevo-preview-card .nuevo-size-card-name {
   font-size: 24px;
-  letter-spacing: 0.45px;
+  letter-spacing: 0.8px;
 }
 
 .nuevo-preview-card .nuevo-size-card-dims {
   font-size: 15px;
-  letter-spacing: 0.3px;
+  letter-spacing: 0.6px;
 }
 
 .nuevo-preview-card .nuevo-size-card-divider {
@@ -329,7 +283,7 @@
 
 .nuevo-preview-card .nuevo-size-card-price {
   font-size: 18px;
-  letter-spacing: 0.36px;
+  letter-spacing: 0.7px;
 }
 
 /* ── Designer custom select ──────────────────────────────────────────────── */
@@ -346,9 +300,10 @@
   height: 34px;
   padding: 0 12px;
   border-radius: 12px;
-  font-family: var(--font-body);
+  font-family: "forma-djr-display", sans-serif;
   font-size: 14px;
-  font-weight: 500;
+  font-weight: 700;
+  letter-spacing: 0.6px;
   cursor: pointer;
   white-space: nowrap;
   min-width: 110px;
@@ -390,9 +345,10 @@
   height: 34px;
   padding: 0 12px;
   border-radius: 12px;
-  font-family: var(--font-body);
+  font-family: "forma-djr-display", sans-serif;
   font-size: 14px;
-  font-weight: 400;
+  font-weight: 600;
+  letter-spacing: 0.6px;
   cursor: pointer;
   white-space: nowrap;
   text-align: left;
@@ -420,11 +376,11 @@
 }
 
 .nuevo-upload-empty-text {
-  font-family: var(--font-body);
+  font-family: "forma-djr-display", sans-serif;
   font-size: 22px;
-  font-weight: 400;
+  font-weight: 600;
   color: #1b1b1b;
-  letter-spacing: 0.44px;
+  letter-spacing: 0.8px;
 }
 
 .nuevo-upload-btn {
@@ -433,10 +389,10 @@
   border: none;
   border-radius: 3px;
   padding: 8px 24px;
-  font-family: var(--font-body);
+  font-family: "forma-djr-display", sans-serif;
   font-size: 16px;
-  font-weight: 400;
-  letter-spacing: 0.4px;
+  font-weight: 700;
+  letter-spacing: 0.8px;
   cursor: pointer;
   transition: opacity 0.15s;
 }
@@ -551,7 +507,7 @@
   background: none;
   border: 1px solid #1b1b1b;
   padding: 7px 16px;
-  font-family: var(--font-body);
+  font-family: "forma-djr-display", sans-serif;
   font-size: 13px;
   font-weight: 400;
   color: #1b1b1b;

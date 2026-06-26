@@ -33,7 +33,7 @@ function ConfirmadoContent() {
       const now       = new Date().toISOString()
 
       const [{ data: orderData }, { data: { user } }] = await Promise.all([
-        supabase.from('orders').select('book_name, size, extra_text').eq('id', orderId!).single(),
+        supabase.from('orders').select('book_name, size, extra_text, pages_base, extra_pages').eq('id', orderId!).single(),
         supabase.auth.getUser(),
         supabase.from('orders').update({
           status:       newStatus,
@@ -98,11 +98,12 @@ function ConfirmadoContent() {
             })
             const docsLink = docsRes.ok ? (await docsRes.json()).docsUrl ?? null : null
 
+            const totalPages = (orderData.pages_base ?? 20) + (orderData.extra_pages ?? 0)
             await Promise.all([
               supabase.from('projects').insert({
                 name:          bookName,
                 book_size:     orderData.size ?? 'vertical',
-                total_spreads: 13,
+                total_spreads: totalPages - 1,
                 photos:        [],
                 spreads:       {},
                 order_id:      orderId,
