@@ -558,6 +558,7 @@ export default function Canvas({
   // Stores exact image state before entering pan mode.
   // initLeft/initTop are the ghost's starting canvas position (≠ frameCenter for non-centered crops).
   // userPan = img.left - initLeft (not img.left - frameCenter) so "no movement" always restores
+  // the original crop exactly, regardless of whether the crop is centered or not.
   const prePanStateRef = useRef<{
     width: number; height: number; cropX: number; cropY: number
     scaleXY: number; angle: number
