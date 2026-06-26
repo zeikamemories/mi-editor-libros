@@ -413,7 +413,10 @@ export default function PedidoAdminPage() {
             </button>
           </div>
           {order.preview_url && (
-            <a className="pedido-link-btn" href={order.preview_url} target="_blank" rel="noreferrer">
+            <a className="pedido-link-btn" href={(() => {
+              try { const u = new URL(order.preview_url!); return u.pathname + u.search }
+              catch { return order.preview_url! }
+            })()} target="_blank" rel="noreferrer">
               Ver preview ↗
             </a>
           )}
