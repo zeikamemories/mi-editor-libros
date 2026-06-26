@@ -11,6 +11,7 @@ export type Photo = {
   name:   string
   width:  number
   height: number
+  focalY?: number  // face-center Y as 0–1 fraction of image height (0=top, 1=bottom)
 }
 
 interface PhotoPanelProps {

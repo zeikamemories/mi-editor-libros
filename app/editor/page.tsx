@@ -109,6 +109,53 @@ function AddPagesModal({
   )
 }
 
+// ─── Face focal-point detection (face-api.js) ────────────────────────────────
+// Returns focalY: face-top position as a 0–1 fraction of image height (0 = top).
+// buildPageFromLayout uses focalY to place the face near the top of each frame.
+
+let faceApiReady = false
+
+async function ensureFaceApi() {
+  if (faceApiReady) return
+  const faceapi = await import('face-api.js')
+  await faceapi.nets.tinyFaceDetector.loadFromUri('/models')
+  faceApiReady = true
+  console.log('[face-detect] modelo cargado ✓')
+}
+
+async function detectFocalY(src: string, _naturalW: number, naturalH: number): Promise<number> {
+  // Fallback: upper-third bias works better than center for most portrait photos
+  const FALLBACK = 0.25
+  try {
+    await ensureFaceApi()
+    const faceapi = await import('face-api.js')
+
+    const img = new Image()
+    img.crossOrigin = 'anonymous'
+    await new Promise<void>((res, rej) => { img.onload = () => res(); img.onerror = rej; img.src = src })
+
+    const detections = await faceapi.detectAllFaces(
+      img,
+      new faceapi.TinyFaceDetectorOptions({ inputSize: 416, scoreThreshold: 0.3 })
+    )
+    console.log('[face-detect]', detections.length, 'caras en', src.split('/').pop())
+    if (detections.length === 0) return FALLBACK
+
+    // Pick the largest detected face
+    const best = detections.reduce((a, b) =>
+      b.box.width * b.box.height > a.box.width * a.box.height ? b : a
+    )
+    // top of face minus 50% of face height → includes hair/forehead
+    const faceTop = best.box.top - best.box.height * 0.5
+    const focalY = Math.max(0, Math.min(0.9, faceTop / naturalH))
+    console.log('[face-detect] focalY:', focalY.toFixed(2))
+    return focalY
+  } catch (err) {
+    console.error('[face-detect] ERROR:', err)
+    return FALLBACK
+  }
+}
+
 // ─── AutoCreateConfirmModal ──────────────────────────────────────────────────
 
 function AutoCreateConfirmModal({
@@ -566,6 +613,11 @@ export default function EditorPage() {
       savePhotosToSupabase(next)
       return next
     })
+    // Async: detect face focal points and update photos once ready
+    uploaded.forEach(async (photo) => {
+      const focalY = await detectFocalY(photo.src, photo.width, photo.height)
+      setPhotos(prev => prev.map(p => p.id === photo.id ? { ...p, focalY } : p))
+    })
   }, [savePhotosToSupabase])
 
   // ── Back navigation: flush save + cover thumbnail before leaving ─────────
@@ -972,7 +1024,7 @@ export default function EditorPage() {
       const batch: PhotoAssignment[] = []
       for (let fi = 0; fi < layout.frames.length && photoIdx < total; fi++, photoIdx++) {
         const p = allPhotos[photoIdx]
-        batch.push({ src: p.src, naturalW: p.width, naturalH: p.height })
+        batch.push({ src: p.src, naturalW: p.width, naturalH: p.height, focalY: p.focalY })
       }
 
       // Reorder batch to match frame orientations (landscape ↔ landscape, portrait ↔ portrait)
@@ -1027,6 +1079,23 @@ export default function EditorPage() {
 
   const confirmAutoCreate = useCallback(async () => {
     setAutoCreateInfo(null)
+
+    // Ensure every photo has a focal point before building layouts.
+    // Photos loaded from Supabase skip handlePhotoUpload so they never get detectFocalY.
+    const current = photosRef.current
+    const needsDetection = current.some(p => p.focalY === undefined)
+    if (needsDetection) {
+      const withFocal = await Promise.all(
+        current.map(async (p) => {
+          if (p.focalY !== undefined) return p
+          const focalY = await detectFocalY(p.src, p.width, p.height)
+          return { ...p, focalY }
+        })
+      )
+      photosRef.current = withFocal
+      setPhotos(withFocal)
+    }
+
     await handleAutoCreate()
   }, [handleAutoCreate])
 

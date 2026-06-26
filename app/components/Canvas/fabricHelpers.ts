@@ -876,6 +876,7 @@ export type PhotoAssignment = {
   src:      string
   naturalW: number
   naturalH: number
+  focalY?:  number  // 0–1 fraction; undefined → use heuristic
 }
 
 export function buildPageFromLayout(
@@ -899,6 +900,14 @@ export function buildPageFromLayout(
     const virtW      = frameW / coverScale
     const virtH      = frameH / coverScale
 
+    // focalY: face-top position as fraction of nH (0=top, 1=bottom).
+    // When FaceDetector finds a face, focalY is set precisely.
+    // Fallback: center crop (0.5) — the least-wrong default without face data.
+    const maxCropY  = nH - virtH
+    const focalY    = photo.focalY ?? 0.5
+    const facePixel = focalY * nH
+    const cropY     = Math.max(0, Math.min(maxCropY, facePixel - 0.15 * virtH))
+
     return {
       kind:       'photo' as const,
       frameX,
@@ -909,7 +918,7 @@ export function buildPageFromLayout(
       coverScale,
       editScale:  1,
       cropX:      (nW - virtW) / 2,
-      cropY:      (nH - virtH) / 2,
+      cropY,
       naturalW:   nW,
       naturalH:   nH,
     }
