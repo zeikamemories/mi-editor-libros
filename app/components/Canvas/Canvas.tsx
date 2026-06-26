@@ -555,6 +555,15 @@ export default function Canvas({
   const [photoSel, setPhotoSel] = useState<PhotoSel>(null)
   const activePhotoRef = useRef<{ img: fabric.FabricImage; fc: fabric.Canvas } | null>(null)
 
+  // Stores exact image state before entering pan mode.
+  // initLeft/initTop are the ghost's starting canvas position (≠ frameCenter for non-centered crops).
+  // userPan = img.left - initLeft (not img.left - frameCenter) so "no movement" always restores
+  const prePanStateRef = useRef<{
+    width: number; height: number; cropX: number; cropY: number
+    scaleXY: number; angle: number
+    initLeft: number; initTop: number
+  } | null>(null)
+
   const rotateActivePhoto = useCallback((dir: 1 | -1) => {
     const ref = activePhotoRef.current
     if (!ref) return
@@ -984,28 +993,44 @@ export default function Canvas({
           frameX: number; frameY: number; frameW: number; frameH: number
           naturalW: number; naturalH: number; coverScale: number; editScale: number
         } }).data
-        const scaleXY  = pd.coverScale * (pd.editScale ?? 1)
-        const panX     = (img.left ?? pd.frameX + pd.frameW / 2) - (pd.frameX + pd.frameW / 2)
-        const panY     = (img.top  ?? pd.frameY + pd.frameH / 2) - (pd.frameY + pd.frameH / 2)
-        const angle    = ((img.angle ?? 0) % 360 + 360) % 360
-        // At 90°/270° the frame W/H swap roles relative to img.width/height.
-        // Also the canvas pan axes map differently to source crop axes.
-        const is90     = angle === 90 || angle === 270
-        const virtW    = is90 ? pd.frameH / scaleXY : pd.frameW / scaleXY
-        const virtH    = is90 ? pd.frameW / scaleXY : pd.frameH / scaleXY
+        // Use stored pre-pan state to avoid floating-point drift in virtW/virtH.
+        // IMPORTANT: measure user drag from initLeft/initTop (the ghost's starting position),
+        // NOT from the frame center. For non-centered crops, initLeft ≠ frameCenter, so
+        // using frameCenter would introduce spurious crop shift even when user doesn't move.
+        const pre = prePanStateRef.current
+        const virtW    = pre?.width    ?? pd.frameW / (pd.coverScale * (pd.editScale ?? 1))
+        const virtH    = pre?.height   ?? pd.frameH / (pd.coverScale * (pd.editScale ?? 1))
+        const scaleXY  = pre?.scaleXY  ?? pd.coverScale * (pd.editScale ?? 1)
+        const preCropX = pre?.cropX    ?? (pd.naturalW - virtW) / 2
+        const preCropY = pre?.cropY    ?? (pd.naturalH - virtH) / 2
+        const angle    = pre?.angle    ?? ((img.angle ?? 0) % 360 + 360) % 360
+        const initLeft = pre?.initLeft ?? (pd.frameX + pd.frameW / 2)
+        const initTop  = pre?.initTop  ?? (pd.frameY + pd.frameH / 2)
+
+        // User drag = current ghost position minus where ghost started (initLeft/initTop).
+        // Zero movement → zero crop change → original crop exactly restored.
+        const userPanX = (img.left ?? initLeft) - initLeft
+        const userPanY = (img.top  ?? initTop)  - initTop
+
         let rawCropX: number, rawCropY: number
         if (angle === 90) {
-          rawCropX = (pd.naturalW - virtW) / 2 - panY / scaleXY
-          rawCropY = (pd.naturalH - virtH) / 2 + panX / scaleXY
+          // At 90° CW: ghost canvas X → source Y; ghost canvas Y → source X (inverted).
+          rawCropX = preCropX - userPanY / scaleXY
+          rawCropY = preCropY + userPanX / scaleXY
         } else if (angle === 270) {
-          rawCropX = (pd.naturalW - virtW) / 2 + panY / scaleXY
-          rawCropY = (pd.naturalH - virtH) / 2 - panX / scaleXY
+          rawCropX = preCropX + userPanY / scaleXY
+          rawCropY = preCropY - userPanX / scaleXY
+        } else if (angle === 180) {
+          rawCropX = preCropX + userPanX / scaleXY
+          rawCropY = preCropY + userPanY / scaleXY
         } else {
-          rawCropX = (pd.naturalW - virtW) / 2 - panX / scaleXY
-          rawCropY = (pd.naturalH - virtH) / 2 - panY / scaleXY
+          rawCropX = preCropX - userPanX / scaleXY
+          rawCropY = preCropY - userPanY / scaleXY
         }
-        const cropX    = Math.max(0, Math.min(rawCropX, pd.naturalW - virtW))
-        const cropY    = Math.max(0, Math.min(rawCropY, pd.naturalH - virtH))
+        const cropX = Math.max(0, Math.min(rawCropX, Math.max(0, pd.naturalW - virtW)))
+        const cropY = Math.max(0, Math.min(rawCropY, Math.max(0, pd.naturalH - virtH)))
+        prePanStateRef.current = null
+
         img.set({
           width:          virtW,
           height:         virtH,
@@ -1186,6 +1211,20 @@ export default function Canvas({
         initTop  = cy + (pd.naturalH / 2 - cropY - imgH / 2) * scaleXY
       }
 
+      // Store exact pre-pan state so exitPanMode can restore without floating-point drift.
+      // initLeft/initTop are stored so exitPanMode measures user drag from the INITIAL ghost
+      // position (not from the frame center), making "no movement" always a perfect restore.
+      prePanStateRef.current = {
+        width:    imgW,
+        height:   imgH,
+        cropX:    cropX,
+        cropY:    cropY,
+        scaleXY:  scaleXY,
+        angle:    angle,
+        initLeft: initLeft,
+        initTop:  initTop,
+      }
+
       isPanMode.current    = true
       panTargetRef.current = img
       panData.current      = null
@@ -1210,23 +1249,26 @@ export default function Canvas({
       })
       img.clipPath = undefined
 
-      // Clone: same image at full opacity, clipped to frame — shows sharp content inside frame
+      // Clone: full opacity, clipped to frame — shows clear content inside frame boundary.
+      // Angle is set via .set() after construction (not constructor) to match how the ghost
+      // acquires its rotation, avoiding Fabric.js v7 constructor initialization quirks.
       const cloneEl = img.getElement() as HTMLImageElement
       const clone = new fabric.FabricImage(cloneEl, {
-        originX:        'center',
-        originY:        'center',
-        left:           initLeft,
-        top:            initTop,
-        scaleX:         scaleXY,
-        scaleY:         scaleXY,
-        width:          pd.naturalW,
-        height:         pd.naturalH,
-        cropX:          0,
-        cropY:          0,
-        opacity:        1,
-        selectable:     false,
-        evented:        false,
+        originX:    'center',
+        originY:    'center',
+        left:       initLeft,
+        top:        initTop,
+        scaleX:     scaleXY,
+        scaleY:     scaleXY,
+        width:      pd.naturalW,
+        height:     pd.naturalH,
+        cropX:      0,
+        cropY:      0,
+        opacity:    1,
+        selectable: false,
+        evented:    false,
       })
+      if (angle !== 0) clone.set('angle', angle)
       clone.clipPath = makeClipRect(pd.frameX, pd.frameY, pd.frameW, pd.frameH)
       fc.add(clone)
       panCloneRef.current = clone

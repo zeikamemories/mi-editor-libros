@@ -617,6 +617,10 @@ export default function ProyectoPage() {
             </a>
           )}
         </div>
+        <div className="mpd-mat-tips">
+          <span className="mpd-mat-tip">Si las fotos tienen un orden específico, numeralas: 01.jpg, 02.jpg…</span>
+          <span className="mpd-mat-tip">Si organizás por destinos o secciones, usá subcarpetas dentro de la carpeta.</span>
+        </div>
       </div>
       <div className="mpd-mat-row">
         <div className="mpd-mat-header">
@@ -636,6 +640,9 @@ export default function ProyectoPage() {
             readOnly
           />
         )}
+        <div className="mpd-mat-tips">
+          <span className="mpd-mat-tip">Si los textos van con fotos específicas, numeralos igual que las fotos: 01, 02…</span>
+        </div>
       </div>
       <div className="mpd-mat-row">
         <div className="mpd-mat-header">

@@ -1,11 +1,11 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import Image from 'next/image'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { Trash2, List, LayoutGrid } from 'lucide-react'
 import { supabase } from '../lib/supabase'
+import Navbar from '../components/Landing/Navbar/Navbar'
 import './dashboard.css'
 
 const ADMIN_EMAILS = [
@@ -82,21 +82,12 @@ export default function DashboardPage() {
   const [selected, setSelected]           = useState<Set<string>>(new Set())
   const [deleting, setDeleting]           = useState(false)
   const [designerPopup, setDesignerPopup] = useState<string | null>(null)
-  const [userMenuOpen, setUserMenuOpen]   = useState(false)
-
   useEffect(() => {
     if (!designerPopup) return
     const close = () => setDesignerPopup(null)
     window.addEventListener('click', close)
     return () => window.removeEventListener('click', close)
   }, [designerPopup])
-
-  useEffect(() => {
-    if (!userMenuOpen) return
-    const close = () => setUserMenuOpen(false)
-    window.addEventListener('click', close)
-    return () => window.removeEventListener('click', close)
-  }, [userMenuOpen])
 
   async function handleSignOut() {
     await supabase.auth.signOut()
@@ -208,21 +199,7 @@ export default function DashboardPage() {
   return (
     <div className="dash-root">
       {/* ── Topbar ─────────────────────────────── */}
-      <header className="dash-topbar">
-        <Image src="/LogoZeika.png" alt="Zeika" width={36} height={36} />
-        <span className="dash-topbar-spacer" />
-        <div className="dash-user-widget" onClick={e => { e.stopPropagation(); setUserMenuOpen(o => !o) }}>
-          <span className="dash-topbar-username">MAIKA</span>
-          <div className="dash-avatar">M</div>
-          {userMenuOpen && (
-            <div className="dash-user-dropdown" onClick={e => e.stopPropagation()}>
-              <button className="dash-user-dropdown-item" onClick={handleSignOut}>
-                Cerrar sesión
-              </button>
-            </div>
-          )}
-        </div>
-      </header>
+      <Navbar hideLinks hideMisProyectos />
 
       {/* ── Sidebar ────────────────────────────── */}
       <aside className="dash-sidebar">
@@ -251,7 +228,6 @@ export default function DashboardPage() {
 
       {/* ── Main ───────────────────────────────── */}
       <main className="dash-main">
-        <p className="dash-greeting">Hola Maika! Hoy va a ser un gran día 🌿</p>
 
         <div className="dash-tabs">
           {TABS.map(tab => (

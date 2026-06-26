@@ -13,7 +13,7 @@ const navLinks = [
   { label: 'FAQs',           href: '#faqs'            },
 ]
 
-export default function Navbar({ hideLinks }: { hideLinks?: boolean } = {}) {
+export default function Navbar({ hideLinks, hideMisProyectos }: { hideLinks?: boolean; hideMisProyectos?: boolean } = {}) {
   const [mounted,   setMounted]   = useState(false)
   const [open,      setOpen]      = useState(false)
   const [user,      setUser]      = useState<{ name: string; initial: string } | null>(null)
@@ -91,9 +91,11 @@ export default function Navbar({ hideLinks }: { hideLinks?: boolean } = {}) {
                 </button>
                 {dropOpen && (
                   <div className="navbar__user-dropdown">
-                    <a href="/mis-proyectos" className="navbar__dropdown-item" onClick={() => setDropOpen(false)}>
-                      Mis proyectos
-                    </a>
+                    {!hideMisProyectos && (
+                      <a href="/mis-proyectos" className="navbar__dropdown-item" onClick={() => setDropOpen(false)}>
+                        Mis proyectos
+                      </a>
+                    )}
                     <button className="navbar__dropdown-item navbar__dropdown-item--btn" onClick={signOut}>
                       Cerrar sesión
                     </button>

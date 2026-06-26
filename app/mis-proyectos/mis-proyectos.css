@@ -525,7 +525,6 @@
   background: #fff;
 }
 
-.mpd-accordion__body .mpd-row,
 .mpd-desktop-panel .mpd-row {
   background: #fff;
 }
@@ -1301,10 +1300,16 @@
 
 .mpd-row__val {
   font-family: "forma-djr-display", sans-serif;
-  font-size: 16px;
+  font-size: 14px;
   font-weight: 500;
   letter-spacing: 0.04em;
   color: var(--color-black);
+}
+
+@media (min-width: 1024px) {
+  .mpd-row__val {
+    font-size: 16px;
+  }
 }
 
 .mpd-row--balance .mpd-row__val {
@@ -1328,18 +1333,32 @@
 .mpd-timeline-row__inner {
   display: flex;
   align-items: center;
-  gap: 16px;
-  padding: 8px 20px;
+  gap: 14px;
+  padding: 6px 20px;
+}
+
+@media (min-width: 1024px) {
+  .mpd-timeline-row__inner {
+    gap: 16px;
+    padding: 8px 20px;
+  }
 }
 
 .mpd-step-circle {
-  width: 35px;
-  height: 35px;
+  width: 28px;
+  height: 28px;
   border-radius: 50%;
   flex-shrink: 0;
   display: flex;
   align-items: center;
   justify-content: center;
+}
+
+@media (min-width: 1024px) {
+  .mpd-step-circle {
+    width: 35px;
+    height: 35px;
+  }
 }
 
 .mpd-step-circle--done {
@@ -1354,10 +1373,17 @@
 
 .mpd-step-circle--current::after {
   content: '';
-  width: 13px;
-  height: 13px;
+  width: 10px;
+  height: 10px;
   border-radius: 50%;
   background: var(--color-blue);
+}
+
+@media (min-width: 1024px) {
+  .mpd-step-circle--current::after {
+    width: 13px;
+    height: 13px;
+  }
 }
 
 .mpd-step-circle--pending {
@@ -1374,10 +1400,16 @@
 
 .mpd-step-name {
   font-family: "forma-djr-display", sans-serif;
-  font-size: 16px;
+  font-size: 14px;
   font-weight: 500;
   letter-spacing: 0.04em;
   color: var(--color-black);
+}
+
+@media (min-width: 1024px) {
+  .mpd-step-name {
+    font-size: 16px;
+  }
 }
 
 .mpd-step-name--pending {
@@ -1505,6 +1537,26 @@
   letter-spacing: 0;
   color: #7b7a78;
   text-transform: none;
+}
+
+.mpd-mat-tips {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  padding-top: 4px;
+}
+
+.mpd-mat-tip {
+  font-family: "forma-djr-display", sans-serif;
+  font-size: 12px;
+  font-weight: 500;
+  color: #9b9a97;
+  letter-spacing: 0.56px;
+  line-height: 1.5;
+}
+
+.mpd-mat-tip::before {
+  content: "· ";
 }
 
 .mpd-mat-input-row {
