@@ -1477,8 +1477,8 @@
 .mpd-mat-row {
   display: flex;
   flex-direction: column;
-  gap: 8px;
-  padding: 10px 20px;
+  gap: 6px;
+  padding: 8px 20px;
   background: var(--color-cream);
   border-bottom: 0.3px solid #7b7a78;
 }
@@ -1500,7 +1500,7 @@
 
 .mpd-mat-header__opt {
   font-family: "forma-djr-display", sans-serif;
-  font-size: 14px;
+  font-size: 12px;
   font-weight: 400;
   letter-spacing: 0;
   color: #7b7a78;
@@ -1531,9 +1531,9 @@
 .mpd-mat-input {
   width: 100%;
   border: 1px solid #7b7a78;
-  padding: 12px 20px;
+  padding: 8px 14px;
   font-family: "forma-djr-display", sans-serif;
-  font-size: 16px;
+  font-size: 13px;
   font-weight: 500;
   letter-spacing: 0.04em;
   color: var(--color-black);
@@ -1566,9 +1566,9 @@
 .mpd-mat-textarea {
   width: 100%;
   border: 1px solid #7b7a78;
-  padding: 12px 20px;
+  padding: 8px 14px;
   font-family: "forma-djr-display", sans-serif;
-  font-size: 16px;
+  font-size: 13px;
   font-weight: 500;
   letter-spacing: 0.04em;
   color: var(--color-black);
@@ -1576,7 +1576,7 @@
   outline: none;
   box-sizing: border-box;
   resize: vertical;
-  min-height: 80px;
+  min-height: 60px;
 }
 
 .mpd-mat-textarea::placeholder {
@@ -1637,7 +1637,7 @@
 
 .mpd-ref-desc {
   font-family: "forma-djr-display", sans-serif;
-  font-size: 12px;
+  font-size: 13px;
   letter-spacing: 0.04em;
   color: #7b7a78;
   line-height: 1.5;
@@ -3036,6 +3036,42 @@
 .mpd-wa-fab:hover {
   transform: scale(1.08);
   box-shadow: 0 6px 18px rgba(0,0,0,0.25);
+}
+
+/* ── Toast ───────────────────────────────────────────────────────────────── */
+
+.mpd-toast {
+  position: fixed;
+  bottom: 30px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: var(--color-blue);
+  color: white;
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 16px 20px;
+  width: calc(100vw - 40px);
+  font-family: "forma-djr-display", sans-serif;
+  font-size: 14px;
+  font-weight: 500;
+  letter-spacing: 0.56px;
+  line-height: 1.4;
+  z-index: 500;
+  animation: mpd-toast-in 0.25s ease;
+}
+
+@media (min-width: 1024px) {
+  .mpd-toast {
+    width: auto;
+    white-space: nowrap;
+    align-items: center;
+  }
+}
+
+@keyframes mpd-toast-in {
+  from { opacity: 0; transform: translateX(-50%) translateY(10px); }
+  to   { opacity: 1; transform: translateX(-50%) translateY(0); }
 }
 
 .mpd-wa-fab img {

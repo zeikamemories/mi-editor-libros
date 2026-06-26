@@ -202,6 +202,8 @@ export default function ProyectoPage() {
   const [docsLink,           setDocsLink]           = useState('')
   const [noteText,           setNoteText]           = useState('')
   const [confirmingMaterial, setConfirmingMaterial] = useState(false)
+  const [materialDone,       setMaterialDone]       = useState(false)
+  const [showMaterialToast,  setShowMaterialToast]  = useState(false)
   const refInputRef = useRef<HTMLInputElement>(null)
   const [uploadingRef, setUploadingRef] = useState(false)
 
@@ -310,6 +312,7 @@ export default function ProyectoPage() {
 
   async function confirmMaterial() {
     if (!order) return
+    setMaterialDone(true)
     setConfirmingMaterial(true)
     const updates: Record<string, unknown> = {
       drive_link: driveLink,
@@ -327,6 +330,8 @@ export default function ProyectoPage() {
       setNoteText('')
     }
     setConfirmingMaterial(false)
+    setShowMaterialToast(true)
+    setTimeout(() => setShowMaterialToast(false), 5000)
   }
 
   async function uploadRefImage(file: File) {
@@ -600,7 +605,7 @@ export default function ProyectoPage() {
       </div>
       <div className="mpd-mat-row">
         <div className="mpd-mat-header">
-          <span className="mpd-mat-header__label">Referencias de diseño</span>
+          <span className="mpd-mat-header__label">Referencias de diseño de tapa</span>
           <span className="mpd-mat-header__opt">(Opcional)</span>
         </div>
         <div className="mpd-ref-upload">
@@ -621,7 +626,7 @@ export default function ProyectoPage() {
             </div>
           )}
           <p className="mpd-ref-desc">
-            Podes subir fotos de referencia, moodboards, ejemplos de otros libros... lo que sirva para que entendamos el estilo que querés.
+            Podes subir fotos de referencia, ejemplos de otros libros... lo que nos sirva para entender el estilo que querés.
           </p>
         </div>
         <input
@@ -643,7 +648,7 @@ export default function ProyectoPage() {
         />
       </div>
       {(() => {
-        const confirmed = !['pendiente_pago', 'confirmado'].includes(order.status)
+        const confirmed = materialDone || !['pendiente_pago', 'confirmado'].includes(order.status)
         return (
           <div className="mpd-mat-save-wrap">
             <button
@@ -652,7 +657,7 @@ export default function ProyectoPage() {
               disabled={confirmed || confirmingMaterial}
             >
               <div className={`mpd-check-circle${confirmed ? ' mpd-check-circle--checked' : ''}`} />
-              <span>{confirmingMaterial ? 'Confirmando...' : 'Material cargado'}</span>
+              <span>Material cargado</span>
             </button>
           </div>
         )
@@ -1097,6 +1102,15 @@ export default function ProyectoPage() {
         </div>
 
       </div>
+
+      {showMaterialToast && (
+        <div className="mpd-toast">
+          <svg width="18" height="14" viewBox="0 0 18 14" fill="none">
+            <path d="M1.5 7L6.5 12L16.5 1.5" stroke="white" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"/>
+          </svg>
+          <span>¡Recibimos tu material! En menos de 48hs el diseño va a estar listo.</span>
+        </div>
+      )}
 
       {order && (
         <a
