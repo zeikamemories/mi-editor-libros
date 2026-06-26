@@ -693,7 +693,14 @@ export default function ProyectoPage() {
           <div className="mpd-preview-card-info">
             <div className="mpd-preview-card-name">{order.book_name}</div>
             {order.preview_url ? (
-              <a className="mpd-preview-link" href={`${order.preview_url}?orderId=${order.id}`}>
+              <a className="mpd-preview-link" href={(() => {
+                try {
+                  const u = new URL(order.preview_url!)
+                  return `${u.pathname}?orderId=${order.id}`
+                } catch {
+                  return `${order.preview_url}?orderId=${order.id}`
+                }
+              })()}>
                 Ver el libro completo ›
               </a>
             ) : (
