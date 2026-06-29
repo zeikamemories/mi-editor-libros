@@ -485,7 +485,7 @@
 
 .preview-save-changes-btn {
   position: absolute;
-  right: 120px;
+  right: 24px;
   background: var(--color-blue);
   border: none;
   border-radius: 1px;
@@ -508,9 +508,10 @@
   opacity: 0.7;
 }
 
+/* Close button — lives in the titlebar, left side */
 .preview-close-btn {
   position: absolute;
-  right: 24px;
+  left: 16px;
   background: none;
   border: 1.5px solid #464646;
   border-radius: 1px;
@@ -518,12 +519,27 @@
   font-weight: 600;
   font-size: 12px;
   color: #282828;
-  padding: 7px 20px;
+  padding: 6px 14px;
   cursor: pointer;
   letter-spacing: 0.24px;
   transition: background 0.1s;
+  white-space: nowrap;
 }
 
 .preview-close-btn:hover {
   background: rgba(0, 0, 0, 0.04);
+}
+
+@media (max-width: 600px) {
+  .preview-page-label {
+    min-width: 0;
+    font-size: 12px;
+    padding: 0 8px;
+  }
+
+  .preview-save-changes-btn {
+    font-size: 11px;
+    padding: 6px 10px;
+    right: 12px;
+  }
 }

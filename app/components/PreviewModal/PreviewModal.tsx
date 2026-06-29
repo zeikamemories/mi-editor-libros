@@ -559,6 +559,7 @@ export default function PreviewModal({
 
       {/* ── Title bar ── */}
       <div className="preview-titlebar">
+        <button className="preview-close-btn" onClick={onClose}>{t.close}</button>
         <span className="preview-title">{t.preview2D}</span>
         <div className="preview-titlebar-actions">
           <button
@@ -792,7 +793,6 @@ export default function PreviewModal({
         {onSaveChanges && (
           <SaveChangesButton onSaveChanges={onSaveChanges} />
         )}
-        <button className="preview-close-btn" onClick={onClose}>{t.close}</button>
       </div>
 
     </div>
