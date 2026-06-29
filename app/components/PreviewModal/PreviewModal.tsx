@@ -189,6 +189,14 @@ export default function PreviewModal({
     } catch {}
   }, [scale])
 
+  // Disable turn.js page-flipping when annotating so taps don't change page
+  useEffect(() => {
+    if (!$bookRef.current) return
+    try {
+      $bookRef.current.turn('disable', annotMode !== 'view')
+    } catch {}
+  }, [annotMode])
+
   // ── Pre-render pages ───────────────────────────────────────────────────────
   useEffect(() => {
     let cancelled = false
@@ -723,13 +731,10 @@ export default function PreviewModal({
             )}
           </div>
         )}
-      </div>
 
-      {/* ── Draw panel sidebar ── */}
-      {hasAnnotations && annotMode === 'draw' && drawPanelOpen && (
-        <div className="preview-annot-sidebar preview-annot-sidebar--draw">
-
-          {annotMode === 'draw' && (
+        {/* ── Draw panel — floats inside stage, top-right ── */}
+        {hasAnnotations && annotMode === 'draw' && drawPanelOpen && (
+          <div className="preview-annot-sidebar preview-annot-sidebar--draw">
             <div className="preview-annot-section">
               <span className="preview-annot-label">Dibujar — {pageLabel}</span>
               <span className="preview-annot-hint">
@@ -769,9 +774,16 @@ export default function PreviewModal({
                 ))}
               </div>
             </div>
-          )}
-        </div>
-      )}
+          </div>
+        )}
+
+        {/* ── Guardar cambios — floats inside stage, bottom-right ── */}
+        {onSaveChanges && (
+          <div className="preview-save-changes-wrap">
+            <SaveChangesButton onSaveChanges={onSaveChanges} />
+          </div>
+        )}
+      </div>
 
       {/* ── Bottom controls ── */}
       <div className="preview-controls">
@@ -790,9 +802,6 @@ export default function PreviewModal({
             <ChevronsRight size={15} strokeWidth={1.5} />
           </button>
         </div>
-        {onSaveChanges && (
-          <SaveChangesButton onSaveChanges={onSaveChanges} />
-        )}
       </div>
 
     </div>

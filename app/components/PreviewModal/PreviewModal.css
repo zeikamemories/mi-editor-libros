@@ -104,16 +104,17 @@
   touch-action: none;
 }
 
-/* ─── Annotation sidebar ─────────────────────────────────────────────────────── */
+/* ─── Annotation sidebar — floats inside .preview-stage ─────────────────────── */
 
 .preview-annot-sidebar {
   position: absolute;
-  right: 0;
-  top: 50px;
-  bottom: 64px;
-  width: 280px;
+  right: 12px;
+  top: 12px;
+  width: 220px;
   background: #fff;
-  border-left: 1px solid rgba(0, 0, 0, 0.1);
+  border: 1px solid rgba(0, 0, 0, 0.1);
+  border-radius: 8px;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.12);
   overflow-y: auto;
   z-index: 20;
   display: flex;
@@ -121,8 +122,15 @@
 }
 
 .preview-annot-sidebar--draw {
-  bottom: auto;
   height: auto;
+}
+
+@media (max-width: 700px) {
+  .preview-annot-sidebar {
+    width: 175px;
+    right: 8px;
+    top: 8px;
+  }
 }
 
 .preview-annot-section {
@@ -483,21 +491,29 @@
   letter-spacing: 0.2px;
 }
 
-.preview-save-changes-btn {
+/* Guardar cambios — floating inside .preview-stage, bottom-right */
+.preview-save-changes-wrap {
   position: absolute;
-  right: 24px;
+  bottom: 14px;
+  right: 14px;
+  z-index: 25;
+}
+
+.preview-save-changes-btn {
   background: var(--color-blue);
   border: none;
-  border-radius: 1px;
+  border-radius: 4px;
   font-family: var(--font-body);
   font-weight: 600;
   font-size: 12px;
   color: white;
-  padding: 7px 20px;
+  padding: 10px 20px;
   cursor: pointer;
   letter-spacing: 0.24px;
   text-transform: uppercase;
   transition: opacity 0.15s;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.18);
+  white-space: nowrap;
 }
 
 .preview-save-changes-btn:disabled {
@@ -506,6 +522,17 @@
 
 .preview-save-changes-btn--saved {
   opacity: 0.7;
+}
+
+@media (max-width: 700px) {
+  .preview-save-changes-wrap {
+    bottom: 10px;
+    right: 10px;
+  }
+  .preview-save-changes-btn {
+    font-size: 11px;
+    padding: 8px 14px;
+  }
 }
 
 /* Close button — lives in the titlebar, left side */
