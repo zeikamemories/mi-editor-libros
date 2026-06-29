@@ -98,11 +98,16 @@ function ConfirmadoContent() {
             })
             const docsLink = docsRes.ok ? (await docsRes.json()).docsUrl ?? null : null
 
+            const SIZE_MAP: Record<string, string> = {
+              chico_h: 'chico', mediano_h: 'mediano', grande_h: 'grande',
+              vertical: 'vertical', cuadrado: 'cuadrado',
+            }
+            const bookSizeId = SIZE_MAP[orderData.size ?? ''] ?? 'vertical'
             const totalPages = (orderData.pages_base ?? 20) + (orderData.extra_pages ?? 0)
             await Promise.all([
               supabase.from('projects').insert({
                 name:          bookName,
-                book_size:     orderData.size ?? 'vertical',
+                book_size:     bookSizeId,
                 total_spreads: totalPages - 1,
                 photos:        [],
                 spreads:       {},

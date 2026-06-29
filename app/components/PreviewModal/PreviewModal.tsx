@@ -189,13 +189,9 @@ export default function PreviewModal({
     } catch {}
   }, [scale])
 
-  // Disable turn.js page-flipping when annotating so taps don't change page
-  useEffect(() => {
-    if (!$bookRef.current) return
-    try {
-      $bookRef.current.turn('disable', annotMode !== 'view')
-    } catch {}
-  }, [annotMode])
+  // When annotating, block touch events from reaching turn.js via pointer-events,
+  // but keep programmatic navigation (turn('next')/('previous')) working.
+  const flipbookBlocked = annotMode !== 'view'
 
   // ── Pre-render pages ───────────────────────────────────────────────────────
   useEffect(() => {
@@ -503,6 +499,20 @@ export default function PreviewModal({
     setActiveCommentId(null)
   }
 
+  function handleBookTouchEnd(e: React.TouchEvent<HTMLDivElement>) {
+    if (annotMode !== 'comment' || pendingComment) return
+    e.preventDefault()
+    e.stopPropagation()
+    const touch = e.changedTouches[0]
+    if (!touch) return
+    const rect = e.currentTarget.getBoundingClientRect()
+    setPendingComment({
+      x: (touch.clientX - rect.left) / rect.width,
+      y: (touch.clientY - rect.top)  / rect.height,
+    })
+    setActiveCommentId(null)
+  }
+
   async function handleSaveComment() {
     if (!commentText.trim() || !onCommentSave || !pendingComment) return
     setSavingComment(true)
@@ -598,7 +608,11 @@ export default function PreviewModal({
             className="preview-book-shell"
             style={{ width: canvasW * 2, height: canvasH }}
           >
-            <div ref={flipbookEl} className="preview-flipbook" />
+            <div
+              ref={flipbookEl}
+              className="preview-flipbook"
+              style={flipbookBlocked ? { pointerEvents: 'none' } : undefined}
+            />
 
             {/* Saved drawing overlays — SVG vector (transparent) over the book pages */}
             {pageDrawings.map(d => {
@@ -696,7 +710,11 @@ export default function PreviewModal({
             {/* Comment mode extras: click overlay + pending popup */}
             {annotMode === 'comment' && hasAnnotations && (
               <>
-                <div className="preview-comment-overlay" onClick={handleBookClick} />
+                <div
+                  className="preview-comment-overlay"
+                  onClick={handleBookClick}
+                  onTouchEnd={handleBookTouchEnd}
+                />
                 {pendingComment && (
                   <div
                     className="preview-comment-popup"

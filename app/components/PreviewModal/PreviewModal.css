@@ -261,6 +261,7 @@
   inset: 0;
   z-index: 15;
   cursor: crosshair;
+  touch-action: none;
 }
 
 .preview-comment-pin {

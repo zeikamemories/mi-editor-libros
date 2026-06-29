@@ -230,8 +230,8 @@ export default function PedidoAdminPage() {
       chico_h: 'chico', mediano_h: 'mediano', grande_h: 'grande',
       vertical: 'vertical', cuadrado: 'cuadrado',
     }
-    // Use the project's own book_size (set when designed), NOT the order's size
-    const bookSizeId = project.book_size ?? SIZE_MAP[order?.size ?? ''] ?? 'vertical'
+    const rawSize = project.book_size ?? order?.size ?? 'vertical'
+    const bookSizeId = SIZE_MAP[rawSize] ?? rawSize
     sessionStorage.setItem('zeika_project_id', project.id)
     sessionStorage.setItem('zeika_book_size', bookSizeId)
     sessionStorage.setItem('zeika_return_path', `/dashboard/pedidos/${orderId}`)
