@@ -1,6 +1,5 @@
 import { google } from 'googleapis'
 import { NextRequest, NextResponse } from 'next/server'
-import { Readable } from 'stream'
 
 const ZEIKA_EMAIL = 'zeika.memories@gmail.com'
 
@@ -81,9 +80,7 @@ export async function POST(req: NextRequest) {
     const auth  = getServiceAccountAuth()
     const drive = google.drive({ version: 'v3', auth })
 
-    // Create a Google Doc via Drive API (upload plain text → convert to Docs format)
     const templateText = buildTemplate(bookName, extraText ?? false)
-    const stream = Readable.from([Buffer.from(templateText, 'utf-8')])
 
     const file = await drive.files.create({
       requestBody: {
@@ -93,7 +90,7 @@ export async function POST(req: NextRequest) {
       },
       media: {
         mimeType: 'text/plain',
-        body:     stream,
+        body:     templateText,
       },
       fields: 'id',
     })
