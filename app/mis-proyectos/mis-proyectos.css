@@ -1950,6 +1950,32 @@
 
 /* Change request button & form */
 
+.mpd-change-note-block {
+  padding: 16px 20px 4px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.mpd-change-note-hint {
+  font-family: "forma-djr-display", sans-serif;
+  font-size: 13px;
+  letter-spacing: 0.04em;
+  color: var(--color-black);
+  opacity: 0.6;
+  margin: 0;
+  line-height: 1.5;
+}
+
+.mpd-change-note-hint--em {
+  opacity: 0.85;
+}
+
+.mpd-change-note-block .mpd-mat-textarea {
+  margin-top: 8px;
+  min-height: 72px;
+}
+
 .mpd-change-btn-row {
   padding: 10px 20px;
   background: var(--color-cream);

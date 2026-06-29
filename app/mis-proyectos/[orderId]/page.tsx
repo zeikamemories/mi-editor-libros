@@ -211,6 +211,7 @@ export default function ProyectoPage() {
 
   // Preview
   const [sendingChange, setSendingChange] = useState(false)
+  const [changeNote,    setChangeNote]    = useState('')
   const [approved,      setApproved]      = useState(false)
   const [coverThumbnail, setCoverThumbnail] = useState<{ left?: string; right?: string } | null>(null)
 
@@ -367,10 +368,14 @@ export default function ProyectoPage() {
     setSendingChange(true)
     const newUsed = (order.change_requests_used ?? 0) + 1
     await supabase.from('orders').update({ change_requests_used: newUsed }).eq('id', order.id)
+    const noteContent = changeNote.trim()
+      ? `Ronda de cambios solicitada${changeNote.trim() ? `: ${changeNote.trim()}` : ''}`
+      : 'Ronda de cambios solicitada'
     await supabase.from('order_notes').insert({
-      order_id: order.id, user_id: userId, content: 'Ronda de cambios solicitada', type: 'change_request',
+      order_id: order.id, user_id: userId, content: noteContent, type: 'change_request',
     })
     setOrder(prev => prev ? { ...prev, change_requests_used: newUsed } : prev)
+    setChangeNote('')
     setSendingChange(false)
   }
 
@@ -772,9 +777,9 @@ export default function ProyectoPage() {
               <a className="mpd-preview-link" href={(() => {
                 try {
                   const u = new URL(order.preview_url!)
-                  return `${u.pathname}?orderId=${order.id}`
+                  return u.pathname
                 } catch {
-                  return `${order.preview_url}?orderId=${order.id}`
+                  return order.preview_url!
                 }
               })()}>
                 Ver el libro completo ›
@@ -802,13 +807,28 @@ export default function ProyectoPage() {
               Nuestro precio incluye 3 rondas de cambios. A partir de la tercera hay un precio extra de $5.000 por ronda.
             </p>
           </div>
+          <div className="mpd-change-note-block">
+            <p className="mpd-change-note-hint">
+              Dentro del preview podés comentar y dibujar directamente sobre las páginas. Si querés agregar algo más, escribilo acá.
+            </p>
+            <p className="mpd-change-note-hint mpd-change-note-hint--em">
+              Cuando estés lista, presioná <strong>Enviar cambios</strong> para que el equipo reciba todo junto.
+            </p>
+            <textarea
+              className="mpd-mat-textarea"
+              placeholder="Escribí cualquier detalle extra que quieras que tengamos en cuenta..."
+              value={changeNote}
+              onChange={e => setChangeNote(e.target.value)}
+              disabled={sendingChange || usedRounds >= MAX_CHANGES}
+            />
+          </div>
           <div className="mpd-change-btn-row">
             <button
               className="mpd-guardar-cambios-btn"
               onClick={requestChange}
               disabled={sendingChange || usedRounds >= MAX_CHANGES}
             >
-              {sendingChange ? 'Guardando...' : 'Pedir un cambio'}
+              {sendingChange ? 'Enviando...' : 'Enviar cambios'}
             </button>
           </div>
         </>

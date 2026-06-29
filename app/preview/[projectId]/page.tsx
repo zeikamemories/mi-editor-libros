@@ -1,7 +1,7 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import { useParams, useRouter, useSearchParams } from 'next/navigation'
+import { useParams, useRouter } from 'next/navigation'
 import dynamic from 'next/dynamic'
 import { supabase } from '../../lib/supabase'
 import type { PageData } from '../../components/Canvas/fabricHelpers'
@@ -25,9 +25,6 @@ const PreviewModal = dynamic(
 export default function PreviewPage() {
   const { projectId } = useParams<{ projectId: string }>()
   const router        = useRouter()
-  const searchParams  = useSearchParams()
-  const orderId       = searchParams.get('orderId')
-
   const [project,       setProject]       = useState<SavedProject | null>(null)
   const [notFound,      setNotFound]      = useState(false)
   const [userId,        setUserId]        = useState<string | null>(null)
@@ -115,16 +112,6 @@ export default function PreviewPage() {
     return data as Annotation | null
   }
 
-  async function handleSaveChanges() {
-    if (!orderId || !userId) return
-    const { data: order } = await supabase.from('orders').select('change_requests_used').eq('id', orderId).single()
-    const newUsed = ((order?.change_requests_used ?? 0) + 1)
-    await supabase.from('orders').update({ change_requests_used: newUsed }).eq('id', orderId)
-    await supabase.from('order_notes').insert({
-      order_id: orderId, user_id: userId, content: 'Ronda de cambios solicitada', type: 'change_request',
-    })
-  }
-
   async function handleCommentUpdate(id: string, content: string): Promise<boolean> {
     const { error } = await supabase.from('preview_annotations').update({ content }).eq('id', id)
     return !error
@@ -210,7 +197,6 @@ export default function PreviewPage() {
       onCommentDelete={isOwner ? handleCommentDelete : undefined}
       onDrawingSave={isOwner ? handleDrawingSave : undefined}
       onDrawingDelete={isOwner ? handleDrawingDelete : undefined}
-      onSaveChanges={orderId && isOwner ? handleSaveChanges : undefined}
     />
     </>
   )

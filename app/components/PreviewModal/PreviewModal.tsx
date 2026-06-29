@@ -36,8 +36,6 @@ interface Props {
   onCommentDelete?:  (id: string) => Promise<void>
   onDrawingSave?:    (dataUrl: string, page: number) => Promise<Annotation | null>
   onDrawingDelete?:  (ids: string[]) => Promise<void>
-  // Change request — optional, shown when client views preview via orderId link
-  onSaveChanges?:    () => Promise<void>
 }
 
 const TITLEBAR_H  = 50
@@ -84,7 +82,7 @@ function ensureTurnJs(cb: () => void) {
 export default function PreviewModal({
   spreadsData, totalSpreads, initialSpread, pageW, pageH, onClose, onPageChange,
   annotations: initialAnnotations, onCommentSave, onCommentUpdate, onCommentDelete,
-  onDrawingSave, onDrawingDelete, onSaveChanges,
+  onDrawingSave, onDrawingDelete,
 }: Props) {
   const EMPTY_PAGE: PageData = { background: '#ffffff', pageW, pageH, objects: [] }
   const { t } = useLang()
@@ -803,12 +801,7 @@ export default function PreviewModal({
           </div>
         )}
 
-        {/* ── Guardar cambios — floats inside stage, bottom-right ── */}
-        {onSaveChanges && (
-          <div className="preview-save-changes-wrap">
-            <SaveChangesButton onSaveChanges={onSaveChanges} />
-          </div>
-        )}
+
       </div>
 
       {/* ── Bottom controls ── */}
@@ -834,25 +827,3 @@ export default function PreviewModal({
   )
 }
 
-function SaveChangesButton({ onSaveChanges }: { onSaveChanges: () => Promise<void> }) {
-  const [saving, setSaving] = useState(false)
-  const [saved,  setSaved]  = useState(false)
-
-  async function handleClick() {
-    if (saving || saved) return
-    setSaving(true)
-    await onSaveChanges()
-    setSaving(false)
-    setSaved(true)
-  }
-
-  return (
-    <button
-      className={`preview-save-changes-btn${saved ? ' preview-save-changes-btn--saved' : ''}`}
-      onClick={handleClick}
-      disabled={saving || saved}
-    >
-      {saving ? 'Guardando...' : saved ? 'Cambios guardados ✓' : 'Guardar cambios'}
-    </button>
-  )
-}
