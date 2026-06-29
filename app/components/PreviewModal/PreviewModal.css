@@ -86,7 +86,7 @@
   height: 100%;
   object-fit: fill;
   pointer-events: none;
-  z-index: 10;
+  z-index: 200;
 }
 
 /* Legacy raster drawings — multiply blend makes white transparent */
@@ -259,7 +259,7 @@
 .preview-comment-overlay {
   position: absolute;
   inset: 0;
-  z-index: 15;
+  z-index: 210;
   cursor: crosshair;
   touch-action: none;
 }
@@ -278,10 +278,11 @@
   align-items: center;
   justify-content: center;
   cursor: pointer;
-  z-index: 16;
+  z-index: 211;
   transform: translate(-50%, -50%);
   box-shadow: 0 2px 6px rgba(0,0,0,0.25);
   transition: transform 0.12s;
+  touch-action: none;
 }
 
 .preview-comment-pin:hover,
@@ -291,7 +292,7 @@
 
 .preview-comment-tooltip {
   position: absolute;
-  z-index: 17;
+  z-index: 212;
   background: #fff;
   border-radius: 6px;
   box-shadow: 0 3px 14px rgba(0,0,0,0.18);
@@ -308,7 +309,7 @@
 
 .preview-comment-popup {
   position: absolute;
-  z-index: 20;
+  z-index: 213;
   background: #fff;
   border-radius: 8px;
   box-shadow: 0 4px 20px rgba(0,0,0,0.22);

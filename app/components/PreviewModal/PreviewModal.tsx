@@ -141,7 +141,12 @@ export default function PreviewModal({
 
   // Clear drawing canvas + strokes when page changes (cancel pending auto-save)
   useEffect(() => {
-    if (autoSaveTimer.current) { clearTimeout(autoSaveTimer.current); autoSaveTimer.current = null }
+    if (autoSaveTimer.current) {
+      clearTimeout(autoSaveTimer.current)
+      autoSaveTimer.current = null
+      // Flush any pending strokes before leaving this spread
+      if (strokesRef.current.length > 0) saveCurrentStrokes()
+    }
     const c = drawCanvasRef.current
     if (c) c.getContext('2d')!.clearRect(0, 0, c.width, c.height)
     strokesRef.current = []
@@ -659,6 +664,12 @@ export default function PreviewModal({
                     onMouseLeave={() => setHoveredCommentId(null)}
                     onClick={e => {
                       e.stopPropagation()
+                      if (isActive) { setActiveCommentId(null); setEditText('') }
+                      else { setActiveCommentId(c.id); setEditText(text); setPendingComment(null) }
+                    }}
+                    onTouchEnd={e => {
+                      e.stopPropagation()
+                      e.preventDefault()
                       if (isActive) { setActiveCommentId(null); setEditText('') }
                       else { setActiveCommentId(c.id); setEditText(text); setPendingComment(null) }
                     }}
