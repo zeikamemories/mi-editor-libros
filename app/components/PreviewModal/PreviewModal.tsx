@@ -194,30 +194,45 @@ export default function PreviewModal({
     let cancelled = false
     setLoading(true)
 
-    const tasks: Promise<string>[] = []
-    const s0 = spreadsData[0]
-    tasks.push(exportPageAsJpg(s0?.right ?? EMPTY_PAGE, pageW, pageH, 1,
-      s0?.left  ? { data: s0.left,  fromSide: 'left'  } : undefined))
-    for (let s = 1; s < totalSpreads; s++) {
-      const data      = spreadsData[s]
-      const left      = data?.left  ?? EMPTY_PAGE
-      const right     = data?.right ?? EMPTY_PAGE
-      const isInside  = s === 1
-      const isOutside = s === totalSpreads - 1
-      tasks.push(isInside
-        ? Promise.resolve(renderNoEditPage(t.noEditable, pageW, pageH))
-        : exportPageAsJpg(left,  pageW, pageH, 1, { data: right, fromSide: 'right' }))
-      tasks.push(isOutside
-        ? Promise.resolve(renderNoEditPage(t.noEditable, pageW, pageH))
-        : exportPageAsJpg(right, pageW, pageH, 1, { data: left,  fromSide: 'left'  }))
-    }
-    tasks.push(exportPageAsJpg(s0?.left ?? EMPTY_PAGE, pageW, pageH, 1,
-      s0?.right ? { data: s0.right, fromSide: 'right' } : undefined))
+    // On mobile, render at half resolution to avoid crashing Safari
+    const renderScale = window.innerWidth < 900 ? 0.5 : 1
 
-    Promise.all(tasks).then(images => {
+    async function renderAll() {
+      const images: string[] = []
+
+      const s0 = spreadsData[0]
+
+      const pushJpg = async (page: PageData, adj?: { data: PageData; fromSide: 'left' | 'right' }) => {
+        if (cancelled) return
+        images.push(await exportPageAsJpg(page, pageW, pageH, renderScale, adj))
+      }
+      const pushStatic = (label: string) => {
+        images.push(renderNoEditPage(label, pageW, pageH))
+      }
+
+      await pushJpg(s0?.right ?? EMPTY_PAGE, s0?.left  ? { data: s0.left,  fromSide: 'left'  } : undefined)
+
+      for (let s = 1; s < totalSpreads; s++) {
+        if (cancelled) return
+        const data      = spreadsData[s]
+        const left      = data?.left  ?? EMPTY_PAGE
+        const right     = data?.right ?? EMPTY_PAGE
+        const isInside  = s === 1
+        const isOutside = s === totalSpreads - 1
+
+        if (isInside) pushStatic(t.noEditable)
+        else await pushJpg(left,  { data: right, fromSide: 'right' })
+
+        if (isOutside) pushStatic(t.noEditable)
+        else await pushJpg(right, { data: left,  fromSide: 'left'  })
+      }
+
+      await pushJpg(s0?.left ?? EMPTY_PAGE, s0?.right ? { data: s0.right, fromSide: 'right' } : undefined)
+
       if (!cancelled) { setPageImages(images); setLoading(false) }
-    })
+    }
 
+    renderAll()
     return () => { cancelled = true }
   }, [spreadsData, totalSpreads])
 
