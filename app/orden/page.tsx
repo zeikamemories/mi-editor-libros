@@ -30,6 +30,14 @@ const PRICES_BY_PAGES: Record<string, [number, number, number]> = {
   cuadrado:  [125800, 161800, 197800],
 }
 
+const TEXT_EXTRA_BY_SIZE: Record<string, number> = {
+  chico_h:   1,
+  mediano_h: 10000,
+  grande_h:  10000,
+  vertical:  10000,
+  cuadrado:  10000,
+}
+
 const PAGE_OPTIONS_SMALL = [
   { label: '20-100 fotos · 20 páginas',  pages: 20 },
   { label: '101-180 fotos · 30 páginas', pages: 30 },
@@ -41,10 +49,6 @@ const PAGE_OPTIONS_LARGE = [
   { label: '241-350 fotos · 40 páginas', pages: 40 },
 ]
 
-const TEXT_OPTIONS = [
-  { label: '1 texto · Incluído',        value: false },
-  { label: 'Textos varios · +$10.000',  value: true  },
-]
 
 function fmt(n: number) {
   return '$' + Math.round(n).toLocaleString('es-AR')
@@ -104,7 +108,8 @@ export default function OrdenPage() {
   const isLarge     = ['grande_h', 'cuadrado'].includes(sizeId)
   const pageOptions = isLarge ? PAGE_OPTIONS_LARGE : PAGE_OPTIONS_SMALL
   const pagePrices  = PRICES_BY_PAGES[sizeId] ?? [0, 0, 0]
-  const totalPrice  = pagePrices[pageIdx] + (textExtra ? 10000 : 0)
+  const textExtraPrice = TEXT_EXTRA_BY_SIZE[sizeId] ?? 10000
+  const totalPrice  = pagePrices[pageIdx] + (textExtra ? textExtraPrice : 0)
   const payNow      = Math.round(totalPrice / 2)
   const selectedSize = SIZES.find(s => s.id === sizeId) ?? SIZES[0]
   const selectedPage = pageOptions[pageIdx] ?? pageOptions[0]

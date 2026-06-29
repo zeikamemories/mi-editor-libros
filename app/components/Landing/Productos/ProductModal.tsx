@@ -25,6 +25,14 @@ const PRICES_BY_PAGES: Record<string, [number, number, number]> = {
   cuadrado: [125800, 161800, 197800],
 }
 
+const TEXT_EXTRA_BY_SIZE: Record<string, number> = {
+  chico:    1,
+  mediano:  10000,
+  grande:   10000,
+  vertical: 10000,
+  cuadrado: 10000,
+}
+
 const PAGE_OPTIONS_SMALL = [
   { photos: 'hasta ~100 fotos',  pages: 20 },
   { photos: 'hasta ~180 fotos',  pages: 30 },
@@ -61,7 +69,8 @@ export default function ProductModal({ product, onClose }: Props) {
   const isLarge     = ['grande', 'cuadrado'].includes(product.sizeId)
   const pageOptions = isLarge ? PAGE_OPTIONS_LARGE : PAGE_OPTIONS_SMALL
   const prices      = PRICES_BY_PAGES[product.sizeId] ?? [0, 0, 0]
-  const basePrice   = prices[pageIdx] + (textExtra ? 10000 : 0)
+  const textExtraPrice = TEXT_EXTRA_BY_SIZE[product.sizeId] ?? 10000
+  const basePrice   = prices[pageIdx] + (textExtra ? textExtraPrice : 0)
   const images      = IMAGES[product.sizeId] ?? ['', '', '', '']
 
   useEffect(() => {
@@ -236,7 +245,7 @@ export default function ProductModal({ product, onClose }: Props) {
                   onClick={() => setTextExtra(true)}
                 >
                   <span className="pm__card-top">Textos varios</span>
-                  <span className="pm__card-bot">+$10.000</span>
+                  <span className="pm__card-bot">+{fmt(textExtraPrice)}</span>
                 </button>
               </div>
               <p className="pm__section-note">

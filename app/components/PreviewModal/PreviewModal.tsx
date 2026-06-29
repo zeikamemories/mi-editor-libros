@@ -194,10 +194,6 @@ export default function PreviewModal({
     } catch {}
   }, [scale])
 
-  // When annotating, block touch events from reaching turn.js via pointer-events,
-  // but keep programmatic navigation (turn('next')/('previous')) working.
-  const flipbookBlocked = annotMode !== 'view'
-
   // ── Pre-render pages ───────────────────────────────────────────────────────
   useEffect(() => {
     let cancelled = false
@@ -616,7 +612,6 @@ export default function PreviewModal({
             <div
               ref={flipbookEl}
               className="preview-flipbook"
-              style={flipbookBlocked ? { pointerEvents: 'none' } : undefined}
             />
 
             {/* Saved drawing overlays — SVG vector (transparent) over the book pages */}
@@ -647,6 +642,7 @@ export default function PreviewModal({
                 onPointerMove={onDrawMove}
                 onPointerUp={onDrawEnd}
                 onPointerCancel={onDrawEnd}
+                onTouchStart={e => e.stopPropagation()}
               />
             )}
 
@@ -724,6 +720,7 @@ export default function PreviewModal({
                 <div
                   className="preview-comment-overlay"
                   onClick={handleBookClick}
+                  onTouchStart={e => e.stopPropagation()}
                   onTouchEnd={handleBookTouchEnd}
                 />
                 {pendingComment && (

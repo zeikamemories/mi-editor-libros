@@ -195,7 +195,7 @@ export default function ProyectoPage() {
   const [userName,  setUserName]  = useState('')
   const [userEmail, setUserEmail] = useState('')
 
-  const [openSection, setOpenSection] = useState<string>(searchParams.get('open') ?? 'material')
+  const [openSection, setOpenSection] = useState<string>(searchParams.get('open') ?? '')
 
   // Material form
   const [driveLink,          setDriveLink]          = useState('')
@@ -301,6 +301,17 @@ export default function ProyectoPage() {
       setDocsLink(o.docs_link ?? '')
       setNotes((n ?? []) as Note[])
       if (p?.cover_thumbnail) setCoverThumbnail(p.cover_thumbnail)
+
+      if (!openParam) {
+        if (o.status === 'preview_listo') {
+          setOpenSection('preview')
+        } else if (['en_camino', 'en_produccion', 'entregado'].includes(o.status)) {
+          setOpenSection('estado')
+        } else {
+          setOpenSection('material')
+        }
+      }
+
       setLoading(false)
     }
     init()

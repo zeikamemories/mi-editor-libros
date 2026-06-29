@@ -86,7 +86,10 @@
   height: 100%;
   object-fit: fill;
   pointer-events: none;
-  z-index: 200;
+  z-index: 950;
+  /* Force GPU compositing layer so Safari respects z-index above turn.js pages */
+  -webkit-transform: translateZ(0);
+  transform: translateZ(0);
 }
 
 /* Legacy raster drawings — multiply blend makes white transparent */
@@ -259,7 +262,7 @@
 .preview-comment-overlay {
   position: absolute;
   inset: 0;
-  z-index: 210;
+  z-index: 1100;
   cursor: crosshair;
   touch-action: none;
 }
@@ -278,7 +281,7 @@
   align-items: center;
   justify-content: center;
   cursor: pointer;
-  z-index: 211;
+  z-index: 1200;
   transform: translate(-50%, -50%);
   box-shadow: 0 2px 6px rgba(0,0,0,0.25);
   transition: transform 0.12s;
@@ -292,7 +295,7 @@
 
 .preview-comment-tooltip {
   position: absolute;
-  z-index: 212;
+  z-index: 1300;
   background: #fff;
   border-radius: 6px;
   box-shadow: 0 3px 14px rgba(0,0,0,0.18);
@@ -309,7 +312,7 @@
 
 .preview-comment-popup {
   position: absolute;
-  z-index: 213;
+  z-index: 1400;
   background: #fff;
   border-radius: 8px;
   box-shadow: 0 4px 20px rgba(0,0,0,0.22);
