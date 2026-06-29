@@ -28,11 +28,13 @@ export default function PreviewPage() {
   const searchParams  = useSearchParams()
   const orderId       = searchParams.get('orderId')
 
-  const [project,     setProject]     = useState<SavedProject | null>(null)
-  const [notFound,    setNotFound]    = useState(false)
-  const [userId,      setUserId]      = useState<string | null>(null)
-  const [isOwner,     setIsOwner]     = useState(false)
-  const [annotations, setAnnotations] = useState<Annotation[]>([])
+  const [project,       setProject]       = useState<SavedProject | null>(null)
+  const [notFound,      setNotFound]      = useState(false)
+  const [userId,        setUserId]        = useState<string | null>(null)
+  const [isOwner,       setIsOwner]       = useState(false)
+  const [annotations,   setAnnotations]   = useState<Annotation[]>([])
+  const [showRotateHint, setShowRotateHint] = useState(false)
+  const [hintDismissed,  setHintDismissed]  = useState(false)
 
   useEffect(() => {
     if (!projectId) return
@@ -84,6 +86,23 @@ export default function PreviewPage() {
       }
     })
   }, [projectId])
+
+  useEffect(() => {
+    const isMobile = () => window.innerWidth <= 900
+    const isPortrait = () => window.innerHeight > window.innerWidth
+
+    function check() {
+      if (isMobile() && isPortrait() && !hintDismissed) {
+        setShowRotateHint(true)
+      } else {
+        setShowRotateHint(false)
+      }
+    }
+
+    check()
+    window.addEventListener('resize', check)
+    return () => window.removeEventListener('resize', check)
+  }, [hintDismissed])
 
   async function handleCommentSave(text: string, page: number): Promise<Annotation | null> {
     const { data } = await supabase.from('preview_annotations').insert({
@@ -145,6 +164,38 @@ export default function PreviewPage() {
   const size = getBookSize(project.bookSizeId ?? 'vertical')
 
   return (
+    <>
+    {showRotateHint && (
+      <div className="preview-rotate-overlay">
+        <div className="preview-rotate-content">
+          <div className="preview-rotate-icon">
+            <svg viewBox="0 0 80 80" fill="none" xmlns="http://www.w3.org/2000/svg">
+              {/* Phone portrait */}
+              <rect x="8" y="14" width="26" height="42" rx="4" stroke="white" strokeWidth="2.5" strokeOpacity="0.5"/>
+              <rect x="12" y="20" width="18" height="28" rx="1" fill="white" fillOpacity="0.15"/>
+              <circle cx="21" cy="52" r="2" fill="white" fillOpacity="0.5"/>
+              {/* Arrow */}
+              <path d="M38 36 Q52 20 60 30" stroke="white" strokeWidth="2.5" strokeLinecap="round" strokeDasharray="4 3"/>
+              <path d="M57 27 L60 30 L56 32" stroke="white" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"/>
+              {/* Phone landscape */}
+              <rect x="46" y="38" width="26" height="16" rx="3" stroke="white" strokeWidth="2.5"/>
+              <rect x="50" y="41" width="18" height="10" rx="1" fill="white" fillOpacity="0.15"/>
+              <circle cx="70" cy="46" r="1.5" fill="white"/>
+            </svg>
+          </div>
+          <p className="preview-rotate-text">
+            Rotá el celular para<br />visualizar el libro
+          </p>
+          <button
+            className="preview-rotate-btn"
+            onClick={() => { setHintDismissed(true); setShowRotateHint(false) }}
+          >
+            Continuar así
+          </button>
+        </div>
+      </div>
+    )}
+
     <PreviewModal
       spreadsData={project.spreadsData}
       totalSpreads={project.totalSpreads}
@@ -161,5 +212,6 @@ export default function PreviewPage() {
       onDrawingDelete={isOwner ? handleDrawingDelete : undefined}
       onSaveChanges={orderId && isOwner ? handleSaveChanges : undefined}
     />
+    </>
   )
 }
