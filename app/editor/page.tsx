@@ -1046,7 +1046,7 @@ export default function EditorPage() {
       const layout = count === 1
         ? (LAYOUTS.find((l) => l.id === 'layout_1_3') ?? matching[0])
         : count === 2
-        ? (LAYOUTS.find((l) => l.id === 'layout_2_4') ?? matching[0])
+        ? (LAYOUTS.find((l) => l.id === 'layout_2_2') ?? matching[0])
         : count === 3
           ? (LAYOUTS.find((l) => l.id === 'layout_3_1') ?? matching[0])
           : count === 4

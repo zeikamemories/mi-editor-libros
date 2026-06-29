@@ -82,7 +82,7 @@ const layout_2_1: Layout = {
   photoCount: 2,
   orientation: 'any',
   frames: (() => {
-    const h = 0.56
+    const h = 0.45
     const y = (1 - h) / 2
     return [
       { x: cx(0, 2), y, w: fw(2), h },
@@ -103,6 +103,24 @@ const layout_2_2: Layout = {
   ],
 };
 
+const layout_2_12: Layout = {
+  id: 'layout_2_12',
+  nombre: 'Dos filas centradas con margen',
+  photoCount: 2,
+  orientation: 'any',
+  // 2 landscape frames centered, wide side margins, white space above and below
+  frames: (() => {
+    const mH  = 0.14
+    const w   = 1 - mH * 2
+    const h   = 0.27
+    const y0  = (1 - h * 2 - G) / 2
+    return [
+      { x: mH, y: y0,         w, h },
+      { x: mH, y: y0 + h + G, w, h },
+    ]
+  })(),
+}
+
 const layout_2_3: Layout = {
   id: 'layout_2_3',
   nombre: 'Dos filas completas',
@@ -118,17 +136,6 @@ const layout_2_3: Layout = {
   })(),
 };
 
-const layout_2_4: Layout = {
-  id: 'layout_2_4',
-  nombre: 'Dos filas con margen',
-  photoCount: 2,
-  orientation: 'any',
-  // Full width within margin, 2 equal rows
-  frames: [
-    { x: M, y: ry(0, 2), w: 1 - M * 2, h: fh(2) },
-    { x: M, y: ry(1, 2), w: 1 - M * 2, h: fh(2) },
-  ],
-};
 
 // ─── 3 FOTOS ───────────────────────────────────────────────────────────────
 
@@ -174,12 +181,16 @@ const layout_3_3: Layout = {
   nombre: 'Tres filas centradas',
   photoCount: 3,
   orientation: 'any',
-  // 1 col × 3 rows within margin
-  frames: [
-    { x: M, y: ry(0, 3), w: 1 - M * 2, h: fh(3) },
-    { x: M, y: ry(1, 3), w: 1 - M * 2, h: fh(3) },
-    { x: M, y: ry(2, 3), w: 1 - M * 2, h: fh(3) },
-  ],
+  // 3 equal rows, narrower width centered with white space on sides
+  frames: (() => {
+    const w = 0.38
+    const x = (1 - w) / 2
+    return [
+      { x, y: ry(0, 3), w, h: fh(3) },
+      { x, y: ry(1, 3), w, h: fh(3) },
+      { x, y: ry(2, 3), w, h: fh(3) },
+    ]
+  })(),
 };
 
 const layout_3_4: Layout = {
@@ -189,7 +200,7 @@ const layout_3_4: Layout = {
   orientation: 'any',
   // 3 cols × 1 row, vertically centered
   frames: (() => {
-    const frameH = 0.4
+    const frameH = 0.30
     const y = (1 - frameH) / 2
     return [
       { x: cx(0, 3), y, w: fw(3), h: frameH },
@@ -239,7 +250,7 @@ const layout_4_3: Layout = {
   // 2×2 landscape frames, vertically centered
   frames: (() => {
     const frameW = fw(2)
-    const frameH = frameW * 0.65
+    const frameH = frameW * 0.80
     const startY = (1 - (frameH * 2 + G)) / 2
     return [
       { x: cx(0, 2), y: startY,            w: frameW, h: frameH },
@@ -250,25 +261,25 @@ const layout_4_3: Layout = {
   })(),
 };
 
-const layout_4_4: Layout = {
-  id: 'layout_4_4',
-  nombre: 'Grande izquierda, tres derecha',
+
+const layout_4_10: Layout = {
+  id: 'layout_4_10',
+  nombre: 'Grilla 2×2 sin margen lateral',
   photoCount: 4,
   orientation: 'any',
+  // 2×2 grid, full bleed sides, white space top and bottom
   frames: (() => {
-    const available = 1 - M * 2 - G
-    const leftW     = available * 0.52
-    const rightW    = available * 0.48
-    const rightH    = fh(3)
-    const rx        = M + leftW + G
+    const mV    = 0.22
+    const cellW = (1 - G) / 2
+    const cellH = (1 - mV * 2 - G) / 2
     return [
-      { x: M,  y: M,            w: leftW,  h: 1 - M * 2 },
-      { x: rx, y: ry(0, 3),     w: rightW, h: rightH     },
-      { x: rx, y: ry(1, 3),     w: rightW, h: rightH     },
-      { x: rx, y: ry(2, 3),     w: rightW, h: rightH     },
+      { x: 0,        y: mV,             w: cellW, h: cellH },
+      { x: cellW+G,  y: mV,             w: cellW, h: cellH },
+      { x: 0,        y: mV + cellH + G, w: cellW, h: cellH },
+      { x: cellW+G,  y: mV + cellH + G, w: cellW, h: cellH },
     ]
   })(),
-};
+}
 
 // ─── 1 FOTO (editoriales) ──────────────────────────────────────────────────
 
@@ -308,6 +319,44 @@ const layout_1_8: Layout = {
   frames: [{ x: 0.30, y: 0, w: 0.70, h: 1 }],
 }
 
+// ─── 1 FOTO (horizontal) ───────────────────────────────────────────────────
+
+const layout_1_9: Layout = {
+  id: 'layout_1_9',
+  nombre: 'Franja centrada',
+  photoCount: 1,
+  orientation: 'landscape',
+  // Wide strip bleeding to left/right edges, equal white space above and below
+  frames: [{ x: 0, y: (1 - 0.62) / 2, w: 1, h: 0.62 }],
+}
+
+const layout_1_10: Layout = {
+  id: 'layout_1_10',
+  nombre: 'Cuadrado centrado',
+  photoCount: 1,
+  orientation: 'landscape',
+  // Small square photo, centered
+  frames: [{ x: (1 - 0.33) / 2, y: (1 - 0.42) / 2, w: 0.33, h: 0.42 }],
+}
+
+const layout_1_11: Layout = {
+  id: 'layout_1_11',
+  nombre: 'Franja inferior',
+  photoCount: 1,
+  orientation: 'landscape',
+  // White space at top, photo bleeds to left/right/bottom
+  frames: [{ x: 0, y: 0.30, w: 1, h: 0.70 }],
+}
+
+const layout_1_12: Layout = {
+  id: 'layout_1_12',
+  nombre: 'Franja superior',
+  photoCount: 1,
+  orientation: 'landscape',
+  // White space at bottom, photo bleeds to top/left/right
+  frames: [{ x: 0, y: 0, w: 1, h: 0.70 }],
+}
+
 // ─── 2 FOTOS (editoriales) ─────────────────────────────────────────────────
 
 const layout_2_5: Layout = {
@@ -316,12 +365,14 @@ const layout_2_5: Layout = {
   photoCount: 2,
   orientation: 'any',
   frames: (() => {
+    const mV    = 0.27
     const avail = 1 - M * 2 - G
     const leftW = avail * 0.62
     const rightW = avail * 0.38
+    const h     = 1 - mV * 2
     return [
-      { x: M,                y: M, w: leftW,  h: 1 - M * 2 },
-      { x: M + leftW + G,    y: M, w: rightW, h: 1 - M * 2 },
+      { x: M,             y: mV, w: leftW,  h },
+      { x: M + leftW + G, y: mV, w: rightW, h },
     ]
   })(),
 }
@@ -334,7 +385,7 @@ const layout_2_6: Layout = {
   // Photo 1 top-left, Photo 2 bottom-right — diagonal feel
   frames: (() => {
     const colW  = fw(2)
-    const frameH = 0.56
+    const frameH = 0.45
     return [
       { x: cx(0, 2), y: M,                     w: colW, h: frameH },
       { x: cx(1, 2), y: 1 - M - frameH,        w: colW, h: frameH },
@@ -351,6 +402,18 @@ const layout_2_7: Layout = {
   frames: [
     { x: 0,   y: 0, w: 0.5, h: 1 },
     { x: 0.5, y: 0, w: 0.5, h: 1 },
+  ],
+}
+
+const layout_2_13: Layout = {
+  id: 'layout_2_13',
+  nombre: 'Díptico horizontal',
+  photoCount: 2,
+  orientation: 'any',
+  // Mirror of layout_2_7: two full-bleed halves stacked top/bottom
+  frames: [
+    { x: 0, y: 0,   w: 1, h: 0.5 },
+    { x: 0, y: 0.5, w: 1, h: 0.5 },
   ],
 }
 
@@ -372,6 +435,54 @@ const layout_2_8: Layout = {
   })(),
 }
 
+// ─── 2 FOTOS (horizontal) ──────────────────────────────────────────────────
+
+const layout_2_9: Layout = {
+  id: 'layout_2_9',
+  nombre: 'Dos columnas altas',
+  photoCount: 2,
+  orientation: 'landscape',
+  // Two equal columns filling full height within margins
+  frames: [
+    { x: cx(0, 2), y: M, w: fw(2), h: 1 - M * 2 },
+    { x: cx(1, 2), y: M, w: fw(2), h: 1 - M * 2 },
+  ],
+}
+
+const layout_2_10: Layout = {
+  id: 'layout_2_10',
+  nombre: 'Dos apiladas centradas',
+  photoCount: 2,
+  orientation: 'landscape',
+  // Two stacked photos centered horizontally
+  frames: (() => {
+    const w = 0.52
+    const x = (1 - w) / 2
+    return [
+      { x, y: ry(0, 2), w, h: fh(2) },
+      { x, y: ry(1, 2), w, h: fh(2) },
+    ]
+  })(),
+}
+
+const layout_2_11: Layout = {
+  id: 'layout_2_11',
+  nombre: 'Escalonado diagonal',
+  photoCount: 2,
+  orientation: 'landscape',
+  // Two equal rectangles, centered as group, photo 1 upper-left, photo 2 lower-right
+  frames: (() => {
+    const w = 0.40
+    const h = 0.65
+    const x1 = (1 - (w * 2 + G)) / 2
+    const x2 = x1 + w + G
+    return [
+      { x: x1, y: M,         w, h },
+      { x: x2, y: 1 - M - h, w, h },
+    ]
+  })(),
+}
+
 // ─── 3 FOTOS (editoriales) ─────────────────────────────────────────────────
 
 const layout_3_5: Layout = {
@@ -381,14 +492,83 @@ const layout_3_5: Layout = {
   orientation: 'any',
   // 1 large left + 2 stacked right (asymmetric widths)
   frames: (() => {
+    const mV     = 0.22
     const avail  = 1 - M * 2 - G
     const leftW  = avail * 0.55
     const rightW = avail * 0.45
     const rx     = M + leftW + G
+    const h      = 1 - mV * 2
+    const cellH  = (h - G) / 2
     return [
-      { x: M,  y: M,        w: leftW,  h: 1 - M * 2 },
-      { x: rx, y: ry(0, 2), w: rightW, h: fh(2)     },
-      { x: rx, y: ry(1, 2), w: rightW, h: fh(2)     },
+      { x: M,  y: mV,             w: leftW,  h        },
+      { x: rx, y: mV,             w: rightW, h: cellH },
+      { x: rx, y: mV + cellH + G, w: rightW, h: cellH },
+    ]
+  })(),
+}
+
+const layout_3_12: Layout = {
+  id: 'layout_3_12',
+  nombre: 'Columna editorial espejada',
+  photoCount: 3,
+  orientation: 'any',
+  // Mirror of layout_3_5: 2 stacked left + 1 large right
+  frames: (() => {
+    const mV     = 0.22
+    const avail  = 1 - M * 2 - G
+    const leftW  = avail * 0.45
+    const rightW = avail * 0.55
+    const rx     = M + leftW + G
+    const h      = 1 - mV * 2
+    const cellH  = (h - G) / 2
+    return [
+      { x: M,  y: mV,             w: leftW,  h: cellH },
+      { x: M,  y: mV + cellH + G, w: leftW,  h: cellH },
+      { x: rx, y: mV,             w: rightW, h        },
+    ]
+  })(),
+}
+
+const layout_3_13: Layout = {
+  id: 'layout_3_13',
+  nombre: 'Columna editorial sin margen',
+  photoCount: 3,
+  orientation: 'any',
+  // Full-bleed version of layout_3_5: 1 large left + 2 stacked right, no side margins
+  frames: (() => {
+    const mV    = 0.22
+    const avail = 1 - G
+    const leftW = avail * 0.55
+    const rightW = avail * 0.45
+    const rx    = leftW + G
+    const h     = 1 - mV * 2
+    const cellH = (h - G) / 2
+    return [
+      { x: 0,  y: mV,             w: leftW,  h        },
+      { x: rx, y: mV,             w: rightW, h: cellH },
+      { x: rx, y: mV + cellH + G, w: rightW, h: cellH },
+    ]
+  })(),
+}
+
+const layout_3_14: Layout = {
+  id: 'layout_3_14',
+  nombre: 'Columna editorial espejada sin margen',
+  photoCount: 3,
+  orientation: 'any',
+  // Full-bleed version of layout_3_12: 2 stacked left + 1 large right, no side margins
+  frames: (() => {
+    const mV     = 0.22
+    const avail  = 1 - G
+    const leftW  = avail * 0.45
+    const rightW = avail * 0.55
+    const rx     = leftW + G
+    const h      = 1 - mV * 2
+    const cellH  = (h - G) / 2
+    return [
+      { x: 0,  y: mV,             w: leftW,  h: cellH },
+      { x: 0,  y: mV + cellH + G, w: leftW,  h: cellH },
+      { x: rx, y: mV,             w: rightW, h        },
     ]
   })(),
 }
@@ -411,39 +591,61 @@ const layout_3_6: Layout = {
   })(),
 }
 
-const layout_3_7: Layout = {
-  id: 'layout_3_7',
-  nombre: 'Franja + dos',
+
+
+// ─── 3 FOTOS (horizontal) ──────────────────────────────────────────────────
+
+const layout_3_9: Layout = {
+  id: 'layout_3_9',
+  nombre: 'Dos arriba, grande abajo',
   photoCount: 3,
-  orientation: 'any',
-  // Full-bleed strip top, 2 columns with margin below
+  orientation: 'landscape',
+  // 2 equal photos top, 1 large photo bottom, all with margins
   frames: (() => {
-    const stripH = 0.42
-    const botY   = stripH + G
-    const botH   = 1 - botY - M
+    const available = 1 - M * 2 - G
+    const topH = available * 0.45
+    const botH = available * 0.55
     return [
-      { x: 0,          y: 0,   w: 1,    h: stripH },
-      { x: cx(0, 2),   y: botY, w: fw(2), h: botH  },
-      { x: cx(1, 2),   y: botY, w: fw(2), h: botH  },
+      { x: cx(0, 2), y: M,            w: fw(2),     h: topH },
+      { x: cx(1, 2), y: M,            w: fw(2),     h: topH },
+      { x: M,        y: M + topH + G, w: 1 - M * 2, h: botH },
     ]
   })(),
 }
 
-const layout_3_8: Layout = {
-  id: 'layout_3_8',
-  nombre: 'Tres columnas desiguales',
+const layout_3_10: Layout = {
+  id: 'layout_3_10',
+  nombre: 'Dos izquierda, grande derecha',
+  photoCount: 3,
+  orientation: 'landscape',
+  // 2 stacked photos left, 1 large photo right
+  frames: (() => {
+    const avail  = 1 - M * 2 - G
+    const leftW  = avail * 0.45
+    const rightW = avail * 0.55
+    const rx     = M + leftW + G
+    return [
+      { x: M,  y: ry(0, 2), w: leftW,  h: fh(2)     },
+      { x: M,  y: ry(1, 2), w: leftW,  h: fh(2)     },
+      { x: rx, y: M,        w: rightW, h: 1 - M * 2 },
+    ]
+  })(),
+}
+
+const layout_3_11: Layout = {
+  id: 'layout_3_11',
+  nombre: 'Grande arriba, dos abajo completo',
   photoCount: 3,
   orientation: 'any',
-  // Columns: narrow / wide / narrow — editorial magazine feel
+  // Full bleed inverse of layout_3_2: 1 wide top + 2 cols bottom
   frames: (() => {
-    const avail = 1 - M * 2 - G * 2
-    const w1 = avail * 0.24
-    const w2 = avail * 0.52
-    const w3 = avail * 0.24
+    const colW = (1 - G) / 2
+    const topH = (1 - G) * 0.55
+    const botH = (1 - G) * 0.45
     return [
-      { x: M,                     y: M, w: w1, h: 1 - M * 2 },
-      { x: M + w1 + G,            y: M, w: w2, h: 1 - M * 2 },
-      { x: M + w1 + G + w2 + G,   y: M, w: w3, h: 1 - M * 2 },
+      { x: 0,        y: 0,        w: 1,    h: topH },
+      { x: 0,        y: topH + G, w: colW, h: botH },
+      { x: colW + G, y: topH + G, w: colW, h: botH },
     ]
   })(),
 }
@@ -469,21 +671,21 @@ const layout_4_5: Layout = {
   })(),
 }
 
-const layout_4_6: Layout = {
-  id: 'layout_4_6',
-  nombre: 'Banda + tres',
+const layout_4_9: Layout = {
+  id: 'layout_4_9',
+  nombre: 'Grande arriba, tres pequeñas',
   photoCount: 4,
   orientation: 'any',
-  // Full-bleed strip top, 3 small with margin below
+  // Mirror of layout_4_5: 1 wide top + 3 small bottom
   frames: (() => {
-    const stripH = 0.44
-    const botY   = stripH + G
-    const botH   = 1 - botY - M
+    const available = 1 - M * 2 - G
+    const topH = available * 0.64
+    const botH = available * 0.36
     return [
-      { x: 0,          y: 0,    w: 1,     h: stripH },
-      { x: cx(0, 3),   y: botY, w: fw(3), h: botH   },
-      { x: cx(1, 3),   y: botY, w: fw(3), h: botH   },
-      { x: cx(2, 3),   y: botY, w: fw(3), h: botH   },
+      { x: M,        y: M,            w: 1 - M * 2, h: topH },
+      { x: cx(0, 3), y: M + topH + G, w: fw(3),     h: botH },
+      { x: cx(1, 3), y: M + topH + G, w: fw(3),     h: botH },
+      { x: cx(2, 3), y: M + topH + G, w: fw(3),     h: botH },
     ]
   })(),
 }
@@ -496,8 +698,8 @@ const layout_4_7: Layout = {
   // 1 large left + 3 stacked right
   frames: (() => {
     const avail  = 1 - M * 2 - G
-    const leftW  = avail * 0.52
-    const rightW = avail * 0.48
+    const leftW  = avail * 0.60
+    const rightW = avail * 0.40
     const rx     = M + leftW + G
     return [
       { x: M,  y: M,        w: leftW,  h: 1 - M * 2 },
@@ -508,29 +710,28 @@ const layout_4_7: Layout = {
   })(),
 }
 
-// ─── 5 FOTOS ───────────────────────────────────────────────────────────────
-
-const layout_5_1: Layout = {
-  id: 'layout_5_1',
-  nombre: 'Grilla 2×2 + franja inferior',
-  photoCount: 5,
+const layout_4_8: Layout = {
+  id: 'layout_4_8',
+  nombre: '3 apiladas + grande derecha',
+  photoCount: 4,
   orientation: 'any',
-  // 2×2 grid + 1 thin wide frame at bottom
+  // Mirror of layout_4_7: 3 stacked left + 1 large right
   frames: (() => {
-    const colW     = fw(2)
-    const available = 1 - M * 2 - G * 2  // vertical space for 3 rows
-    const topH     = available * 0.42
-    const midH     = available * 0.42
-    const botH     = available * 0.16
+    const avail  = 1 - M * 2 - G
+    const leftW  = avail * 0.40
+    const rightW = avail * 0.60
+    const rx     = M + leftW + G
     return [
-      { x: cx(0, 2), y: M,                        w: colW,      h: topH },
-      { x: cx(1, 2), y: M,                        w: colW,      h: topH },
-      { x: cx(0, 2), y: M + topH + G,             w: colW,      h: midH },
-      { x: cx(1, 2), y: M + topH + G,             w: colW,      h: midH },
-      { x: M,        y: M + topH + midH + G * 2,  w: 1 - M * 2, h: botH },
+      { x: M,  y: ry(0, 3), w: leftW,  h: fh(3)     },
+      { x: M,  y: ry(1, 3), w: leftW,  h: fh(3)     },
+      { x: M,  y: ry(2, 3), w: leftW,  h: fh(3)     },
+      { x: rx, y: M,        w: rightW, h: 1 - M * 2 },
     ]
   })(),
-};
+}
+
+// ─── 5 FOTOS ───────────────────────────────────────────────────────────────
+
 
 const layout_5_2: Layout = {
   id: 'layout_5_2',
@@ -574,25 +775,68 @@ const layout_5_3: Layout = {
   })(),
 };
 
+const layout_5_6: Layout = {
+  id: 'layout_5_6',
+  nombre: 'Tres arriba, dos abajo con margen',
+  photoCount: 5,
+  orientation: 'any',
+  // Mirror of layout_5_3: 3 top + 2 bottom with margins
+  frames: (() => {
+    const available = 1 - M * 2 - G
+    const topH = available * 0.55
+    const botH = available * 0.45
+    return [
+      { x: cx(0, 3), y: M,            w: fw(3), h: topH },
+      { x: cx(1, 3), y: M,            w: fw(3), h: topH },
+      { x: cx(2, 3), y: M,            w: fw(3), h: topH },
+      { x: cx(0, 2), y: M + topH + G, w: fw(2), h: botH },
+      { x: cx(1, 2), y: M + topH + G, w: fw(2), h: botH },
+    ]
+  })(),
+}
+
 const layout_5_4: Layout = {
   id: 'layout_5_4',
   nombre: '1 grande + 4 en grilla',
   photoCount: 5,
   orientation: 'any',
-  // 1 large left + 2×2 grid right
+  // 1 large left + 2×2 grid right, extra vertical white space
   frames: (() => {
+    const mV     = 0.16
     const avail  = 1 - M * 2 - G
     const leftW  = avail * 0.50
     const rightW = avail * 0.50
     const rx     = M + leftW + G
     const cellW  = (rightW - G) / 2
-    const cellH  = (1 - M * 2 - G) / 2
+    const cellH  = (1 - mV * 2 - G) / 2
     return [
-      { x: M,             y: M,         w: leftW, h: 1 - M * 2 },
-      { x: rx,            y: ry(0, 2),  w: cellW, h: cellH      },
-      { x: rx + cellW + G,y: ry(0, 2),  w: cellW, h: cellH      },
-      { x: rx,            y: ry(1, 2),  w: cellW, h: cellH      },
-      { x: rx + cellW + G,y: ry(1, 2),  w: cellW, h: cellH      },
+      { x: M,              y: mV,          w: leftW, h: 1 - mV * 2 },
+      { x: rx,             y: mV,          w: cellW, h: cellH       },
+      { x: rx + cellW + G, y: mV,          w: cellW, h: cellH       },
+      { x: rx,             y: mV + cellH + G, w: cellW, h: cellH    },
+      { x: rx + cellW + G, y: mV + cellH + G, w: cellW, h: cellH    },
+    ]
+  })(),
+}
+
+const layout_5_7: Layout = {
+  id: 'layout_5_7',
+  nombre: '4 en grilla + 1 grande',
+  photoCount: 5,
+  orientation: 'any',
+  // Mirror of layout_5_4: 2×2 grid left + 1 large right, no side margins, white space top/bottom
+  frames: (() => {
+    const mV    = 0.16
+    const half  = (1 - G) / 2
+    const cellW = (half - G) / 2
+    const cellH = (1 - mV * 2 - G) / 2
+    const rx    = half + G
+    return [
+      { x: 0,          y: mV,             w: cellW, h: cellH },
+      { x: cellW + G,  y: mV,             w: cellW, h: cellH },
+      { x: 0,          y: mV + cellH + G, w: cellW, h: cellH },
+      { x: cellW + G,  y: mV + cellH + G, w: cellW, h: cellH },
+      { x: rx,         y: mV,             w: 1 - rx, h: 1 - mV * 2 },
     ]
   })(),
 }
@@ -624,18 +868,20 @@ export const LAYOUTS: Layout[] = [
   // 1 foto
   layout_1_1, layout_1_2, layout_1_3, layout_1_4,
   layout_1_5, layout_1_6, layout_1_7, layout_1_8,
+  layout_1_9, layout_1_10, layout_1_11, layout_1_12,
   // 2 fotos
-  layout_2_1, layout_2_2, layout_2_3, layout_2_4,
-  layout_2_5, layout_2_6, layout_2_7, layout_2_8,
+  layout_2_1, layout_2_2, layout_2_12, layout_2_3,
+  layout_2_9, layout_2_10, layout_2_11,
+  layout_2_5, layout_2_6, layout_2_7, layout_2_13, layout_2_8,
   // 3 fotos
-  layout_3_1, layout_3_2, layout_3_3, layout_3_4,
-  layout_3_5, layout_3_6, layout_3_7, layout_3_8,
+  layout_3_1, layout_3_6, layout_3_9, layout_3_2, layout_3_11, layout_3_3, layout_3_4,
+  layout_3_5, layout_3_12, layout_3_13, layout_3_14, layout_3_10,
   // 4 fotos
-  layout_4_1, layout_4_2, layout_4_3, layout_4_4,
-  layout_4_5, layout_4_6, layout_4_7,
+  layout_4_1, layout_4_2, layout_4_3, layout_4_10,
+  layout_4_5, layout_4_9, layout_4_7, layout_4_8,
   // 5 fotos
-  layout_5_1, layout_5_2, layout_5_3,
-  layout_5_4, layout_5_5,
+  layout_5_2, layout_5_5, layout_5_3, layout_5_6,
+  layout_5_4, layout_5_7,
 ];
 
 export function getLayoutsByCantidad(cantidad: number): Layout[] {
