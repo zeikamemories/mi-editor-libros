@@ -1618,6 +1618,30 @@
 
 .mpd-mat-link-btn:hover { opacity: 0.85; }
 
+.mpd-mat-retry-btn {
+  display: inline-block;
+  padding: 10px 16px;
+  background: transparent;
+  color: var(--color-blue);
+  font-family: var(--font-body);
+  font-size: 14px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  border: 1.5px solid var(--color-blue);
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s;
+}
+.mpd-mat-retry-btn:hover { background: var(--color-blue); color: #fff; }
+.mpd-mat-retry-btn:disabled { opacity: 0.5; cursor: default; }
+
+.mpd-mat-pending-note {
+  font-family: var(--font-body);
+  font-size: 13px;
+  color: #7b7a78;
+  margin: 0;
+  padding: 8px 0;
+}
+
 .mpd-mat-textarea {
   width: 100%;
   border: 1px solid #7b7a78;

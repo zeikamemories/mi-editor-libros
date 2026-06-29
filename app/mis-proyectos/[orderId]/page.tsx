@@ -207,6 +207,8 @@ export default function ProyectoPage() {
   const refInputRef = useRef<HTMLInputElement>(null)
   const [uploadingRef, setUploadingRef] = useState(false)
 
+  const [generatingLinks, setGeneratingLinks] = useState(false)
+
   // Preview
   const [sendingChange, setSendingChange] = useState(false)
   const [approved,      setApproved]      = useState(false)
@@ -471,6 +473,36 @@ export default function ProyectoPage() {
     setPaying(false)
   }
 
+  async function generateMaterialLinks() {
+    if (!order || generatingLinks) return
+    setGeneratingLinks(true)
+    const folderName  = `Zeika - ${order.book_name} - ${order.id.slice(0, 8).toUpperCase()}`
+    const driveRes    = await fetch('/api/create-drive-folder', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ folderName, clientEmail: userEmail }),
+    })
+    const driveData   = driveRes.ok ? await driveRes.json() : {}
+    const newDriveLink = driveData.folderUrl ?? null
+    const folderId    = driveData.folderId  ?? null
+
+    const docsRes     = await fetch('/api/create-docs', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ bookName: order.book_name, clientEmail: userEmail, extraText: order.extra_text, folderId }),
+    })
+    const newDocsLink = docsRes.ok ? (await docsRes.json()).docsUrl ?? null : null
+
+    await supabase.from('orders').update({
+      ...(newDriveLink ? { drive_link: newDriveLink } : {}),
+      ...(newDocsLink  ? { docs_link:  newDocsLink  } : {}),
+    }).eq('id', order.id)
+
+    if (newDriveLink) setDriveLink(newDriveLink)
+    if (newDocsLink)  setDocsLink(newDocsLink)
+    setGeneratingLinks(false)
+  }
+
   function toggle(section: string) {
     setOpenSection(prev => prev === section ? '' : section)
   }
@@ -607,13 +639,12 @@ export default function ProyectoPage() {
           <a className="mpd-mat-link-btn" href={driveLink} target="_blank" rel="noopener noreferrer">
             Abrir carpeta de fotos →
           </a>
+        ) : order.status !== 'pendiente_pago' ? (
+          <button className="mpd-mat-retry-btn" onClick={generateMaterialLinks} disabled={generatingLinks}>
+            {generatingLinks ? 'Generando...' : 'Generar carpeta de Drive →'}
+          </button>
         ) : (
-          <input
-            className="mpd-mat-input"
-            placeholder="La carpeta se genera automáticamente al confirmar el pago"
-            value={driveLink}
-            readOnly
-          />
+          <p className="mpd-mat-pending-note">La carpeta se genera automáticamente al confirmar el pago.</p>
         )}
         <div className="mpd-mat-tips">
           <span className="mpd-mat-tip">Si las fotos tienen un orden específico, numeralas: 01.jpg, 02.jpg…</span>
@@ -628,15 +659,10 @@ export default function ProyectoPage() {
           <a className="mpd-mat-link-btn" href={docsLink} target="_blank" rel="noopener noreferrer">
             Abrir documento de textos →
           </a>
+        ) : order.status !== 'pendiente_pago' ? (
+          <p className="mpd-mat-pending-note">Se genera junto con la carpeta de fotos.</p>
         ) : (
-          <input
-            className="mpd-mat-input"
-            placeholder="El documento se genera automáticamente al confirmar el pago"
-            value={docsLink}
-            onChange={e => setDocsLink(e.target.value)}
-            onBlur={e => saveLinkSilently('docs_link', e.target.value)}
-            readOnly
-          />
+          <p className="mpd-mat-pending-note">El documento se genera automáticamente al confirmar el pago.</p>
         )}
         <div className="mpd-mat-tips">
           <span className="mpd-mat-tip">Si los textos van con fotos específicas, numeralos igual que las fotos: 01, 02…</span>

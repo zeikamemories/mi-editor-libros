@@ -4,13 +4,12 @@ import { Readable } from 'stream'
 
 const ZEIKA_EMAIL = 'zeika.memories@gmail.com'
 
-function getZeikaAuth() {
-  const oauth2Client = new google.auth.OAuth2(
-    process.env.ZEIKA_OAUTH_CLIENT_ID,
-    process.env.ZEIKA_OAUTH_CLIENT_SECRET,
-  )
-  oauth2Client.setCredentials({ refresh_token: process.env.ZEIKA_OAUTH_REFRESH_TOKEN })
-  return oauth2Client
+function getServiceAccountAuth() {
+  const credentials = JSON.parse(process.env.GOOGLE_SERVICE_ACCOUNT_JSON!)
+  return new google.auth.GoogleAuth({
+    credentials,
+    scopes: ['https://www.googleapis.com/auth/drive'],
+  })
 }
 
 function buildTemplate(bookName: string, extraText: boolean): string {
@@ -79,7 +78,7 @@ export async function POST(req: NextRequest) {
   try {
     const { bookName, clientEmail, extraText, folderId } = await req.json()
 
-    const auth  = getZeikaAuth()
+    const auth  = getServiceAccountAuth()
     const drive = google.drive({ version: 'v3', auth })
 
     // Create a Google Doc via Drive API (upload plain text → convert to Docs format)

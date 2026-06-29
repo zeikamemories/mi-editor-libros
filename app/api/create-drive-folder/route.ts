@@ -1,20 +1,21 @@
 import { google } from 'googleapis'
 import { NextRequest, NextResponse } from 'next/server'
 
-function getZeikaAuth() {
-  const oauth2Client = new google.auth.OAuth2(
-    process.env.ZEIKA_OAUTH_CLIENT_ID,
-    process.env.ZEIKA_OAUTH_CLIENT_SECRET,
-  )
-  oauth2Client.setCredentials({ refresh_token: process.env.ZEIKA_OAUTH_REFRESH_TOKEN })
-  return oauth2Client
+const ZEIKA_EMAIL = 'zeika.memories@gmail.com'
+
+function getServiceAccountAuth() {
+  const credentials = JSON.parse(process.env.GOOGLE_SERVICE_ACCOUNT_JSON!)
+  return new google.auth.GoogleAuth({
+    credentials,
+    scopes: ['https://www.googleapis.com/auth/drive'],
+  })
 }
 
 export async function POST(req: NextRequest) {
   try {
     const { folderName, clientEmail } = await req.json()
 
-    const auth  = getZeikaAuth()
+    const auth  = getServiceAccountAuth()
     const drive = google.drive({ version: 'v3', auth })
 
     const folder = await drive.files.create({
@@ -26,6 +27,12 @@ export async function POST(req: NextRequest) {
     })
 
     const folderId = folder.data.id!
+
+    await drive.permissions.create({
+      fileId: folderId,
+      sendNotificationEmail: false,
+      requestBody: { type: 'user', role: 'writer', emailAddress: ZEIKA_EMAIL },
+    })
 
     if (clientEmail) {
       await drive.permissions.create({
