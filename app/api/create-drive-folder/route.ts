@@ -30,14 +30,14 @@ export async function POST(req: NextRequest) {
 
     await drive.permissions.create({
       fileId: folderId,
-      sendNotificationEmail: false,
+      sendNotificationEmail: true,
       requestBody: { type: 'user', role: 'writer', emailAddress: ZEIKA_EMAIL },
     })
 
     if (clientEmail) {
       await drive.permissions.create({
         fileId: folderId,
-        sendNotificationEmail: false,
+        sendNotificationEmail: true,
         requestBody: { type: 'user', role: 'writer', emailAddress: clientEmail },
       })
     }

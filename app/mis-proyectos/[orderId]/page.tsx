@@ -653,7 +653,7 @@ export default function ProyectoPage() {
         </div>
         {driveLink ? (
           <a className="mpd-mat-link-btn" href={driveLink} target="_blank" rel="noopener noreferrer">
-            Abrir carpeta de fotos →
+            Abrir carpeta de Drive →
           </a>
         ) : order.status !== 'pendiente_pago' ? (
           <button className="mpd-mat-retry-btn" onClick={generateMaterialLinks} disabled={generatingLinks}>
@@ -663,7 +663,7 @@ export default function ProyectoPage() {
           <p className="mpd-mat-pending-note">La carpeta se genera automáticamente al confirmar el pago.</p>
         )}
         <div className="mpd-mat-tips">
-          <span className="mpd-mat-tip">Si las fotos tienen un orden específico, numeralas: 01.jpg, 02.jpg…</span>
+          <span className="mpd-mat-tip">Si las fotos tienen un orden específico, enumeralas: 01.jpg, 02.jpg…</span>
           <span className="mpd-mat-tip">Si organizás por destinos o secciones, usá subcarpetas dentro de la carpeta.</span>
         </div>
       </div>
@@ -676,7 +676,7 @@ export default function ProyectoPage() {
             Abrir documento de textos →
           </a>
         ) : order.status !== 'pendiente_pago' ? (
-          <p className="mpd-mat-pending-note">Se genera junto con la carpeta de fotos.</p>
+          <p className="mpd-mat-pending-note">Creá un Google Docs dentro de tu carpeta de Drive.</p>
         ) : (
           <p className="mpd-mat-pending-note">El documento se genera automáticamente al confirmar el pago.</p>
         )}

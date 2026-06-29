@@ -51,6 +51,8 @@ interface Order {
   extra_pages: number
   extra_text: boolean
   pages_base: number
+  delivery_type: string | null
+  delivery_address: string | null
 }
 
 interface Note {
@@ -287,7 +289,8 @@ export default function PedidoAdminPage() {
   }
 
   function buildWaLink(message: string) {
-    const digits = clientPhone.replace(/\D/g, '')
+    const phone = clientPhone || editPhone
+    const digits = phone.replace(/\D/g, '')
     const waNumber = digits.startsWith('54') ? digits : '549' + digits
     return `https://wa.me/${waNumber}?text=${encodeURIComponent(message)}`
   }
@@ -319,6 +322,10 @@ export default function PedidoAdminPage() {
             <div className="pedido-item"><label>Total</label><span>{fmt(order.price_total)}</span></div>
             <div className="pedido-item"><label>50% pagado</label><span>{fmt(order.price_paid)}</span></div>
             <div className="pedido-item"><label>Fecha pedido</label><span>{fmtDate(order.created_at)}</span></div>
+            <div className="pedido-item"><label>Envío</label><span>{order.delivery_type === 'andreani' ? 'Andreani' : order.delivery_type === 'retiro' ? 'Retiro en fábrica' : '—'}</span></div>
+            {order.delivery_type === 'andreani' && order.delivery_address && (
+              <div className="pedido-item pedido-item--full"><label>Dirección</label><span>{order.delivery_address}</span></div>
+            )}
           </div>
           {order.drive_link && (
             <a className="pedido-link-btn" href={order.drive_link} target="_blank" rel="noreferrer">
@@ -338,16 +345,18 @@ export default function PedidoAdminPage() {
               ))}
             </div>
           )}
-          {clientPhone && (
+          {(clientPhone || editPhone) ? (
             <a
               className="pedido-wa-btn"
-              href={buildWaLink(`¡Hola! 👋 Recibimos tu pedido del fotolibro "${order.book_name}" ✨ Estamos trabajando en el diseño y te contactamos en las próximas 48hs hábiles. ¡Gracias por confiar en Zeika! 📸`)}
+              href={buildWaLink(`¡Hola! Recibimos tu pedido del fotolibro "${order.book_name}". Estamos trabajando en el diseño y te contactamos en las próximas 48hs hábiles. ¡Gracias por confiar en Zeika!`)}
               target="_blank"
               rel="noreferrer"
             >
               <svg width="16" height="16" viewBox="0 0 32 32" fill="none"><rect width="32" height="32" rx="8" fill="#25D366"/><path d="M16 6C10.477 6 6 10.477 6 16c0 1.89.523 3.655 1.432 5.16L6 26l4.98-1.407A9.946 9.946 0 0016 26c5.523 0 10-4.477 10-10S21.523 6 16 6zm4.38 13.13c-.24-.12-1.42-.7-1.64-.78-.22-.08-.38-.12-.54.12-.16.24-.62.78-.76.94-.14.16-.28.18-.52.06-.24-.12-1.014-.374-1.932-1.19-.714-.636-1.196-1.42-1.336-1.66-.14-.24-.015-.37.105-.49.108-.108.24-.28.36-.42.12-.14.16-.24.24-.4.08-.16.04-.3-.02-.42-.06-.12-.54-1.3-.74-1.78-.195-.468-.394-.404-.54-.412l-.46-.008c-.16 0-.42.06-.64.3-.22.24-.84.82-.84 2s.86 2.32.98 2.48c.12.16 1.692 2.582 4.1 3.62.573.248 1.02.396 1.368.506.575.183 1.098.157 1.512.095.461-.069 1.42-.58 1.62-1.14.2-.56.2-1.04.14-1.14-.06-.1-.22-.16-.46-.28z" fill="white"/></svg>
               Enviar confirmación de compra
             </a>
+          ) : (
+            <p className="pedido-hint">Ingresá el WhatsApp del cliente para habilitar los botones de mensajes.</p>
           )}
 
           <hr className="pedido-divider" />
@@ -367,7 +376,7 @@ export default function PedidoAdminPage() {
               <input className="pedido-input" type="number" value={editPaid} onChange={e => setEditPaid(e.target.value)} style={{ width: '100%', boxSizing: 'border-box' }} />
             </div>
             <div style={{ flex: '1 1 120px' }}>
-              <label className="pedido-hint">WhatsApp{clientPhone ? ` (actual: ${clientPhone})` : ''}</label>
+              <label className="pedido-hint">WhatsApp</label>
               <input className="pedido-input" placeholder="11 1234 5678" value={editPhone} onChange={e => setEditPhone(e.target.value)} style={{ width: '100%', boxSizing: 'border-box' }} />
             </div>
             <button className="pedido-save-btn" onClick={saveDetails} disabled={savingDetails} style={{ alignSelf: 'flex-end', flexShrink: 0 }}>
@@ -423,7 +432,7 @@ export default function PedidoAdminPage() {
           {clientPhone && previewUrl && (
             <a
               className="pedido-wa-btn"
-              href={buildWaLink(`¡Hola! 🎉 El diseño de tu fotolibro "${order.book_name}" está listo para que lo revises. Entrá a tu portal en Zeika para verlo y dejarnos tus comentarios. ¡Cualquier cambio nos avisás! 💛`)}
+              href={buildWaLink(`¡Hola! El diseño de tu fotolibro "${order.book_name}" está listo para que lo revises. Entrá a tu portal en Zeika para verlo y dejarnos tus comentarios. ¡Cualquier cambio nos avisás!`)}
               target="_blank"
               rel="noreferrer"
             >
@@ -451,7 +460,7 @@ export default function PedidoAdminPage() {
           {clientPhone && tracking && (
             <a
               className="pedido-wa-btn"
-              href={buildWaLink(`¡Hola! 📦 Tu fotolibro "${order.book_name}" ya está en camino. Número de seguimiento Andreani: ${tracking}. ¡Ya falta poquito! 🎊`)}
+              href={buildWaLink(`¡Hola! Tu fotolibro "${order.book_name}" ya está en camino. Número de seguimiento Andreani: ${tracking}. ¡Ya falta poquito!`)}
               target="_blank"
               rel="noreferrer"
             >

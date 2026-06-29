@@ -163,7 +163,7 @@ function ConfirmadoContent() {
               ? 'Tu pago está siendo procesado. Te avisamos cuando se confirme.'
               : isReorder
                 ? 'Usamos el diseño de tu pedido anterior. ¡Ya lo mandamos a producción!'
-                : 'Te mandamos el comprobante por WhatsApp. ¡Ahora te toca subir el material!'}
+                : 'Gracias por tu compra. Cargá tu material dentro del proyecto, nosotras diseñamos.'}
           </p>
 
           {!isPending && (

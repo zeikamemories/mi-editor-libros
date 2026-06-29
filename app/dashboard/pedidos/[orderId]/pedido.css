@@ -241,6 +241,10 @@
   gap: 12px 20px;
 }
 
+.pedido-item--full {
+  grid-column: 1 / -1;
+}
+
 .pedido-item label {
   display: block;
   font-family: "forma-djr-display", sans-serif;

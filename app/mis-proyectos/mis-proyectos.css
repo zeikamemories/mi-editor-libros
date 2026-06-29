@@ -1429,7 +1429,8 @@
 /* Tracking (inside timeline row) */
 
 .mpd-tracking-card {
-  margin: 10px 0 14px 51px;
+  margin: 10px 20px 14px 51px;
+  max-width: 360px;
   border: 1px solid #7b7a78;
   background: #fff;
   display: flex;
