@@ -38,16 +38,28 @@
 }
 
 .editor-loading-spinner {
-  width: 28px;
-  height: 28px;
-  border: 2px solid #ddd;
-  border-top-color: var(--color-blue);
-  border-radius: 50%;
-  animation: editor-spin 0.7s linear infinite;
+  width: 40px;
+  height: 40px;
+  animation: editor-spin 1.4s linear infinite;
+}
+
+.editor-loading-spinner circle {
+  stroke: var(--color-blue);
+  stroke-linecap: round;
+  stroke-dasharray: 126;
+  stroke-dashoffset: 126;
+  animation: editor-stroke 1.4s ease-in-out infinite;
+  transform-origin: center;
 }
 
 @keyframes editor-spin {
   to { transform: rotate(360deg); }
+}
+
+@keyframes editor-stroke {
+  0%   { stroke-dashoffset: 126; }
+  50%  { stroke-dashoffset: 20; }
+  100% { stroke-dashoffset: 126; }
 }
 
 /* ── Add Pages Modal ────────────────────────────────────────────────────── */

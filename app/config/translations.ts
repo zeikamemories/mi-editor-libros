@@ -28,6 +28,7 @@ export const translations = {
     // LayoutPanel
     tabLayouts:      'Layouts',
     tabFondos:       'Fondos',
+    tabTextos:       'Textos',
     tabDeco:         'Deco',
     subTabTexturas:  'Texturas',
     subTabStickers:  'Stickers',
@@ -168,6 +169,7 @@ export const translations = {
     // LayoutPanel
     tabLayouts:      'Layouts',
     tabFondos:       'Styles',
+    tabTextos:       'Text',
     tabDeco:         'Deco',
     subTabTexturas:  'Textures',
     subTabStickers:  'Stickers',

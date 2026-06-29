@@ -4,6 +4,7 @@ import { useState } from 'react'
 import { LAYOUTS } from '../../config/layouts'
 import type { Layout } from '../../config/layouts'
 import type { BookOrientation } from '../../config/bookSize'
+import type { TextBoxOptions } from '../Canvas/fabricHelpers'
 import { useLang } from '../../context/LanguageContext'
 import './LayoutPanel.css'
 
@@ -17,6 +18,7 @@ interface LayoutPanelProps {
   onLayoutSelect: (layout: Layout) => void
   onAddTexture?: (url: string) => void
   onAddSticker?: (url: string) => void
+  onAddTextPreset?: (opts: TextBoxOptions) => void
 }
 
 const TEXTURES = Array.from({ length: 12 }, (_, i) => `/texturas/text${i + 1}.jpg`)
@@ -24,9 +26,42 @@ const FONDOS = ['/fondos/fondo.jpg', ...Array.from({ length: 11 }, (_, i) => `/f
 const STICKERS = Array.from({ length: 13 }, (_, i) => `/stickers/stickersPNG${i + 1}.png`)
 const GRAFICOS = Array.from({ length: 7 }, (_, i) => `/ilus/IlusZeika-${i + 14}.png`)
 
-type MainTab = 'layouts' | 'fondos' | 'deco'
-type FondosSubTab = 'texturas' | 'fondos'
-type DecoSubTab = 'stickers' | 'graficos'
+interface TextPreset {
+  label: string
+  preview: string
+  opts: TextBoxOptions
+}
+
+const TEXT_PRESETS: TextPreset[] = [
+  {
+    label: 'Título',
+    preview: 'Título',
+    opts: { fontFamily: 'amandine', fontSize: 52, textAlign: 'center', widthFraction: 0.38, placeholder: 'Título' },
+  },
+  {
+    label: 'Subtítulo',
+    preview: 'Subtítulo',
+    opts: { fontFamily: 'amandine', fontSize: 30, textAlign: 'center', widthFraction: 0.32, placeholder: 'Subtítulo' },
+  },
+  {
+    label: 'Cuerpo',
+    preview: 'Texto de cuerpo',
+    opts: { fontFamily: 'overused-grotesk', fontSize: 14, textAlign: 'left', widthFraction: 0.30, placeholder: 'Escribe aquí...' },
+  },
+  {
+    label: 'Fecha',
+    preview: '2024',
+    opts: { fontFamily: 'overused-grotesk', fontSize: 11, textAlign: 'center', charSpacing: 120, widthFraction: 0.20, placeholder: '2024' },
+  },
+  {
+    label: 'Cita',
+    preview: '"Frase"',
+    opts: { fontFamily: 'amandine', fontSize: 24, fontStyle: 'italic', textAlign: 'center', widthFraction: 0.34, placeholder: '"Tu frase aquí"' },
+  },
+]
+
+type MainTab = 'layouts' | 'textos' | 'deco'
+type DecoSubTab = 'fondos' | 'texturas' | 'stickers'
 
 const PHOTO_COUNTS = [1, 2, 3, 4, 5]
 
@@ -65,11 +100,11 @@ export default function LayoutPanel({
   onLayoutSelect,
   onAddTexture,
   onAddSticker,
+  onAddTextPreset,
 }: LayoutPanelProps) {
   const { t } = useLang()
   const [activeTab, setActiveTab] = useState<MainTab>('layouts')
-  const [fondosSubTab, setFondosSubTab] = useState<FondosSubTab>('texturas')
-  const [decoSubTab, setDecoSubTab] = useState<DecoSubTab>('stickers')
+  const [decoSubTab, setDecoSubTab] = useState<DecoSubTab>('fondos')
   const [displayFilter, setDisplayFilter] = useState<number | 'all'>('all')
 
   const aspectRatio = ASPECT_RATIOS[bookOrientation]
@@ -93,10 +128,10 @@ export default function LayoutPanel({
           {t.tabLayouts}
         </button>
         <button
-          className={`panel-tab${activeTab === 'fondos' ? ' panel-tab--active' : ''}`}
-          onClick={() => setActiveTab('fondos')}
+          className={`panel-tab${activeTab === 'textos' ? ' panel-tab--active' : ''}`}
+          onClick={() => setActiveTab('textos')}
         >
-          {t.tabFondos}
+          {t.tabTextos}
         </button>
         <button
           className={`panel-tab${activeTab === 'deco' ? ' panel-tab--active' : ''}`}
@@ -149,45 +184,57 @@ export default function LayoutPanel({
         </>
       )}
 
-      {/* ── Fondos tab ── */}
-      {activeTab === 'fondos' && (
+      {/* ── Textos tab ── */}
+      {activeTab === 'textos' && (
+        <div className="text-presets">
+          {TEXT_PRESETS.map((preset) => (
+            <button
+              key={preset.label}
+              className="text-preset-card"
+              onClick={() => onAddTextPreset?.(preset.opts)}
+            >
+              <span
+                className="text-preset-preview"
+                style={{
+                  fontFamily: preset.opts.fontFamily === 'amandine' ? 'amandine, serif' : 'var(--font-body)',
+                  fontSize: Math.min((preset.opts.fontSize ?? 24) * 0.45, 28),
+                  fontStyle: preset.opts.fontStyle ?? 'normal',
+                  letterSpacing: preset.opts.charSpacing ? `${preset.opts.charSpacing / 1000}em` : undefined,
+                }}
+              >
+                {preset.preview}
+              </span>
+              <span className="text-preset-label">{preset.label}</span>
+            </button>
+          ))}
+        </div>
+      )}
+
+      {/* ── Deco tab ── */}
+      {activeTab === 'deco' && (
         <>
           <div className="panel-subtabs">
             <button
-              className={`panel-subtab${fondosSubTab === 'texturas' ? ' panel-subtab--active' : ''}`}
-              onClick={() => setFondosSubTab('texturas')}
+              className={`panel-subtab${decoSubTab === 'fondos' ? ' panel-subtab--active' : ''}`}
+              onClick={() => setDecoSubTab('fondos')}
+            >
+              {t.tabFondos}
+            </button>
+            <button
+              className={`panel-subtab${decoSubTab === 'texturas' ? ' panel-subtab--active' : ''}`}
+              onClick={() => setDecoSubTab('texturas')}
             >
               {t.subTabTexturas}
             </button>
             <button
-              className={`panel-subtab${fondosSubTab === 'fondos' ? ' panel-subtab--active' : ''}`}
-              onClick={() => setFondosSubTab('fondos')}
+              className={`panel-subtab${decoSubTab === 'stickers' ? ' panel-subtab--active' : ''}`}
+              onClick={() => setDecoSubTab('stickers')}
             >
-              {t.tabFondos}
+              {t.subTabStickers}
             </button>
           </div>
           <div className="panel-content-grid">
-            {fondosSubTab === 'texturas' ? (
-              <div className="texture-grid">
-                {TEXTURES.map((url) => (
-                  <div
-                    key={url}
-                    className="texture-thumb"
-                    role="button"
-                    tabIndex={0}
-                    draggable
-                    onClick={() => onAddTexture?.(url)}
-                    onKeyDown={(e) => e.key === 'Enter' && onAddTexture?.(url)}
-                    onDragStart={(e) => {
-                      e.dataTransfer.setData('application/zeika-texture', url)
-                      e.dataTransfer.effectAllowed = 'copy'
-                    }}
-                  >
-                    <img src={url} alt="" className="texture-img" draggable={false} />
-                  </div>
-                ))}
-              </div>
-            ) : (
+            {decoSubTab === 'fondos' && (
               <div className="texture-grid">
                 {FONDOS.map((url) => (
                   <div
@@ -208,41 +255,19 @@ export default function LayoutPanel({
                 ))}
               </div>
             )}
-          </div>
-        </>
-      )}
-
-      {/* ── Deco tab ── */}
-      {activeTab === 'deco' && (
-        <>
-          <div className="panel-subtabs">
-            <button
-              className={`panel-subtab${decoSubTab === 'stickers' ? ' panel-subtab--active' : ''}`}
-              onClick={() => setDecoSubTab('stickers')}
-            >
-              {t.subTabStickers}
-            </button>
-            <button
-              className={`panel-subtab${decoSubTab === 'graficos' ? ' panel-subtab--active' : ''}`}
-              onClick={() => setDecoSubTab('graficos')}
-            >
-              {t.subTabGraficos}
-            </button>
-          </div>
-          <div className="panel-content-grid">
-            {decoSubTab === 'stickers' ? (
+            {decoSubTab === 'texturas' && (
               <div className="texture-grid">
-                {STICKERS.map((url) => (
+                {TEXTURES.map((url) => (
                   <div
                     key={url}
                     className="texture-thumb"
                     role="button"
                     tabIndex={0}
                     draggable
-                    onClick={() => onAddSticker?.(url)}
-                    onKeyDown={(e) => e.key === 'Enter' && onAddSticker?.(url)}
+                    onClick={() => onAddTexture?.(url)}
+                    onKeyDown={(e) => e.key === 'Enter' && onAddTexture?.(url)}
                     onDragStart={(e) => {
-                      e.dataTransfer.setData('application/zeika-sticker', url)
+                      e.dataTransfer.setData('application/zeika-texture', url)
                       e.dataTransfer.effectAllowed = 'copy'
                     }}
                   >
@@ -250,9 +275,10 @@ export default function LayoutPanel({
                   </div>
                 ))}
               </div>
-            ) : (
+            )}
+            {decoSubTab === 'stickers' && (
               <div className="texture-grid">
-                {GRAFICOS.map((url) => (
+                {[...STICKERS, ...GRAFICOS].map((url) => (
                   <div
                     key={url}
                     className="texture-thumb"

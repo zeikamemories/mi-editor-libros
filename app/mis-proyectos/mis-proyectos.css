@@ -9,15 +9,18 @@
 }
 
 .mp-spinner {
-  width: 32px;
-  height: 32px;
-  border: 2px solid rgba(25,25,25,0.15);
-  border-top-color: var(--color-blue);
+  width: 28px;
+  height: 28px;
+  background: var(--color-blue);
   border-radius: 50%;
-  animation: mp-spin 0.7s linear infinite;
+  animation: mp-pulse 1.2s ease-in-out infinite;
 }
 
-@keyframes mp-spin { to { transform: rotate(360deg); } }
+@keyframes mp-pulse {
+  0%   { transform: scale(0.2); opacity: 0.7; }
+  50%  { transform: scale(1);   opacity: 1; }
+  100% { transform: scale(0.2); opacity: 0.7; }
+}
 
 /* ── List page ───────────────────────────────────────────────────────────── */
 
@@ -1669,7 +1672,7 @@
   width: 76px;
   height: 76px;
   background: white;
-  border: none;
+  border: 1.5px solid #b0afac;
   cursor: pointer;
   display: flex;
   align-items: center;

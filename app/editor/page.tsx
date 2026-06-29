@@ -23,11 +23,11 @@ import type { Layout } from '../components/LayoutPanel/LayoutPanel'
 
 import { getBookSize }                                     from '../config/bookSize'
 import type { GridSettings, Guide }                        from '../components/Canvas/Canvas'
-import { applyLayout, addShape, serializePage,
+import { applyLayout, addShape, addTextBox, serializePage,
          deserializePage, dropPhotoOnFrame, dropPhotoFree,
          exportPageAsJpg, buildPageFromLayout,
          dropTextureOnPage, dropStickerOnPage }             from '../components/Canvas/fabricHelpers'
-import type { PageData, PhotoAssignment, ShapeKind }       from '../components/Canvas/fabricHelpers'
+import type { PageData, PhotoAssignment, ShapeKind, TextBoxOptions } from '../components/Canvas/fabricHelpers'
 import { LAYOUTS }                                         from '../config/layouts'
 
 import { LanguageProvider } from '../context/LanguageContext'
@@ -1174,6 +1174,14 @@ export default function EditorPage() {
     saveCurrentSpread()
   }, [saveCurrentSpread]) // eslint-disable-line react-hooks/exhaustive-deps
 
+  // ── Add text preset from panel ────────────────────────────────────────────
+  const handleAddTextPreset = useCallback((opts: TextBoxOptions) => {
+    const fc = getActiveFabric()
+    if (!fc) return
+    addTextBox(fc, PAGE_W, PAGE_H, opts.placeholder ?? 'Tu texto aquí', opts)
+    saveCurrentSpread()
+  }, [saveCurrentSpread]) // eslint-disable-line react-hooks/exhaustive-deps
+
   // ── Page background color ─────────────────────────────────────────────────
   const handlePageBgChange = useCallback((color: string) => {
     const fc = getActiveFabric()
@@ -1416,7 +1424,9 @@ export default function EditorPage() {
   if (!dbLoaded) {
     return (
       <div className="editor-loading">
-        <div className="editor-loading-spinner" />
+        <svg className="editor-loading-spinner" viewBox="0 0 50 50">
+          <circle cx="25" cy="25" r="20" fill="none" strokeWidth="3" />
+        </svg>
         Cargando proyecto…
       </div>
     )
@@ -1531,6 +1541,7 @@ export default function EditorPage() {
           onLayoutSelect={handleLayoutSelect}
           onAddTexture={handleAddTexture}
           onAddSticker={handleAddSticker}
+          onAddTextPreset={handleAddTextPreset}
         />
       </div>
     </div>

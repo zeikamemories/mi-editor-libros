@@ -540,23 +540,39 @@ export async function dropPhotoFree(
 
 // ─── 5. addTextBox ──────────────────────────────────────────────────────────
 
+export interface TextBoxOptions {
+  fontFamily?: string
+  fontSize?: number
+  fontWeight?: string
+  fontStyle?: 'normal' | 'italic' | 'oblique'
+  textAlign?: 'left' | 'center' | 'right' | 'justify' | 'justify-left' | 'justify-center' | 'justify-right'
+  fill?: string
+  charSpacing?: number
+  placeholder?: string
+  widthFraction?: number
+}
+
 export function addTextBox(
   canvas: fabric.Canvas,
   pageW: number,
   pageH: number,
   placeholder = 'Tu texto aquí',
+  opts: TextBoxOptions = {},
 ): fabric.Textbox {
-  const W = pageW * 0.22
-  const textbox = new fabric.Textbox(placeholder, {
+  const W = pageW * (opts.widthFraction ?? 0.22)
+  const textbox = new fabric.Textbox(opts.placeholder ?? placeholder, {
     left: (pageW - W) / 2,
     top: pageH / 2 - 20,
     originX: 'left',
     originY: 'top',
     width: W,
-    fontFamily: 'amandine',
-    fontSize: 24,
-    fill: '#191919',
-    textAlign: 'center',
+    fontFamily: opts.fontFamily ?? 'amandine',
+    fontSize: opts.fontSize ?? 24,
+    fontWeight: opts.fontWeight ?? 'normal',
+    fontStyle: opts.fontStyle ?? 'normal',
+    fill: opts.fill ?? '#191919',
+    textAlign: opts.textAlign ?? 'center',
+    charSpacing: opts.charSpacing ?? 0,
     splitByGrapheme: true,
   }) as fabric.Textbox & { data: TextData }
 

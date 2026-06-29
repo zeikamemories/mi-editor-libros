@@ -603,20 +603,18 @@ export default function ProyectoPage() {
         <div className="mpd-mat-header">
           <span className="mpd-mat-header__label">Fotos / Google Drive</span>
         </div>
-        <div className="mpd-mat-input-row">
+        {driveLink ? (
+          <a className="mpd-mat-link-btn" href={driveLink} target="_blank" rel="noopener noreferrer">
+            Abrir carpeta de fotos →
+          </a>
+        ) : (
           <input
             className="mpd-mat-input"
-            placeholder="Pegá el link de tu carpeta"
+            placeholder="La carpeta se genera automáticamente al confirmar el pago"
             value={driveLink}
-            onChange={e => setDriveLink(e.target.value)}
-            onBlur={e => saveLinkSilently('drive_link', e.target.value)}
+            readOnly
           />
-          {driveLink && (
-            <a className="mpd-mat-open-btn" href={driveLink} target="_blank" rel="noopener noreferrer">
-              Abrir carpeta →
-            </a>
-          )}
-        </div>
+        )}
         <div className="mpd-mat-tips">
           <span className="mpd-mat-tip">Si las fotos tienen un orden específico, numeralas: 01.jpg, 02.jpg…</span>
           <span className="mpd-mat-tip">Si organizás por destinos o secciones, usá subcarpetas dentro de la carpeta.</span>

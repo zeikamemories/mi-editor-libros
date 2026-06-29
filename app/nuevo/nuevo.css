@@ -302,7 +302,7 @@
   border-radius: 12px;
   font-family: "forma-djr-display", sans-serif;
   font-size: 14px;
-  font-weight: 700;
+  font-weight: 600;
   letter-spacing: 0.6px;
   cursor: pointer;
   white-space: nowrap;
@@ -391,7 +391,7 @@
   padding: 8px 24px;
   font-family: "forma-djr-display", sans-serif;
   font-size: 16px;
-  font-weight: 700;
+  font-weight: 600;
   letter-spacing: 0.8px;
   cursor: pointer;
   transition: opacity 0.15s;
