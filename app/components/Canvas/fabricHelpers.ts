@@ -13,6 +13,9 @@ type FrameData = {
   moved?: boolean
 }
 
+export type PhotoBorder = { color: string; width: number }
+export type PhotoDropShadow = { color: string; intensity: number }
+
 type PhotoData = {
   type: 'photo'
   frameX: number
@@ -24,6 +27,8 @@ type PhotoData = {
   coverScale: number // Math.max(frameW/naturalW, frameH/naturalH) — base cover scale
   editScale: number  // zoom multiplier inside frame (≥ 1.0); combined with coverScale
   moved?: boolean
+  border?: PhotoBorder
+  dropShadow?: PhotoDropShadow
 }
 
 type TextData = {
@@ -92,6 +97,51 @@ export function makeClipRect(frameX: number, frameY: number, frameW: number, fra
     height: frameH,
     absolutePositioned: true,
   })
+}
+
+function hexToRgba(hex: string, alpha: number): string {
+  const clean = hex.replace('#', '')
+  const r = parseInt(clean.substring(0, 2), 16)
+  const g = parseInt(clean.substring(2, 4), 16)
+  const b = parseInt(clean.substring(4, 6), 16)
+  return `rgba(${r}, ${g}, ${b}, ${alpha})`
+}
+
+// The frame clipPath is an exact-bounds rect, so a centered stroke has half its
+// width clipped away — double strokeWidth so the visible portion matches `width`.
+export function applyPhotoBorder(img: fabric.FabricImage, border: PhotoBorder | null): void {
+  if (border) {
+    img.set({ stroke: border.color, strokeWidth: border.width * 2, strokeUniform: true })
+  } else {
+    img.set({ stroke: undefined, strokeWidth: 0 })
+  }
+  const pd = (img as unknown as { data?: PhotoData }).data
+  if (pd) pd.border = border ?? undefined
+}
+
+// nonScaling keeps blur/offset constant regardless of the image's internal
+// zoom (coverScale × editScale varies a lot per photo/crop).
+export function applyPhotoShadow(img: fabric.FabricImage, dropShadow: PhotoDropShadow | null): void {
+  if (dropShadow) {
+    img.set({
+      shadow: new fabric.Shadow({
+        color:      hexToRgba(dropShadow.color, 0.35),
+        blur:       dropShadow.intensity * 3,
+        offsetX:    dropShadow.intensity * 1.5,
+        offsetY:    dropShadow.intensity * 1.5,
+        nonScaling: true,
+      }),
+    })
+  } else {
+    img.set({ shadow: undefined })
+  }
+  const pd = (img as unknown as { data?: PhotoData }).data
+  if (pd) pd.dropShadow = dropShadow ?? undefined
+}
+
+export function getPhotoStyle(img: fabric.FabricImage): { border?: PhotoBorder; dropShadow?: PhotoDropShadow } {
+  const pd = (img as unknown as { data?: PhotoData }).data
+  return { border: pd?.border, dropShadow: pd?.dropShadow }
 }
 
 // ─── 1. createEmptyFrame ────────────────────────────────────────────────────
@@ -361,7 +411,7 @@ export async function replacePhotoInFrame(
   existingPhoto: fabric.FabricImage & { data: PhotoData },
   newPhotoSrc: string,
 ): Promise<void> {
-  const { frameX, frameY, frameW, frameH } = existingPhoto.data
+  const { frameX, frameY, frameW, frameH, border, dropShadow } = existingPhoto.data
 
   const img = await fabric.FabricImage.fromURL(newPhotoSrc, { crossOrigin: 'anonymous' })
 
@@ -404,6 +454,8 @@ export async function replacePhotoInFrame(
     coverScale,
     editScale: 1,
   }
+  if (border) applyPhotoBorder(img, border)
+  if (dropShadow) applyPhotoShadow(img, dropShadow)
 
   canvas.remove(existingPhoto)
   canvas.add(img)
@@ -660,6 +712,8 @@ type PhotoEntry = {
   cropY:      number
   naturalW:   number
   naturalH:   number
+  border?:     PhotoBorder
+  dropShadow?: PhotoDropShadow
 }
 
 type TextEntry = {
@@ -798,6 +852,8 @@ export function serializePage(
         cropY:      obj.cropY ?? 0,
         naturalW:   pd.naturalW,
         naturalH:   pd.naturalH,
+        border:     pd.border,
+        dropShadow: pd.dropShadow,
       })
     } else if (data?.type === 'freePhoto' && obj instanceof fabric.FabricImage) {
       const fp = data as FreePhotoData
@@ -995,6 +1051,8 @@ export async function exportPageAsJpg(
           selectable: false, evented: false,
         })
         img.clipPath = makeClipRect(frameX + offsetX, frameY, frameW, frameH)
+        if (entry.border) applyPhotoBorder(img, entry.border)
+        if (entry.dropShadow) applyPhotoShadow(img, entry.dropShadow)
         offscreen.add(img)
         offscreen.sendObjectToBack(img)
 
@@ -1113,6 +1171,8 @@ export async function deserializePage(
         ;(img as unknown as fabric.FabricObject & { data: PhotoData }).data = {
           type: 'photo', frameX, frameY, frameW, frameH, naturalW, naturalH, coverScale, editScale,
         }
+        if (entry.border) applyPhotoBorder(img, entry.border)
+        if (entry.dropShadow) applyPhotoShadow(img, entry.dropShadow)
         canvas.add(img)
 
       } else if (entry.kind === 'freePhoto') {

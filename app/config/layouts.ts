@@ -1310,6 +1310,317 @@ const layout_5_11: Layout = {
   })(),
 }
 
+// ─── 6 FOTOS (portrait) ────────────────────────────────────────────────────
+
+const layout_6_p1: Layout = {
+  id: 'layout_6_p1',
+  nombre: 'Grilla 3×2',
+  photoCount: 6,
+  orientation: 'portrait',
+  frames: [
+    { x: cx(0,3), y: ry(0,2), w: fw(3), h: fh(2) },
+    { x: cx(1,3), y: ry(0,2), w: fw(3), h: fh(2) },
+    { x: cx(2,3), y: ry(0,2), w: fw(3), h: fh(2) },
+    { x: cx(0,3), y: ry(1,2), w: fw(3), h: fh(2) },
+    { x: cx(1,3), y: ry(1,2), w: fw(3), h: fh(2) },
+    { x: cx(2,3), y: ry(1,2), w: fw(3), h: fh(2) },
+  ],
+}
+
+const layout_6_p2: Layout = {
+  id: 'layout_6_p2',
+  nombre: 'Grande, tira de 5',
+  photoCount: 6,
+  orientation: 'portrait',
+  frames: (() => {
+    const mV   = 0.06
+    const avail = 1 - mV * 2 - G
+    const topH  = avail * 0.60
+    const botH  = avail * 0.40
+    const botW  = (1 - M * 2 - G * 4) / 5
+    const y1    = mV + topH + G
+    return [
+      { x: M,                    y: mV, w: 1 - M * 2, h: topH },
+      { x: M + (botW + G) * 0,   y: y1, w: botW,      h: botH },
+      { x: M + (botW + G) * 1,   y: y1, w: botW,      h: botH },
+      { x: M + (botW + G) * 2,   y: y1, w: botW,      h: botH },
+      { x: M + (botW + G) * 3,   y: y1, w: botW,      h: botH },
+      { x: M + (botW + G) * 4,   y: y1, w: botW,      h: botH },
+    ]
+  })(),
+}
+
+const layout_6_p3: Layout = {
+  id: 'layout_6_p3',
+  nombre: '2 izquierda + grilla derecha',
+  photoCount: 6,
+  orientation: 'portrait',
+  frames: (() => {
+    const mV     = 0.08
+    const avail  = 1 - M * 2 - G
+    const leftW  = avail * 0.45
+    const rightW = avail * 0.55
+    const rx     = M + leftW + G
+    const cellH  = (1 - mV * 2 - G) / 2
+    const cellW  = (rightW - G) / 2
+    return [
+      { x: M,              y: mV,             w: leftW, h: cellH },
+      { x: M,              y: mV + cellH + G, w: leftW, h: cellH },
+      { x: rx,             y: mV,             w: cellW, h: cellH },
+      { x: rx + cellW + G, y: mV,             w: cellW, h: cellH },
+      { x: rx,             y: mV + cellH + G, w: cellW, h: cellH },
+      { x: rx + cellW + G, y: mV + cellH + G, w: cellW, h: cellH },
+    ]
+  })(),
+}
+
+const layout_6_p4: Layout = {
+  id: 'layout_6_p4',
+  nombre: 'Pirámide 1-2-3',
+  photoCount: 6,
+  orientation: 'portrait',
+  frames: (() => {
+    const mV    = 0.06
+    const avail = 1 - mV * 2 - G * 2
+    const topH  = avail * 0.32
+    const midH  = avail * 0.38
+    const botH  = avail * 0.30
+    const y1    = mV + topH + G
+    const y2    = y1 + midH + G
+    return [
+      { x: M,        y: mV, w: 1 - M * 2, h: topH },
+      { x: cx(0, 2), y: y1, w: fw(2),     h: midH },
+      { x: cx(1, 2), y: y1, w: fw(2),     h: midH },
+      { x: cx(0, 3), y: y2, w: fw(3),     h: botH },
+      { x: cx(1, 3), y: y2, w: fw(3),     h: botH },
+      { x: cx(2, 3), y: y2, w: fw(3),     h: botH },
+    ]
+  })(),
+}
+
+const layout_6_p5: Layout = {
+  id: 'layout_6_p5',
+  nombre: 'Grilla 3×2 completa',
+  photoCount: 6,
+  orientation: 'portrait',
+  frames: (() => {
+    const cellW = (1 - G * 2) / 3
+    const cellH = (1 - G) / 2
+    return [
+      { x: 0,             y: 0,         w: cellW, h: cellH },
+      { x: cellW + G,     y: 0,         w: cellW, h: cellH },
+      { x: (cellW + G)*2, y: 0,         w: cellW, h: cellH },
+      { x: 0,             y: cellH + G, w: cellW, h: cellH },
+      { x: cellW + G,     y: cellH + G, w: cellW, h: cellH },
+      { x: (cellW + G)*2, y: cellH + G, w: cellW, h: cellH },
+    ]
+  })(),
+}
+
+// ─── 6 FOTOS (landscape) ───────────────────────────────────────────────────
+
+const layout_6_l2: Layout = {
+  id: 'layout_6_l2',
+  nombre: 'Grilla 3×2',
+  photoCount: 6,
+  orientation: 'landscape',
+  frames: [
+    { x: cx(0,3), y: ry(0,2), w: fw(3), h: fh(2) },
+    { x: cx(1,3), y: ry(0,2), w: fw(3), h: fh(2) },
+    { x: cx(2,3), y: ry(0,2), w: fw(3), h: fh(2) },
+    { x: cx(0,3), y: ry(1,2), w: fw(3), h: fh(2) },
+    { x: cx(1,3), y: ry(1,2), w: fw(3), h: fh(2) },
+    { x: cx(2,3), y: ry(1,2), w: fw(3), h: fh(2) },
+  ],
+}
+
+const layout_6_l4: Layout = {
+  id: 'layout_6_l4',
+  nombre: 'Grilla 2×2 + 2 columna derecha',
+  photoCount: 6,
+  orientation: 'landscape',
+  frames: (() => {
+    const mV     = 0.08
+    const avail  = 1 - M * 2 - G
+    const leftW  = avail * 0.60
+    const rightW = avail * 0.40
+    const rx     = M + leftW + G
+    const cellH  = (1 - mV * 2 - G) / 2
+    const cellW  = (leftW - G) / 2
+    return [
+      { x: M,              y: mV,             w: cellW,  h: cellH },
+      { x: M + cellW + G,  y: mV,             w: cellW,  h: cellH },
+      { x: M,              y: mV + cellH + G, w: cellW,  h: cellH },
+      { x: M + cellW + G,  y: mV + cellH + G, w: cellW,  h: cellH },
+      { x: rx,             y: mV,             w: rightW, h: cellH },
+      { x: rx,             y: mV + cellH + G, w: rightW, h: cellH },
+    ]
+  })(),
+}
+
+const layout_6_l5: Layout = {
+  id: 'layout_6_l5',
+  nombre: 'Grilla 3×2 completa',
+  photoCount: 6,
+  orientation: 'landscape',
+  frames: (() => {
+    const cellW = (1 - G * 2) / 3
+    const cellH = (1 - G) / 2
+    return [
+      { x: 0,             y: 0,         w: cellW, h: cellH },
+      { x: cellW + G,     y: 0,         w: cellW, h: cellH },
+      { x: (cellW + G)*2, y: 0,         w: cellW, h: cellH },
+      { x: 0,             y: cellH + G, w: cellW, h: cellH },
+      { x: cellW + G,     y: cellH + G, w: cellW, h: cellH },
+      { x: (cellW + G)*2, y: cellH + G, w: cellW, h: cellH },
+    ]
+  })(),
+}
+
+// ─── 6 FOTOS (square) ──────────────────────────────────────────────────────
+
+const layout_6_s1: Layout = {
+  id: 'layout_6_s1',
+  nombre: 'Grilla 3×2',
+  photoCount: 6,
+  orientation: 'square',
+  frames: [
+    { x: cx(0,3), y: ry(0,2), w: fw(3), h: fh(2) },
+    { x: cx(1,3), y: ry(0,2), w: fw(3), h: fh(2) },
+    { x: cx(2,3), y: ry(0,2), w: fw(3), h: fh(2) },
+    { x: cx(0,3), y: ry(1,2), w: fw(3), h: fh(2) },
+    { x: cx(1,3), y: ry(1,2), w: fw(3), h: fh(2) },
+    { x: cx(2,3), y: ry(1,2), w: fw(3), h: fh(2) },
+  ],
+}
+
+const layout_6_s2: Layout = {
+  id: 'layout_6_s2',
+  nombre: 'Grilla 2×3',
+  photoCount: 6,
+  orientation: 'square',
+  frames: [
+    { x: cx(0,2), y: ry(0,3), w: fw(2), h: fh(3) },
+    { x: cx(1,2), y: ry(0,3), w: fw(2), h: fh(3) },
+    { x: cx(0,2), y: ry(1,3), w: fw(2), h: fh(3) },
+    { x: cx(1,2), y: ry(1,3), w: fw(2), h: fh(3) },
+    { x: cx(0,2), y: ry(2,3), w: fw(2), h: fh(3) },
+    { x: cx(1,2), y: ry(2,3), w: fw(2), h: fh(3) },
+  ],
+}
+
+const layout_6_s3: Layout = {
+  id: 'layout_6_s3',
+  nombre: 'Grilla 3×2 completa',
+  photoCount: 6,
+  orientation: 'square',
+  frames: (() => {
+    const cellW = (1 - G * 2) / 3
+    const cellH = (1 - G) / 2
+    return [
+      { x: 0,             y: 0,         w: cellW, h: cellH },
+      { x: cellW + G,     y: 0,         w: cellW, h: cellH },
+      { x: (cellW + G)*2, y: 0,         w: cellW, h: cellH },
+      { x: 0,             y: cellH + G, w: cellW, h: cellH },
+      { x: cellW + G,     y: cellH + G, w: cellW, h: cellH },
+      { x: (cellW + G)*2, y: cellH + G, w: cellW, h: cellH },
+    ]
+  })(),
+}
+
+const layout_6_s4: Layout = {
+  id: 'layout_6_s4',
+  nombre: 'Pirámide 1-2-3',
+  photoCount: 6,
+  orientation: 'square',
+  frames: (() => {
+    const mV    = 0.06
+    const avail = 1 - mV * 2 - G * 2
+    const topH  = avail * 0.30
+    const midH  = avail * 0.36
+    const botH  = avail * 0.34
+    const y1    = mV + topH + G
+    const y2    = y1 + midH + G
+    return [
+      { x: M,        y: mV, w: 1 - M * 2, h: topH },
+      { x: cx(0, 2), y: y1, w: fw(2),     h: midH },
+      { x: cx(1, 2), y: y1, w: fw(2),     h: midH },
+      { x: cx(0, 3), y: y2, w: fw(3),     h: botH },
+      { x: cx(1, 3), y: y2, w: fw(3),     h: botH },
+      { x: cx(2, 3), y: y2, w: fw(3),     h: botH },
+    ]
+  })(),
+}
+
+const layout_6_s5: Layout = {
+  id: 'layout_6_s5',
+  nombre: '2 izquierda + grilla derecha',
+  photoCount: 6,
+  orientation: 'square',
+  frames: (() => {
+    const mV     = 0.06
+    const avail  = 1 - M * 2 - G
+    const leftW  = avail * 0.45
+    const rightW = avail * 0.55
+    const rx     = M + leftW + G
+    const cellH  = (1 - mV * 2 - G) / 2
+    const cellW  = (rightW - G) / 2
+    return [
+      { x: M,              y: mV,             w: leftW, h: cellH },
+      { x: M,              y: mV + cellH + G, w: leftW, h: cellH },
+      { x: rx,             y: mV,             w: cellW, h: cellH },
+      { x: rx + cellW + G, y: mV,             w: cellW, h: cellH },
+      { x: rx,             y: mV + cellH + G, w: cellW, h: cellH },
+      { x: rx + cellW + G, y: mV + cellH + G, w: cellW, h: cellH },
+    ]
+  })(),
+}
+
+// ─── 8 FOTOS (square) ──────────────────────────────────────────────────────
+
+const layout_8_s1: Layout = {
+  id: 'layout_8_s1',
+  nombre: '3-2-3 editorial',
+  photoCount: 8,
+  orientation: 'square',
+  frames: (() => {
+    const avail = 1 - M * 2 - G * 2
+    const topH  = avail * 0.30
+    const midH  = avail * 0.40
+    const botH  = avail * 0.30
+    const y1    = M + topH + G
+    const y2    = y1 + midH + G
+    return [
+      { x: cx(0, 3), y: M,  w: fw(3), h: topH },
+      { x: cx(1, 3), y: M,  w: fw(3), h: topH },
+      { x: cx(2, 3), y: M,  w: fw(3), h: topH },
+      { x: cx(0, 2), y: y1, w: fw(2), h: midH },
+      { x: cx(1, 2), y: y1, w: fw(2), h: midH },
+      { x: cx(0, 3), y: y2, w: fw(3), h: botH },
+      { x: cx(1, 3), y: y2, w: fw(3), h: botH },
+      { x: cx(2, 3), y: y2, w: fw(3), h: botH },
+    ]
+  })(),
+}
+
+const layout_9_s1: Layout = {
+  id: 'layout_9_s1',
+  nombre: 'Grilla 3×3',
+  photoCount: 9,
+  orientation: 'square',
+  frames: [
+    { x: cx(0,3), y: ry(0,3), w: fw(3), h: fh(3) },
+    { x: cx(1,3), y: ry(0,3), w: fw(3), h: fh(3) },
+    { x: cx(2,3), y: ry(0,3), w: fw(3), h: fh(3) },
+    { x: cx(0,3), y: ry(1,3), w: fw(3), h: fh(3) },
+    { x: cx(1,3), y: ry(1,3), w: fw(3), h: fh(3) },
+    { x: cx(2,3), y: ry(1,3), w: fw(3), h: fh(3) },
+    { x: cx(0,3), y: ry(2,3), w: fw(3), h: fh(3) },
+    { x: cx(1,3), y: ry(2,3), w: fw(3), h: fh(3) },
+    { x: cx(2,3), y: ry(2,3), w: fw(3), h: fh(3) },
+  ],
+}
+
 // ─── Array principal ────────────────────────────────────────────────────────
 
 export const LAYOUTS: Layout[] = [
@@ -1333,6 +1644,11 @@ export const LAYOUTS: Layout[] = [
   layout_5_14, layout_5_15, layout_5_16, layout_5_17,
   layout_5_18, layout_5_19, layout_5_20, layout_5_21,
   layout_5_10, layout_5_11,
+  // 6 fotos
+  layout_6_p1, layout_6_p2, layout_6_p3, layout_6_p4, layout_6_p5,
+  layout_6_l2, layout_6_l4, layout_6_l5,
+  layout_6_s1, layout_6_s2, layout_6_s3, layout_6_s4, layout_6_s5,
+  layout_8_s1, layout_9_s1,
 ];
 
 export function getLayoutsByCantidad(cantidad: number): Layout[] {

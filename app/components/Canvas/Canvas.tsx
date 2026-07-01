@@ -2,8 +2,8 @@
 
 import { useEffect, useRef, useCallback, useState } from 'react'
 import * as fabric from 'fabric'
-import { X, RotateCcw, RotateCw, FlipHorizontal2, AlignStartVertical, AlignCenterVertical, AlignEndVertical, AlignVerticalJustifyStart, AlignCenterHorizontal, AlignVerticalJustifyEnd, AlignVerticalSpaceAround, AlignHorizontalSpaceAround } from 'lucide-react'
-import { dropPhotoOnFrame, dropPhotoFree, dropTextureOnPage, dropStickerOnPage, findFrameAtPoint, findPhotoAtPoint, replacePhotoInFrame, restoreEmptyFrame, createFrameAtPx, makeClipRect } from './fabricHelpers'
+import { X, RotateCcw, RotateCw, FlipHorizontal2, Frame as FrameIcon, SquareStack, AlignStartVertical, AlignCenterVertical, AlignEndVertical, AlignVerticalJustifyStart, AlignCenterHorizontal, AlignVerticalJustifyEnd, AlignVerticalSpaceAround, AlignHorizontalSpaceAround } from 'lucide-react'
+import { dropPhotoOnFrame, dropPhotoFree, dropTextureOnPage, dropStickerOnPage, findFrameAtPoint, findPhotoAtPoint, replacePhotoInFrame, restoreEmptyFrame, createFrameAtPx, makeClipRect, applyPhotoBorder, applyPhotoShadow, getPhotoStyle, type PhotoBorder, type PhotoDropShadow } from './fabricHelpers'
 import { useLang } from '../../context/LanguageContext'
 import './Canvas.css'
 
@@ -15,6 +15,9 @@ const SPINE    = 1
 const ZOOM_MIN = 0.1
 const ZOOM_MAX = 5.0
 const SCROLL_PAD = 400
+
+const DEFAULT_PHOTO_BORDER:  PhotoBorder     = { color: '#FFFFFF', width: 8 }
+const DEFAULT_PHOTO_SHADOW:  PhotoDropShadow = { color: '#000000', intensity: 5 }
 
 
 interface CanvasProps {
@@ -555,6 +558,130 @@ export default function Canvas({
   const [photoSel, setPhotoSel] = useState<PhotoSel>(null)
   const activePhotoRef = useRef<{ img: fabric.FabricImage; fc: fabric.Canvas } | null>(null)
 
+  // ── Photo border / drop-shadow popovers ────────────────────────────────────
+  const [borderPanelOpen, setBorderPanelOpen] = useState(false)
+  const [shadowPanelOpen, setShadowPanelOpen] = useState(false)
+  const [borderDraft, setBorderDraft] = useState<PhotoBorder>(DEFAULT_PHOTO_BORDER)
+  const [shadowDraft, setShadowDraft] = useState<PhotoDropShadow>(DEFAULT_PHOTO_SHADOW)
+  const borderColorInputRef = useRef<HTMLInputElement>(null)
+  const shadowColorInputRef = useRef<HTMLInputElement>(null)
+  const closeStylePanels = useCallback(() => {
+    setBorderPanelOpen(false)
+    setShadowPanelOpen(false)
+  }, [])
+
+  const toggleBorderPanel = useCallback(() => {
+    setShadowPanelOpen(false)
+    setBorderPanelOpen((prev) => {
+      const next = !prev
+      if (next) {
+        const img = activePhotoRef.current?.img
+        if (img) setBorderDraft(getPhotoStyle(img).border ?? DEFAULT_PHOTO_BORDER)
+      }
+      return next
+    })
+  }, [])
+
+  const toggleShadowPanel = useCallback(() => {
+    setBorderPanelOpen(false)
+    setShadowPanelOpen((prev) => {
+      const next = !prev
+      if (next) {
+        const img = activePhotoRef.current?.img
+        if (img) setShadowDraft(getPhotoStyle(img).dropShadow ?? DEFAULT_PHOTO_SHADOW)
+      }
+      return next
+    })
+  }, [])
+
+  const updateBorder = useCallback((border: PhotoBorder) => {
+    const ref = activePhotoRef.current
+    if (!ref) return
+    applyPhotoBorder(ref.img, border)
+    ref.fc.requestRenderAll()
+    ref.fc.fire('object:modified', { target: ref.img })
+    setBorderDraft(border)
+  }, [])
+
+  const removeBorder = useCallback(() => {
+    const ref = activePhotoRef.current
+    if (!ref) return
+    applyPhotoBorder(ref.img, null)
+    ref.fc.requestRenderAll()
+    ref.fc.fire('object:modified', { target: ref.img })
+    setBorderPanelOpen(false)
+  }, [])
+
+  const updateShadow = useCallback((dropShadow: PhotoDropShadow) => {
+    const ref = activePhotoRef.current
+    if (!ref) return
+    applyPhotoShadow(ref.img, dropShadow)
+    ref.fc.requestRenderAll()
+    ref.fc.fire('object:modified', { target: ref.img })
+    setShadowDraft(dropShadow)
+  }, [])
+
+  const removeShadow = useCallback(() => {
+    const ref = activePhotoRef.current
+    if (!ref) return
+    applyPhotoShadow(ref.img, null)
+    ref.fc.requestRenderAll()
+    ref.fc.fire('object:modified', { target: ref.img })
+    setShadowPanelOpen(false)
+  }, [])
+
+  const renderPhotoStyleControls = () => (
+    <>
+      <div className="canvas-align-sep" />
+      <div className="canvas-align-btn-wrap">
+        <button
+          className={`canvas-align-btn${borderPanelOpen ? ' canvas-align-btn--active' : ''}`}
+          onClick={toggleBorderPanel}
+          title={t.photoBorder}
+        >
+          <FrameIcon size={16} strokeWidth={1.5} />
+        </button>
+        {borderPanelOpen && (
+          <div className="canvas-style-popover">
+            <div className="canvas-style-popover-row">
+              <span className="canvas-style-popover-label">{t.borderColor}</span>
+              <button className="canvas-style-swatch" style={{ background: borderDraft.color }} onClick={() => borderColorInputRef.current?.click()} aria-label={t.borderColor} />
+              <input ref={borderColorInputRef} type="color" value={borderDraft.color} onChange={(e) => updateBorder({ ...borderDraft, color: e.target.value })} className="canvas-style-color-input" aria-hidden="true" tabIndex={-1} />
+            </div>
+            <div className="canvas-style-popover-row">
+              <span className="canvas-style-popover-label">{t.borderWidth}</span>
+              <input type="range" min={1} max={24} value={borderDraft.width} onChange={(e) => updateBorder({ ...borderDraft, width: Number(e.target.value) })} className="canvas-style-slider" />
+            </div>
+            <button className="canvas-style-remove" onClick={removeBorder}>{t.removeBorder}</button>
+          </div>
+        )}
+      </div>
+      <div className="canvas-align-btn-wrap">
+        <button
+          className={`canvas-align-btn${shadowPanelOpen ? ' canvas-align-btn--active' : ''}`}
+          onClick={toggleShadowPanel}
+          title={t.photoShadow}
+        >
+          <SquareStack size={16} strokeWidth={1.5} />
+        </button>
+        {shadowPanelOpen && (
+          <div className="canvas-style-popover">
+            <div className="canvas-style-popover-row">
+              <span className="canvas-style-popover-label">{t.shadowColor}</span>
+              <button className="canvas-style-swatch" style={{ background: shadowDraft.color }} onClick={() => shadowColorInputRef.current?.click()} aria-label={t.shadowColor} />
+              <input ref={shadowColorInputRef} type="color" value={shadowDraft.color} onChange={(e) => updateShadow({ ...shadowDraft, color: e.target.value })} className="canvas-style-color-input" aria-hidden="true" tabIndex={-1} />
+            </div>
+            <div className="canvas-style-popover-row">
+              <span className="canvas-style-popover-label">{t.shadowIntensity}</span>
+              <input type="range" min={1} max={10} value={shadowDraft.intensity} onChange={(e) => updateShadow({ ...shadowDraft, intensity: Number(e.target.value) })} className="canvas-style-slider" />
+            </div>
+            <button className="canvas-style-remove" onClick={removeShadow}>{t.removeShadow}</button>
+          </div>
+        )}
+      </div>
+    </>
+  )
+
   // Stores exact image state before entering pan mode.
   // initLeft/initTop are the ghost's starting canvas position (≠ frameCenter for non-centered crops).
   // userPan = img.left - initLeft (not img.left - frameCenter) so "no movement" always restores
@@ -1082,6 +1209,7 @@ export default function Canvas({
     const updatePhotoSel = (obj: fabric.FabricObject | null | undefined, fcInner: fabric.Canvas, sideInner: 'left' | 'right') => {
       const data = (obj as unknown as { data?: { type: string; frameX?: number; frameY?: number; frameW?: number; frameH?: number; editScale?: number } } | undefined)?.data
       if (obj && data?.type === 'photo') {
+        if (activePhotoRef.current?.img !== obj) closeStylePanels()
         setPhotoSel({
           side:       sideInner,
           frameX:     data.frameX ?? 0,
@@ -1092,6 +1220,7 @@ export default function Canvas({
         })
         activePhotoRef.current = { img: obj as fabric.FabricImage, fc: fcInner }
       } else {
+        closeStylePanels()
         setPhotoSel(null)
         activePhotoRef.current = null
       }
@@ -2423,6 +2552,7 @@ export default function Canvas({
                       <button className="canvas-align-btn" onClick={() => rotateActivePhoto(1)}  title="Rotar derecha"><RotateCw  size={16} strokeWidth={1.5} /></button>
                       <div className="canvas-align-sep" />
                       <button className="canvas-align-btn" onClick={flipActivePhoto} title="Espejar"><FlipHorizontal2 size={16} strokeWidth={1.5} /></button>
+                      {renderPhotoStyleControls()}
                     </div>
                   )}
                   {multiSel?.side === 'left' && (
@@ -2493,6 +2623,7 @@ export default function Canvas({
                       <button className="canvas-align-btn" onClick={() => rotateActivePhoto(1)}  title="Rotar derecha"><RotateCw  size={16} strokeWidth={1.5} /></button>
                       <div className="canvas-align-sep" />
                       <button className="canvas-align-btn" onClick={flipActivePhoto} title="Espejar"><FlipHorizontal2 size={16} strokeWidth={1.5} /></button>
+                      {renderPhotoStyleControls()}
                     </div>
                   )}
                   {multiSel?.side === 'right' && (
