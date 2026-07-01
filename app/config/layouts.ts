@@ -269,7 +269,7 @@ const layout_4_10: Layout = {
   orientation: 'any',
   // 2×2 grid, full bleed sides, white space top and bottom
   frames: (() => {
-    const mV    = 0.22
+    const mV    = 0.10
     const cellW = (1 - G) / 2
     const cellH = (1 - mV * 2 - G) / 2
     return [
@@ -573,25 +573,6 @@ const layout_3_14: Layout = {
   })(),
 }
 
-const layout_3_6: Layout = {
-  id: 'layout_3_6',
-  nombre: 'T invertida',
-  photoCount: 3,
-  orientation: 'any',
-  // 2 small top + 1 wide bottom
-  frames: (() => {
-    const available = 1 - M * 2 - G
-    const topH = available * 0.38
-    const botH = available * 0.62
-    return [
-      { x: cx(0, 2), y: M,             w: fw(2),      h: topH },
-      { x: cx(1, 2), y: M,             w: fw(2),      h: topH },
-      { x: M,        y: M + topH + G,  w: 1 - M * 2,  h: botH },
-    ]
-  })(),
-}
-
-
 
 // ─── 3 FOTOS (horizontal) ──────────────────────────────────────────────────
 
@@ -628,6 +609,63 @@ const layout_3_10: Layout = {
       { x: M,  y: ry(0, 2), w: leftW,  h: fh(2)     },
       { x: M,  y: ry(1, 2), w: leftW,  h: fh(2)     },
       { x: rx, y: M,        w: rightW, h: 1 - M * 2 },
+    ]
+  })(),
+}
+
+const layout_3_15: Layout = {
+  id: 'layout_3_15',
+  nombre: 'Grande izquierda, dos derecha',
+  photoCount: 3,
+  orientation: 'landscape',
+  // Mirror of layout_3_10: 1 large photo left + 2 stacked photos right
+  frames: (() => {
+    const avail  = 1 - M * 2 - G
+    const leftW  = avail * 0.55
+    const rightW = avail * 0.45
+    const rx     = M + leftW + G
+    return [
+      { x: M,  y: M,        w: leftW,  h: 1 - M * 2 },
+      { x: rx, y: ry(0, 2), w: rightW, h: fh(2)     },
+      { x: rx, y: ry(1, 2), w: rightW, h: fh(2)     },
+    ]
+  })(),
+}
+
+const layout_3_16: Layout = {
+  id: 'layout_3_16',
+  nombre: 'Dos izquierda, grande derecha completo',
+  photoCount: 3,
+  orientation: 'landscape',
+  // Full-bleed version of layout_3_10: 2 stacked left + 1 large right, no margins
+  frames: (() => {
+    const leftW  = (1 - G) * 0.45
+    const rightW = (1 - G) * 0.55
+    const rx     = leftW + G
+    const cellH  = (1 - G) / 2
+    return [
+      { x: 0,  y: 0,          w: leftW,  h: cellH },
+      { x: 0,  y: cellH + G,  w: leftW,  h: cellH },
+      { x: rx, y: 0,          w: rightW, h: 1      },
+    ]
+  })(),
+}
+
+const layout_3_17: Layout = {
+  id: 'layout_3_17',
+  nombre: 'Grande izquierda, dos derecha completo',
+  photoCount: 3,
+  orientation: 'landscape',
+  // Full-bleed version of layout_3_15: 1 large left + 2 stacked right, no margins
+  frames: (() => {
+    const leftW  = (1 - G) * 0.55
+    const rightW = (1 - G) * 0.45
+    const rx     = leftW + G
+    const cellH  = (1 - G) / 2
+    return [
+      { x: 0,  y: 0,         w: leftW,  h: 1      },
+      { x: rx, y: 0,         w: rightW, h: cellH  },
+      { x: rx, y: cellH + G, w: rightW, h: cellH  },
     ]
   })(),
 }
@@ -759,9 +797,9 @@ const layout_5_3: Layout = {
   id: 'layout_5_3',
   nombre: 'Dos arriba, tres abajo con margen',
   photoCount: 5,
-  orientation: 'any',
+  orientation: 'landscape',
   frames: (() => {
-    const mV      = 0.19
+    const mV      = 0.08
     const topW    = fw(2)
     const available = 1 - mV * 2 - G
     const topH    = available * 0.45
@@ -777,14 +815,58 @@ const layout_5_3: Layout = {
   })(),
 };
 
+const layout_5_3p: Layout = {
+  id: 'layout_5_3p',
+  nombre: 'Dos arriba, tres abajo con margen (vertical)',
+  photoCount: 5,
+  orientation: 'portrait',
+  frames: (() => {
+    const mV      = 0.20
+    const topW    = fw(2)
+    const available = 1 - mV * 2 - G
+    const topH    = available * 0.45
+    const botH    = available * 0.55
+    const botW    = fw(3)
+    return [
+      { x: cx(0, 2), y: mV,             w: topW, h: topH },
+      { x: cx(1, 2), y: mV,             w: topW, h: topH },
+      { x: cx(0, 3), y: mV + topH + G,  w: botW, h: botH },
+      { x: cx(1, 3), y: mV + topH + G,  w: botW, h: botH },
+      { x: cx(2, 3), y: mV + topH + G,  w: botW, h: botH },
+    ]
+  })(),
+};
+
+const layout_5_3pf: Layout = {
+  id: 'layout_5_3pf',
+  nombre: 'Dos arriba, tres abajo completo (vertical)',
+  photoCount: 5,
+  orientation: 'portrait',
+  frames: (() => {
+    const mV      = 0.20
+    const topW    = (1 - G) / 2
+    const botW    = (1 - G * 2) / 3
+    const available = 1 - mV * 2 - G
+    const topH    = available * 0.45
+    const botH    = available * 0.55
+    return [
+      { x: 0,              y: mV,             w: topW, h: topH },
+      { x: topW + G,       y: mV,             w: topW, h: topH },
+      { x: 0,              y: mV + topH + G,  w: botW, h: botH },
+      { x: botW + G,       y: mV + topH + G,  w: botW, h: botH },
+      { x: (botW + G) * 2, y: mV + topH + G,  w: botW, h: botH },
+    ]
+  })(),
+};
+
 const layout_5_6: Layout = {
   id: 'layout_5_6',
   nombre: 'Tres arriba, dos abajo con margen',
   photoCount: 5,
-  orientation: 'any',
+  orientation: 'landscape',
   // Mirror of layout_5_3: 3 top + 2 bottom with margins
   frames: (() => {
-    const mV      = 0.19
+    const mV      = 0.08
     const available = 1 - mV * 2 - G
     const topH = available * 0.55
     const botH = available * 0.45
@@ -798,14 +880,98 @@ const layout_5_6: Layout = {
   })(),
 }
 
+const layout_5_6p: Layout = {
+  id: 'layout_5_6p',
+  nombre: 'Tres arriba, dos abajo con margen (vertical)',
+  photoCount: 5,
+  orientation: 'portrait',
+  frames: (() => {
+    const mV      = 0.20
+    const available = 1 - mV * 2 - G
+    const topH = available * 0.55
+    const botH = available * 0.45
+    return [
+      { x: cx(0, 3), y: mV,             w: fw(3), h: topH },
+      { x: cx(1, 3), y: mV,             w: fw(3), h: topH },
+      { x: cx(2, 3), y: mV,             w: fw(3), h: topH },
+      { x: cx(0, 2), y: mV + topH + G,  w: fw(2), h: botH },
+      { x: cx(1, 2), y: mV + topH + G,  w: fw(2), h: botH },
+    ]
+  })(),
+}
+
+const layout_5_6pf: Layout = {
+  id: 'layout_5_6pf',
+  nombre: 'Tres arriba, dos abajo completo (vertical)',
+  photoCount: 5,
+  orientation: 'portrait',
+  frames: (() => {
+    const mV      = 0.20
+    const topW    = (1 - G * 2) / 3
+    const botW    = (1 - G) / 2
+    const available = 1 - mV * 2 - G
+    const topH = available * 0.55
+    const botH = available * 0.45
+    return [
+      { x: 0,              y: mV,             w: topW, h: topH },
+      { x: topW + G,       y: mV,             w: topW, h: topH },
+      { x: (topW + G) * 2, y: mV,             w: topW, h: topH },
+      { x: 0,              y: mV + topH + G,  w: botW, h: botH },
+      { x: botW + G,       y: mV + topH + G,  w: botW, h: botH },
+    ]
+  })(),
+}
+
+const layout_5_12: Layout = {
+  id: 'layout_5_12',
+  nombre: 'Dos arriba, tres abajo completo',
+  photoCount: 5,
+  orientation: 'any',
+  // Full-bleed version of layout_5_3: 2 top + 3 bottom, no margins
+  frames: (() => {
+    const topW = (1 - G) / 2
+    const botW = (1 - G * 2) / 3
+    const topH = (1 - G) * 0.45
+    const botH = (1 - G) * 0.55
+    return [
+      { x: 0,              y: 0,        w: topW, h: topH },
+      { x: topW + G,       y: 0,        w: topW, h: topH },
+      { x: 0,              y: topH + G, w: botW, h: botH },
+      { x: botW + G,       y: topH + G, w: botW, h: botH },
+      { x: (botW + G) * 2, y: topH + G, w: botW, h: botH },
+    ]
+  })(),
+}
+
+const layout_5_13: Layout = {
+  id: 'layout_5_13',
+  nombre: 'Tres arriba, dos abajo completo',
+  photoCount: 5,
+  orientation: 'any',
+  // Full-bleed version of layout_5_6: 3 top + 2 bottom, no margins
+  frames: (() => {
+    const topW = (1 - G * 2) / 3
+    const botW = (1 - G) / 2
+    const topH = (1 - G) * 0.55
+    const botH = (1 - G) * 0.45
+    return [
+      { x: 0,              y: 0,        w: topW, h: topH },
+      { x: topW + G,       y: 0,        w: topW, h: topH },
+      { x: (topW + G) * 2, y: 0,        w: topW, h: topH },
+      { x: 0,              y: topH + G, w: botW, h: botH },
+      { x: botW + G,       y: topH + G, w: botW, h: botH },
+    ]
+  })(),
+}
+
 const layout_5_4: Layout = {
   id: 'layout_5_4',
   nombre: '1 grande + 4 en grilla',
   photoCount: 5,
-  orientation: 'any',
+  orientation: 'landscape',
   // 1 large left + 2×2 grid right, extra vertical white space
   frames: (() => {
-    const mV     = 0.27
+    const mV     = 0.12
     const avail  = 1 - M * 2 - G
     const leftW  = avail * 0.50
     const rightW = avail * 0.50
@@ -826,10 +992,10 @@ const layout_5_8: Layout = {
   id: 'layout_5_8',
   nombre: '4 en grilla + 1 grande con margen',
   photoCount: 5,
-  orientation: 'any',
+  orientation: 'landscape',
   // Mirror of layout_5_4: 2×2 grid left + 1 large right, with side margins
   frames: (() => {
-    const mV    = 0.27
+    const mV    = 0.12
     const avail = 1 - M * 2 - G
     const halfW = avail * 0.50
     const cellW = (halfW - G) / 2
@@ -849,10 +1015,10 @@ const layout_5_9: Layout = {
   id: 'layout_5_9',
   nombre: '1 grande + 4 en grilla sin margen',
   photoCount: 5,
-  orientation: 'any',
+  orientation: 'landscape',
   // Mirror of layout_5_7: 1 large left + 2×2 grid right, no side margins
   frames: (() => {
-    const mV    = 0.27
+    const mV    = 0.12
     const half  = (1 - G) / 2
     const cellW = (half - G) / 2
     const cellH = (1 - mV * 2 - G) / 2
@@ -871,10 +1037,10 @@ const layout_5_7: Layout = {
   id: 'layout_5_7',
   nombre: '4 en grilla + 1 grande',
   photoCount: 5,
-  orientation: 'any',
+  orientation: 'landscape',
   // Mirror of layout_5_4: 2×2 grid left + 1 large right, no side margins, white space top/bottom
   frames: (() => {
-    const mV    = 0.27
+    const mV    = 0.12
     const half  = (1 - G) / 2
     const cellW = (half - G) / 2
     const cellH = (1 - mV * 2 - G) / 2
@@ -885,6 +1051,187 @@ const layout_5_7: Layout = {
       { x: 0,          y: mV + cellH + G, w: cellW, h: cellH },
       { x: cellW + G,  y: mV + cellH + G, w: cellW, h: cellH },
       { x: rx,         y: mV,             w: 1 - rx, h: 1 - mV * 2 },
+    ]
+  })(),
+}
+
+const layout_5_14: Layout = {
+  id: 'layout_5_14',
+  nombre: '1 grande + 4 en grilla (vertical)',
+  photoCount: 5,
+  orientation: 'portrait',
+  frames: (() => {
+    const mV     = 0.23
+    const avail  = 1 - M * 2 - G
+    const leftW  = avail * 0.50
+    const rightW = avail * 0.50
+    const rx     = M + leftW + G
+    const cellW  = (rightW - G) / 2
+    const cellH  = (1 - mV * 2 - G) / 2
+    return [
+      { x: M,              y: mV,             w: leftW, h: 1 - mV * 2 },
+      { x: rx,             y: mV,             w: cellW, h: cellH       },
+      { x: rx + cellW + G, y: mV,             w: cellW, h: cellH       },
+      { x: rx,             y: mV + cellH + G, w: cellW, h: cellH       },
+      { x: rx + cellW + G, y: mV + cellH + G, w: cellW, h: cellH       },
+    ]
+  })(),
+}
+
+const layout_5_15: Layout = {
+  id: 'layout_5_15',
+  nombre: '4 en grilla + 1 grande con margen (vertical)',
+  photoCount: 5,
+  orientation: 'portrait',
+  frames: (() => {
+    const mV    = 0.23
+    const avail = 1 - M * 2 - G
+    const halfW = avail * 0.50
+    const cellW = (halfW - G) / 2
+    const cellH = (1 - mV * 2 - G) / 2
+    const rx    = M + halfW + G
+    return [
+      { x: M,             y: mV,             w: cellW, h: cellH },
+      { x: M + cellW + G, y: mV,             w: cellW, h: cellH },
+      { x: M,             y: mV + cellH + G, w: cellW, h: cellH },
+      { x: M + cellW + G, y: mV + cellH + G, w: cellW, h: cellH },
+      { x: rx,            y: mV,             w: halfW, h: 1 - mV * 2 },
+    ]
+  })(),
+}
+
+const layout_5_16: Layout = {
+  id: 'layout_5_16',
+  nombre: '1 grande + 4 en grilla sin margen (vertical)',
+  photoCount: 5,
+  orientation: 'portrait',
+  frames: (() => {
+    const mV    = 0.23
+    const half  = (1 - G) / 2
+    const cellW = (half - G) / 2
+    const cellH = (1 - mV * 2 - G) / 2
+    const rx    = half + G
+    return [
+      { x: 0,              y: mV,             w: half,  h: 1 - mV * 2 },
+      { x: rx,             y: mV,             w: cellW, h: cellH },
+      { x: rx + cellW + G, y: mV,             w: cellW, h: cellH },
+      { x: rx,             y: mV + cellH + G, w: cellW, h: cellH },
+      { x: rx + cellW + G, y: mV + cellH + G, w: cellW, h: cellH },
+    ]
+  })(),
+}
+
+const layout_5_17: Layout = {
+  id: 'layout_5_17',
+  nombre: '4 en grilla + 1 grande (vertical)',
+  photoCount: 5,
+  orientation: 'portrait',
+  frames: (() => {
+    const mV    = 0.23
+    const half  = (1 - G) / 2
+    const cellW = (half - G) / 2
+    const cellH = (1 - mV * 2 - G) / 2
+    const rx    = half + G
+    return [
+      { x: 0,         y: mV,             w: cellW,  h: cellH },
+      { x: cellW + G, y: mV,             w: cellW,  h: cellH },
+      { x: 0,         y: mV + cellH + G, w: cellW,  h: cellH },
+      { x: cellW + G, y: mV + cellH + G, w: cellW,  h: cellH },
+      { x: rx,        y: mV,             w: 1 - rx, h: 1 - mV * 2 },
+    ]
+  })(),
+}
+
+const layout_5_18: Layout = {
+  id: 'layout_5_18',
+  nombre: 'Grande arriba, grilla 2×2 abajo',
+  photoCount: 5,
+  orientation: 'portrait',
+  frames: (() => {
+    const mV    = 0.05
+    const mH    = 0.10
+    const avail = 1 - mV * 2 - G
+    const topH  = avail * 0.55
+    const botH  = avail * 0.45
+    const cellW = (1 - mH * 2 - G) / 2
+    const cellH = (botH - G) / 2
+    const y1    = mV + topH + G
+    return [
+      { x: mH,          y: mV,             w: 1 - mH * 2, h: topH  },
+      { x: mH,          y: y1,             w: cellW,      h: cellH },
+      { x: mH + cellW + G, y: y1,          w: cellW,      h: cellH },
+      { x: mH,          y: y1 + cellH + G, w: cellW,      h: cellH },
+      { x: mH + cellW + G, y: y1 + cellH + G, w: cellW,   h: cellH },
+    ]
+  })(),
+}
+
+const layout_5_19: Layout = {
+  id: 'layout_5_19',
+  nombre: 'Grilla 2×2 arriba, grande abajo',
+  photoCount: 5,
+  orientation: 'portrait',
+  frames: (() => {
+    const mV    = 0.05
+    const mH    = 0.10
+    const avail = 1 - mV * 2 - G
+    const topH  = avail * 0.45
+    const botH  = avail * 0.55
+    const cellW = (1 - mH * 2 - G) / 2
+    const cellH = (topH - G) / 2
+    const y2    = mV + topH + G
+    return [
+      { x: mH,             y: mV,             w: cellW,      h: cellH },
+      { x: mH + cellW + G, y: mV,             w: cellW,      h: cellH },
+      { x: mH,             y: mV + cellH + G, w: cellW,      h: cellH },
+      { x: mH + cellW + G, y: mV + cellH + G, w: cellW,      h: cellH },
+      { x: mH,             y: y2,             w: 1 - mH * 2, h: botH  },
+    ]
+  })(),
+}
+
+const layout_5_20: Layout = {
+  id: 'layout_5_20',
+  nombre: 'Grande arriba, grilla 2×2 abajo completo',
+  photoCount: 5,
+  orientation: 'portrait',
+  frames: (() => {
+    const mV    = 0.05
+    const avail = 1 - mV * 2 - G
+    const topH  = avail * 0.55
+    const botH  = avail * 0.45
+    const cellW = (1 - G) / 2
+    const cellH = (botH - G) / 2
+    const y1    = mV + topH + G
+    return [
+      { x: 0,        y: mV,             w: 1,     h: topH  },
+      { x: 0,        y: y1,             w: cellW, h: cellH },
+      { x: cellW + G,y: y1,             w: cellW, h: cellH },
+      { x: 0,        y: y1 + cellH + G, w: cellW, h: cellH },
+      { x: cellW + G,y: y1 + cellH + G, w: cellW, h: cellH },
+    ]
+  })(),
+}
+
+const layout_5_21: Layout = {
+  id: 'layout_5_21',
+  nombre: 'Grilla 2×2 arriba, grande abajo completo',
+  photoCount: 5,
+  orientation: 'portrait',
+  frames: (() => {
+    const mV    = 0.05
+    const avail = 1 - mV * 2 - G
+    const topH  = avail * 0.45
+    const botH  = avail * 0.55
+    const cellW = (1 - G) / 2
+    const cellH = (topH - G) / 2
+    const y2    = mV + topH + G
+    return [
+      { x: 0,        y: mV,             w: cellW, h: cellH },
+      { x: cellW + G,y: mV,             w: cellW, h: cellH },
+      { x: 0,        y: mV + cellH + G, w: cellW, h: cellH },
+      { x: cellW + G,y: mV + cellH + G, w: cellW, h: cellH },
+      { x: 0,        y: y2,             w: 1,     h: botH  },
     ]
   })(),
 }
@@ -975,14 +1322,16 @@ export const LAYOUTS: Layout[] = [
   layout_2_9, layout_2_10, layout_2_11,
   layout_2_5, layout_2_6, layout_2_7, layout_2_13, layout_2_8,
   // 3 fotos
-  layout_3_1, layout_3_6, layout_3_9, layout_3_2, layout_3_11, layout_3_3, layout_3_4,
-  layout_3_5, layout_3_12, layout_3_13, layout_3_14, layout_3_10,
+  layout_3_1, layout_3_9, layout_3_2, layout_3_11, layout_3_3, layout_3_4,
+  layout_3_5, layout_3_12, layout_3_13, layout_3_14, layout_3_10, layout_3_15, layout_3_16, layout_3_17,
   // 4 fotos
   layout_4_1, layout_4_2, layout_4_3, layout_4_10,
   layout_4_5, layout_4_9, layout_4_7, layout_4_8,
   // 5 fotos
-  layout_5_2, layout_5_5, layout_5_3, layout_5_6,
+  layout_5_2, layout_5_5, layout_5_3p, layout_5_3pf, layout_5_6p, layout_5_6pf, layout_5_3, layout_5_6, layout_5_12, layout_5_13,
   layout_5_4, layout_5_8, layout_5_9, layout_5_7,
+  layout_5_14, layout_5_15, layout_5_16, layout_5_17,
+  layout_5_18, layout_5_19, layout_5_20, layout_5_21,
   layout_5_10, layout_5_11,
 ];
 

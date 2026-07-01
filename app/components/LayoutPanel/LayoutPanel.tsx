@@ -23,7 +23,10 @@ interface LayoutPanelProps {
 
 const TEXTURES = Array.from({ length: 12 }, (_, i) => `/texturas/text${i + 1}.jpg`)
 const FONDOS = ['/fondos/fondo.jpg', ...Array.from({ length: 11 }, (_, i) => `/fondos/fondo${i + 2}.jpg`)]
-const STICKERS = Array.from({ length: 13 }, (_, i) => `/stickers/stickersPNG${i + 1}.png`)
+const STICKERS = [
+  ...Array.from({ length: 13 }, (_, i) => `/stickers/stickersPNG${i + 1}.png`),
+  ...Array.from({ length: 7 }, (_, i) => `/stickers/${i + 1}.png`),
+]
 const GRAFICOS = Array.from({ length: 7 }, (_, i) => `/ilus/IlusZeika-${i + 14}.png`)
 
 interface TextPreset {
@@ -63,7 +66,7 @@ const TEXT_PRESETS: TextPreset[] = [
 type MainTab = 'layouts' | 'textos' | 'deco'
 type DecoSubTab = 'fondos' | 'texturas' | 'stickers'
 
-const PHOTO_COUNTS = [1, 2, 3, 4, 5]
+const PHOTO_COUNTS = [1, 2, 3, 4, 5, 6]
 
 function LayoutThumbnail({ layout, aspectRatio }: { layout: Layout; aspectRatio: number }) {
   return (
@@ -114,7 +117,9 @@ export default function LayoutPanel({
   )
   const layouts = displayFilter === 'all'
     ? allFiltered
-    : allFiltered.filter(l => l.photoCount === displayFilter)
+    : displayFilter === 6
+      ? allFiltered.filter(l => l.photoCount >= 6)
+      : allFiltered.filter(l => l.photoCount === displayFilter)
 
   return (
     <aside className="layout-panel">
@@ -150,9 +155,9 @@ export default function LayoutPanel({
                 key={count}
                 className={`layout-count-btn${displayFilter === count ? ' layout-count-btn--active' : ''}`}
                 onClick={() => { onPhotoCountChange(count); setDisplayFilter(count) }}
-                aria-label={`${count} foto${count > 1 ? 's' : ''}`}
+                aria-label={count === 6 ? '6 o más fotos' : `${count} foto${count > 1 ? 's' : ''}`}
               >
-                {count}
+                {count === 6 ? '+' : count}
               </button>
             ))}
           </div>
