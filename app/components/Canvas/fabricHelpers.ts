@@ -625,7 +625,7 @@ export function addTextBox(
     fill: opts.fill ?? '#191919',
     textAlign: opts.textAlign ?? 'center',
     charSpacing: opts.charSpacing ?? 0,
-    splitByGrapheme: true,
+    splitByGrapheme: false,
   }) as fabric.Textbox & { data: TextData }
 
   textbox.data = { type: 'text' }
@@ -1210,7 +1210,7 @@ export async function deserializePage(
           textAlign:       (entry.textAlign  ?? 'left') as fabric.Textbox['textAlign'],
           lineHeight:      entry.lineHeight  ?? 1.16,
           charSpacing:     entry.charSpacing ?? 0,
-          splitByGrapheme: true,
+          splitByGrapheme: false,
         }) as fabric.Textbox & { data: TextData }
         const savedH = entry.height ?? 0
         const contentH = (textbox as unknown as { height?: number }).height ?? 0
@@ -1324,7 +1324,7 @@ export async function deserializePage(
         textAlign:       (st.textAlign  ?? 'left') as fabric.Textbox['textAlign'],
         lineHeight:      st.lineHeight  ?? 1.16,
         charSpacing:     st.charSpacing ?? 0,
-        splitByGrapheme: true,
+        splitByGrapheme: false,
       }) as fabric.Textbox & { data: TextData }
       textbox.data = { type: 'text' }
       textbox.set({ lockUniScaling: false })

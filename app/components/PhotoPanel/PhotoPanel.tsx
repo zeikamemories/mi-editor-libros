@@ -252,7 +252,7 @@ export default function PhotoPanel({
 
       {/* ── Contador ── */}
       <div className="photo-panel-counter">
-        {photos.length} {t.photos.toLowerCase()}
+        {visiblePhotos.length} {t.photos.toLowerCase()}
       </div>
 
       {/* ── Separator bar ── */}

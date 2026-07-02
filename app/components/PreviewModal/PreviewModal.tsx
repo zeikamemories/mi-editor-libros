@@ -564,11 +564,27 @@ export default function PreviewModal({
   const isFirst = currentPage <= 1
   const isLast  = currentPage >= totalSpreads * 2
 
+  // Map turn.js's raw page index to the builder's own content-page numbering.
+  // turn.js page 1 = front cover, page 2 = blank inside-front flyleaf, page 3 =
+  // content page 1, ... page (2*totalSpreads) = back cover. So content page =
+  // turnPage - 2, valid between 1 and maxContent. The spread right after the
+  // cover and the spread right before the back cover each show only ONE real
+  // page (the other side is the non-editable flyleaf) — same as the builder's
+  // PageStrip, which labels those spreads with a single number instead of a range.
   const pageLabel = (() => {
     if (spreadLeftPage <= 1)                  return t.cover
     if (spreadLeftPage >= totalSpreads * 2)   return t.back
-    const spreadNum = Math.floor((spreadLeftPage - 1) / 2)
-    return `${t.page} ${spreadNum * 2 + 1} — ${spreadNum * 2 + 2}`
+
+    const maxContent   = totalSpreads * 2 - 4
+    const contentLeft  = spreadLeftPage  - 2
+    const contentRight = spreadRightPage - 2
+    const leftReal     = contentLeft  >= 1 && contentLeft  <= maxContent
+    const rightReal    = contentRight >= 1 && contentRight <= maxContent
+
+    if (leftReal && rightReal) return `${t.carilla} ${contentLeft} — ${contentRight}`
+    if (rightReal)             return `${t.carilla} ${contentRight}`
+    if (leftReal)              return `${t.carilla} ${contentLeft}`
+    return t.carilla
   })()
 
   return (

@@ -1484,7 +1484,7 @@ export default function Canvas({
                 lineHeight:      1.16,
                 fill:            '#191919',
                 textAlign:       'center',
-                splitByGrapheme: true,
+                splitByGrapheme: false,
               }) as unknown as fabric.Textbox & { data: { type: string; boxH?: number } }
               textbox.data = { type: 'text', boxH: data.frameH }
               textbox.set({ lockUniScaling: false, lockScalingX: false, lockScalingY: false })
@@ -1597,7 +1597,7 @@ export default function Canvas({
                 lineHeight:      1.16,
                 fill:            '#191919',
                 textAlign:       'center',
-                splitByGrapheme: true,
+                splitByGrapheme: false,
               }) as unknown as fabric.Textbox & { data: { type: string; boxH?: number } }
               textbox.data = { type: 'text', boxH: frameH }
               ;(textbox as unknown as { height: number }).height = frameH
@@ -2141,7 +2141,13 @@ export default function Canvas({
       | { kind: 'photo'; src: string; frameX: number; frameY: number; frameW: number; frameH: number; naturalW: number; naturalH: number; coverScale: number; editScale: number; cropX: number; cropY: number }
       | { kind: 'freePhoto'; src: string; left: number; top: number; scaleX: number; scaleY: number; naturalW: number; naturalH: number }
       | { kind: 'frame'; frameX: number; frameY: number; frameW: number; frameH: number }
-      | { kind: 'text';  text: string; left: number; top: number; width: number; fontSize: number; fontFamily: string; fill: string }
+      | {
+          kind: 'text'; text: string; left: number; top: number; width: number
+          fontSize: number; fontFamily: string; fill: string
+          fontWeight: string; underline: boolean; textAlign: string
+          lineHeight: number; charSpacing: number; angle: number
+          scaleX: number; scaleY: number
+        }
     const clipboard = { current: null as ClipboardEntry | null }
 
     const handleKeyDown = async (e: KeyboardEvent) => {
@@ -2204,14 +2210,22 @@ export default function Canvas({
           }
         } else if (obj instanceof fabric.Textbox) {
           clipboard.current = {
-            kind:       'text',
-            text:       obj.text       ?? '',
-            left:       obj.left       ?? 0,
-            top:        obj.top        ?? 0,
-            width:      obj.width      ?? 200,
-            fontSize:   obj.fontSize   ?? 24,
-            fontFamily: obj.fontFamily ?? 'amandine',
-            fill:       (obj.fill as string) ?? '#191919',
+            kind:        'text',
+            text:        obj.text        ?? '',
+            left:        obj.left        ?? 0,
+            top:         obj.top         ?? 0,
+            width:       obj.width       ?? 200,
+            fontSize:    obj.fontSize    ?? 24,
+            fontFamily:  obj.fontFamily  ?? 'amandine',
+            fill:        (obj.fill as string) ?? '#191919',
+            fontWeight:  (obj.fontWeight as string) ?? 'normal',
+            underline:   obj.underline   ?? false,
+            textAlign:   obj.textAlign   ?? 'left',
+            lineHeight:  obj.lineHeight  ?? 1.16,
+            charSpacing: obj.charSpacing ?? 0,
+            angle:       obj.angle       ?? 0,
+            scaleX:      obj.scaleX      ?? 1,
+            scaleY:      obj.scaleY      ?? 1,
           }
         }
         return
@@ -2295,14 +2309,26 @@ export default function Canvas({
 
         } else if (cb.kind === 'text') {
           const textbox = new fabric.Textbox(cb.text, {
-            left:       cb.left   + OFF,
-            top:        cb.top    + OFF,
-            width:      cb.width,
-            fontFamily: cb.fontFamily,
-            fontSize:   cb.fontSize,
-            fill:       cb.fill,
-          }) as unknown as fabric.Textbox & { data: { type: string } }
-          textbox.data = { type: 'text' }
+            left:            cb.left   + OFF,
+            top:             cb.top    + OFF,
+            originX:         'left',
+            originY:         'top',
+            width:           cb.width,
+            fontFamily:      cb.fontFamily,
+            fontSize:        cb.fontSize,
+            fill:            cb.fill,
+            fontWeight:      cb.fontWeight,
+            underline:       cb.underline,
+            textAlign:       cb.textAlign as fabric.Textbox['textAlign'],
+            lineHeight:      cb.lineHeight,
+            charSpacing:     cb.charSpacing,
+            angle:           cb.angle,
+            scaleX:          cb.scaleX,
+            scaleY:          cb.scaleY,
+            splitByGrapheme: false,
+          }) as unknown as fabric.Textbox & { data: { type: string; boxH?: number } }
+          const boxH = (textbox as unknown as { height?: number }).height ?? 0
+          textbox.data = { type: 'text', boxH }
           activeCanvas.add(textbox)
           activeCanvas.setActiveObject(textbox)
         }

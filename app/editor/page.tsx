@@ -776,7 +776,7 @@ export default function EditorPage() {
       fill:            opts.fill,
       lineHeight:      opts.lineHeight,
       charSpacing:     opts.charSpacing,
-      splitByGrapheme: true,
+      splitByGrapheme: false,
       width:           savedWidth,
     })
     const contentH = (textbox as unknown as { calcTextHeight: () => number }).calcTextHeight()

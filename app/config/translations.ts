@@ -133,6 +133,7 @@ export const translations = {
     prev:            'Anterior',
     next:            'Siguiente',
     lastPage:        'Última página',
+    carilla:         'Carilla',
     // SpreadsView
     interna:         'Interna',
     // OnboardingTour
@@ -282,6 +283,7 @@ export const translations = {
     prev:            'Previous',
     next:            'Next',
     lastPage:        'Last page',
+    carilla:         'Page',
     // SpreadsView
     interna:         'Inside',
     // OnboardingTour
