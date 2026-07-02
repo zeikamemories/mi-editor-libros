@@ -2,8 +2,8 @@
   width: 44px;
   height: 44px;
   border-radius: 50%;
-  background: #d4d4d4;
-  border: 1px solid transparent;
+  background: transparent;
+  border: 1px solid var(--color-black);
   cursor: pointer;
   display: flex;
   align-items: center;
@@ -12,12 +12,15 @@
 }
 
 .hand-toggle:hover {
-  background: #c4c4c4;
+  background: rgba(25, 25, 25, 0.08);
 }
 
 .hand-toggle--active {
-  background: white;
-  border-color: var(--color-black);
+  background: #d4d4d4;
+}
+
+.hand-toggle--active:hover {
+  background: #c4c4c4;
 }
 
 .hand-toggle__icon {
