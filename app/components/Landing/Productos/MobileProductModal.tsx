@@ -3,6 +3,7 @@
 import { useState, useEffect, useRef } from 'react'
 import { supabase } from '../../../lib/supabase'
 import type { ProductData } from './ProductCard'
+import { HandToggleButton, HandOverlay } from './HandCompare'
 import './MobileProductModal.css'
 
 const SHARED_MOBILE = ['/fotos/foto2-mobile.jpg', '/fotos/foto3-mobile.jpg', '/fotos/foto4-mobile.jpg', '/fotos/foto5-mobile.jpg']
@@ -68,6 +69,7 @@ type Props = { product: ProductData; onClose: () => void }
 
 export default function MobileProductModal({ product, onClose }: Props) {
   const [showComp,        setShowComp]        = useState(false)
+  const [showHand,        setShowHand]        = useState(false)
   const [compSize,        setCompSize]        = useState(product.sizeId)
   const [activeSlide,     setActiveSlide]     = useState(0)
   const [pageIdx,         setPageIdx]         = useState(0)
@@ -347,10 +349,12 @@ export default function MobileProductModal({ product, onClose }: Props) {
         <div className="mpm__comp-backdrop" onClick={() => setShowComp(false)}>
           <div className="mpm__comp-panel" onClick={e => e.stopPropagation()}>
             <div className="mpm__comp-header">
+              <HandToggleButton active={showHand} onClick={() => setShowHand(v => !v)} />
               <button className="mpm__comp-close" onClick={() => setShowComp(false)}>×</button>
             </div>
             <div className="mpm__comp-canvas-wrap">
               <div className="mpm__comp-canvas">
+                <HandOverlay show={showHand} scaleX={SCALE_X} scaleY={SCALE_Y} />
                 {ORDER.map(id => {
                   const [w, h] = BOOK_DIMS[id]
                   return (

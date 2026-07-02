@@ -1,5 +1,6 @@
 'use client'
 import { useState } from 'react'
+import { HandToggleButton, HandOverlay } from './HandCompare'
 
 // Physical dimensions [widthCm, heightCm] for each book
 const BOOK_DIMS: Record<string, [number, number]> = {
@@ -31,14 +32,22 @@ type Props = {
 
 export default function SizeComparison({ activeSize, onChangeSize }: Props) {
   const [hoveredSize, setHoveredSize] = useState<string | null>(null)
+  const [showHand, setShowHand] = useState(false)
   const [aw, ah] = BOOK_DIMS[activeSize]
   const activePxW = Math.round(aw * SCALE_X)
   const activePxH = Math.round(ah * SCALE_Y)
 
   return (
     <div className="pm__comparison">
+      <HandToggleButton
+        active={showHand}
+        onClick={() => setShowHand(v => !v)}
+        className="pm__hand-toggle"
+      />
+
       <div className="pm__comparison-canvas-wrap">
         <div className="pm__comparison-canvas">
+          <HandOverlay show={showHand} scaleX={SCALE_X} scaleY={SCALE_Y} />
           {ORDER.map(id => {
             const [w, h] = BOOK_DIMS[id]
             const isActive  = id === activeSize

@@ -434,6 +434,7 @@
 /* ── Size comparison panel ────────────────────────────────────────────────── */
 
 .pm__comparison {
+  position: relative;
   width: 433px;
   height: 660px;
   background: #F0EFEB;
@@ -442,6 +443,13 @@
   align-items: center;
   justify-content: space-between;
   padding-bottom: 20px;
+}
+
+.pm__hand-toggle {
+  position: absolute;
+  top: 12px;
+  left: 15px;
+  z-index: 10;
 }
 
 .pm__comparison-canvas-wrap {

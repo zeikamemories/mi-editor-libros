@@ -28,6 +28,14 @@
   padding-bottom: 40px;
 }
 
+/* ── Hand toggle ── */
+.csm__hand-toggle {
+  position: absolute;
+  top: 32px;
+  left: 35px;
+  z-index: 10;
+}
+
 /* ── Close ── */
 .csm__close {
   position: absolute;

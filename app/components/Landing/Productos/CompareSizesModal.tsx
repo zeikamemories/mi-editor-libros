@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
+import { HandToggleButton, HandOverlay } from './HandCompare'
 import './CompareSizesModal.css'
 
 // Physical dimensions [widthCm, heightCm]
@@ -31,6 +32,7 @@ type Props = { onClose: () => void }
 export default function CompareSizesModal({ onClose }: Props) {
   const [active, setActive] = useState('chico')
   const [hovered, setHovered] = useState<string | null>(null)
+  const [showHand, setShowHand] = useState(false)
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => { if (e.key === 'Escape') onClose() }
@@ -53,9 +55,17 @@ export default function CompareSizesModal({ onClose }: Props) {
         {/* Close */}
         <button className="csm__close" onClick={onClose} aria-label="Cerrar">×</button>
 
+        {/* Hand toggle */}
+        <HandToggleButton
+          active={showHand}
+          onClick={() => setShowHand(v => !v)}
+          className="csm__hand-toggle"
+        />
+
         {/* Diagram */}
         <div className="csm__canvas-wrap">
           <div className="csm__canvas">
+            <HandOverlay show={showHand} scaleX={SCALE_X} scaleY={SCALE_Y} />
             {ORDER.map(id => {
               const [w, h] = BOOK_DIMS[id]
               const isActive  = id === active

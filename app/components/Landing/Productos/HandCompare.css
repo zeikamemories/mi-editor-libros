@@ -1,0 +1,34 @@
+.hand-toggle {
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  background: #d4d4d4;
+  border: 1px solid transparent;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+}
+
+.hand-toggle:hover {
+  background: #c4c4c4;
+}
+
+.hand-toggle--active {
+  background: white;
+  border-color: var(--color-black);
+}
+
+.hand-toggle__icon {
+  width: 26px;
+  height: 32px;
+  object-fit: contain;
+  pointer-events: none;
+}
+
+.hand-overlay {
+  position: absolute;
+  z-index: 3;
+  pointer-events: none;
+}

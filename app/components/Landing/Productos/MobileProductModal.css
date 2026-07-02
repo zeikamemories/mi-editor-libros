@@ -400,7 +400,7 @@
 .mpm__comp-header {
   display: flex;
   align-items: center;
-  justify-content: flex-end;
+  justify-content: space-between;
   padding: 10px 20px;
   width: 100%;
 }

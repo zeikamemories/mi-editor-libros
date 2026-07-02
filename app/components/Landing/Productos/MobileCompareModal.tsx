@@ -1,6 +1,7 @@
 'use client'
 
 import { useState } from 'react'
+import { HandToggleButton, HandOverlay } from './HandCompare'
 import './MobileProductModal.css'
 
 const BOOK_DIMS: Record<string, [number, number]> = {
@@ -25,6 +26,7 @@ type Props = { onClose: () => void }
 
 export default function MobileCompareModal({ onClose }: Props) {
   const [active, setActive] = useState('grande')
+  const [showHand, setShowHand] = useState(false)
 
   const [aw, ah] = BOOK_DIMS[active]
   const activePxW = Math.round(aw * SCALE_X)
@@ -37,10 +39,12 @@ export default function MobileCompareModal({ onClose }: Props) {
     >
       <div className="mpm__comp-panel" onClick={e => e.stopPropagation()}>
         <div className="mpm__comp-header">
+          <HandToggleButton active={showHand} onClick={() => setShowHand(v => !v)} />
           <button className="mpm__comp-close" onClick={onClose}>×</button>
         </div>
         <div className="mpm__comp-canvas-wrap">
           <div className="mpm__comp-canvas">
+            <HandOverlay show={showHand} scaleX={SCALE_X} scaleY={SCALE_Y} />
             {ORDER.map(id => {
               const [w, h] = BOOK_DIMS[id]
               return (
