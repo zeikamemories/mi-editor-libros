@@ -10,6 +10,31 @@
   overflow: hidden;
 }
 
+/* ─── Toast ──────────────────────────────────────────────────────────────────── */
+
+.preview-toast {
+  position: fixed;
+  bottom: 30px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: var(--color-blue);
+  color: white;
+  padding: 12px 20px;
+  border-radius: 4px;
+  font-family: "forma-djr-display", sans-serif;
+  font-size: 14px;
+  font-weight: 500;
+  letter-spacing: 0.56px;
+  white-space: nowrap;
+  z-index: 1500;
+  animation: preview-toast-in 0.25s ease;
+}
+
+@keyframes preview-toast-in {
+  from { opacity: 0; transform: translate(-50%, 8px); }
+  to   { opacity: 1; transform: translate(-50%, 0); }
+}
+
 /* ─── Title bar ──────────────────────────────────────────────────────────────── */
 
 .preview-titlebar {

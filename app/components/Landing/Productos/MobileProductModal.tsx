@@ -256,7 +256,7 @@ export default function MobileProductModal({ product, onClose }: Props) {
               <div />
             </div>
             <p className="mpm__section-note">
-              <strong>1 texto:</strong> tapa, dedicatoria o pie de foto. <strong>Textos varios:</strong> cartas y anotaciones elaboradas en múltiples páginas.
+              <strong>1 texto:</strong> una dedicatoria o carta, sin límite de palabras. <strong>Textos varios:</strong> hasta 30-40 cartas — pensado para libros con mensajes de cumpleaños de varias personas.
             </p>
           </div>
 

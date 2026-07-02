@@ -6,9 +6,10 @@ import Navbar from '../../components/Landing/Navbar/Navbar'
 import './confirmado.css'
 
 const STEPS = [
-  { main: 'Subí tus fotos al proyecto',  sub: '',                                          arrow: true  },
-  { main: 'Diseñamos en 48hs',           sub: 'Nos comunicamos por WhatsApp',              arrow: false },
-  { main: 'Te enviamos el preview',      sub: 'Cuando esté finalizado, se manda a imprimir.', arrow: false },
+  { main: 'Subí tus fotos y texto al proyecto', sub: '',                                                          arrow: true  },
+  { main: 'Recibís tu primera propuesta',       sub: 'En 48hs hábiles desde que cargás el material.',             arrow: false },
+  { main: 'Revisás y nos contás qué cambiar',   sub: 'Tenés 3 rondas de cambio; te devolvemos cada ajuste en menos de 24hs.', arrow: false },
+  { main: 'Aprobás el diseño final',            sub: 'Ahí lo mandamos a producción.',                             arrow: false },
 ]
 
 const STEPS_REORDER = [

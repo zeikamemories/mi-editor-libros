@@ -23,6 +23,10 @@ const SIZE_NAMES: Record<string, string> = {
   grande_h: 'Grande Horizontal', vertical: 'Vertical', cuadrado: 'Cuadrado',
 }
 
+const TEXT_EXTRA_BY_SIZE: Record<string, number> = {
+  chico_h: 1, mediano_h: 10000, grande_h: 10000, vertical: 10000, cuadrado: 10000,
+}
+
 interface Project {
   id: string
   book_size: string | null
@@ -124,6 +128,10 @@ export default function PedidoAdminPage() {
   const [assignEmail,    setAssignEmail]    = useState('')
   const [assigning,      setAssigning]      = useState(false)
   const [assignMsg,      setAssignMsg]      = useState('')
+
+  // Cobrar textos extra después de la compra
+  const [chargingText,   setChargingText]   = useState(false)
+  const [textChargeLink, setTextChargeLink] = useState('')
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
@@ -288,6 +296,35 @@ export default function PedidoAdminPage() {
     setAssigning(false)
   }
 
+  // Cliente pidió "textos varios" después de pagar (ej. por WhatsApp) — generamos
+  // un link de pago aparte por ese adicional, en vez de tocar el cálculo del
+  // saldo final (que ya está resuelto por copias + envío).
+  async function chargeExtraText() {
+    if (!order) return
+    const price = TEXT_EXTRA_BY_SIZE[order.size] ?? 10000
+    if (!window.confirm(`¿Generar un link de pago por ${fmt(price)} (textos extra) para este pedido?`)) return
+    setChargingText(true)
+    const base = window.location.origin
+    const res = await fetch('/api/payment', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        orderId:    order.id,
+        bookName:   `${order.book_name} — Textos extra`,
+        amount:     price,
+        successUrl: `${base}/dashboard/pedidos/${order.id}`,
+        failureUrl: `${base}/dashboard/pedidos/${order.id}`,
+      }),
+    })
+    const json = await res.json()
+    if (json.url) {
+      setTextChargeLink(json.url)
+      await supabase.from('orders').update({ extra_text: true }).eq('id', order.id)
+      setOrder(prev => prev ? { ...prev, extra_text: true } : prev)
+    }
+    setChargingText(false)
+  }
+
   function buildWaLink(message: string) {
     const phone = clientPhone || editPhone
     const digits = phone.replace(/\D/g, '')
@@ -319,6 +356,22 @@ export default function PedidoAdminPage() {
             <div className="pedido-item"><label>Tamaño</label><span>{SIZE_NAMES[order.size] ?? order.size}</span></div>
             <div className="pedido-item"><label>Páginas</label><span>{totalPages}</span></div>
             <div className="pedido-item"><label>Textos extra</label><span>{order.extra_text ? 'Sí' : 'No'}</span></div>
+            {!order.extra_text && (
+              <div className="pedido-item pedido-item--full">
+                <label>&nbsp;</label>
+                <button className="pedido-save-btn" onClick={chargeExtraText} disabled={chargingText}>
+                  {chargingText ? 'Generando...' : `Cobrar textos extra (${fmt(TEXT_EXTRA_BY_SIZE[order.size] ?? 10000)})`}
+                </button>
+              </div>
+            )}
+            {textChargeLink && (
+              <div className="pedido-item pedido-item--full">
+                <label>Link de cobro</label>
+                <a className="pedido-link-btn" href={textChargeLink} target="_blank" rel="noreferrer">
+                  Copiá este link y mandalo por WhatsApp ↗
+                </a>
+              </div>
+            )}
             <div className="pedido-item"><label>Total</label><span>{fmt(order.price_total)}</span></div>
             <div className="pedido-item"><label>50% pagado</label><span>{fmt(order.price_paid)}</span></div>
             <div className="pedido-item"><label>Fecha pedido</label><span>{fmtDate(order.created_at)}</span></div>

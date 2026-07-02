@@ -419,6 +419,17 @@
   padding: 0;
 }
 
+.mpm__comp-title {
+  margin: 0;
+  font-family: "forma-djr-display", sans-serif;
+  font-weight: 500;
+  font-size: 16px;
+  letter-spacing: 0.64px;
+  text-transform: lowercase;
+  color: var(--color-black);
+  text-align: center;
+}
+
 .mpm__comp-canvas-wrap {
   width: 100%;
   display: flex;

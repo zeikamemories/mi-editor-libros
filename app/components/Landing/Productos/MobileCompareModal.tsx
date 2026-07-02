@@ -42,6 +42,7 @@ export default function MobileCompareModal({ onClose }: Props) {
           <HandToggleButton active={showHand} onClick={() => setShowHand(v => !v)} />
           <button className="mpm__comp-close" onClick={onClose}>×</button>
         </div>
+        <p className="mpm__comp-title">comparar tamaños de libros</p>
         <div className="mpm__comp-canvas-wrap">
           <div className="mpm__comp-canvas">
             <HandOverlay show={showHand} scaleX={SCALE_X} scaleY={SCALE_Y} />

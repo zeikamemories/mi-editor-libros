@@ -198,8 +198,8 @@ export default function OrdenPage() {
           <span className="orden__summary-val">{bookName || '—'}</span>
         </div>
         <div className="orden__summary-row">
-          <span className="orden__summary-key">DISEÑO ESTIMADO</span>
-          <span className="orden__summary-val">En 48hs hábiles</span>
+          <span className="orden__summary-key">TIEMPO ESTIMADO DE DISEÑO</span>
+          <span className="orden__summary-val">Primera propuesta en 48hs hábiles</span>
         </div>
       </div>
 
@@ -218,6 +218,7 @@ export default function OrdenPage() {
 
       <div className="orden__field">
         <label className="orden__label">WHATSAPP</label>
+        <p className="orden__note">Para mantenernos en contacto: te mandamos el comprobante del pedido y te avisamos cuando esté lista tu primera propuesta.</p>
         <div className={`orden__phone-row${whatsappError ? ' orden__phone-row--error' : ''}`}>
           <span className="orden__phone-prefix">+54</span>
           <input
@@ -229,7 +230,6 @@ export default function OrdenPage() {
             onChange={e => { setWhatsapp(e.target.value); if (e.target.value.trim()) setWhatsappError(false) }}
           />
         </div>
-        <p className="orden__note">Usamos tu WhatsApp para mandar el comprobante del pedido y avisar cuando el diseño esté listo.</p>
       </div>
 
       {error && <p className="orden__error">{error}</p>}
@@ -259,7 +259,7 @@ export default function OrdenPage() {
         <div className="orden__right-col">
           <h1 className="orden__title">Contar mi historia</h1>
           <p className="orden__subtitle-blue">
-            Una vez abonado se crea una carpeta dentro de tu perfil donde podés cargar el material
+            Una vez abonado, este pedido aparece en "Mis proyectos" con tu propia carpeta de Drive donde vas a cargar el material
           </p>
           {summaryContent}
           <button
@@ -267,7 +267,7 @@ export default function OrdenPage() {
             disabled={saving}
             onClick={handleConfirm}
           >
-            {saving ? 'Guardando...' : `PAGAR ${fmt(payNow)}`}
+            {saving ? 'Guardando...' : `PAGAR SEÑA (50%) · ${fmt(payNow)}`}
           </button>
         </div>
       </div>
@@ -278,7 +278,7 @@ export default function OrdenPage() {
           <a className="orden__back-link" href="/">←</a>
           <h1 className="orden__title">Contar mi historia</h1>
           <p className="orden__subtitle-blue">
-            Una vez abonado se crea una carpeta dentro de tu perfil donde podés cargás el material
+            Una vez abonado, este pedido aparece en "Mis proyectos" con tu propia carpeta de Drive donde vas a cargar el material
           </p>
           {summaryContent}
         </div>

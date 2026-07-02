@@ -569,9 +569,9 @@ export default function ProyectoPage() {
         <span className="mpd-row__val">{fmtDate(order.created_at)}</span>
       </div>
       <div className="mpd-row">
-        <span className="mpd-row__key">Diseño estimado</span>
+        <span className="mpd-row__key">Tiempo estimado de diseño</span>
         <span className="mpd-row__val">
-          {order.estimated_design_date ? fmtDate(order.estimated_design_date) : 'En 48hs hábiles'}
+          {order.estimated_design_date ? fmtDate(order.estimated_design_date) : 'Primera propuesta en 48hs hábiles'}
         </span>
       </div>
       <div className="mpd-row">
@@ -663,6 +663,7 @@ export default function ProyectoPage() {
           <p className="mpd-mat-pending-note">La carpeta se genera automáticamente al confirmar el pago.</p>
         )}
         <div className="mpd-mat-tips">
+          <span className="mpd-mat-tip">Subí tus fotos a esta carpeta de Drive — es la que vamos a usar para diseñar tu libro.</span>
           <span className="mpd-mat-tip">Si las fotos tienen un orden específico, enumeralas: 01.jpg, 02.jpg…</span>
           <span className="mpd-mat-tip">Si organizás por destinos o secciones, usá subcarpetas dentro de la carpeta.</span>
         </div>
@@ -676,11 +677,12 @@ export default function ProyectoPage() {
             Abrir documento de textos →
           </a>
         ) : order.status !== 'pendiente_pago' ? (
-          <p className="mpd-mat-pending-note">Creá un Google Docs dentro de tu carpeta de Drive.</p>
+          <p className="mpd-mat-pending-note">Creá un documento (tipo Google Docs) dentro de tu misma carpeta de Drive.</p>
         ) : (
-          <p className="mpd-mat-pending-note">El documento se genera automáticamente al confirmar el pago.</p>
+          <p className="mpd-mat-pending-note">El documento se genera automáticamente, dentro de tu carpeta de Drive, al confirmar el pago.</p>
         )}
         <div className="mpd-mat-tips">
+          <span className="mpd-mat-tip">Ahí escribís las dedicatorias o cartas que quieras incluir en el libro.</span>
           <span className="mpd-mat-tip">Si los textos van con fotos específicas, numeralos igual que las fotos: 01, 02…</span>
         </div>
       </div>
@@ -748,8 +750,8 @@ export default function ProyectoPage() {
 
   const previewContent = !canPreview ? (
     <div className="mpd-preview-unready">
-      <p>Estará disponible cuando el diseño esté listo.</p>
-      <p>Tendrás 3 rondas de cambio.</p>
+      <p>Tu primera propuesta de diseño llega en 48hs hábiles desde que recibimos tu material.</p>
+      <p>Después vas a tener 3 rondas de cambio incluidas — cada corrección que nos mandes te la devolvemos ajustada en menos de 24hs.</p>
     </div>
   ) : (
     <>
@@ -805,6 +807,8 @@ export default function ProyectoPage() {
             </div>
             <p className="mpd-rounds-desc">
               Nuestro precio incluye 3 rondas de cambios. A partir de la tercera hay un precio extra de $5.000 por ronda.
+              Tomate el tiempo que necesites para revisar: una vez que nos mandás tus correcciones, te devolvemos la
+              versión ajustada en menos de 24hs.
             </p>
           </div>
           <div className="mpd-change-note-block">
@@ -877,6 +881,7 @@ export default function ProyectoPage() {
       {/* Entrega */}
       <div className="mpag-entrega-section">
         <span className="mpag-section-label">Entrega</span>
+        <p className="mpag-section-hint">Calculá tu envío antes de comprar: elegí cómo lo recibís y, si es por correo, completá tu dirección.</p>
         <div
           className={`mpag-delivery-card${deliveryType === 'andreani' ? ' mpag-delivery-card--selected' : ''}`}
           onClick={() => setDeliveryType('andreani')}
@@ -1020,6 +1025,7 @@ export default function ProyectoPage() {
       </div>
       <div className="mpag-entrega-section">
         <span className="mpag-section-label">Entrega</span>
+        <p className="mpag-section-hint">Calculá tu envío antes de comprar: elegí cómo lo recibís y, si es por correo, completá tu dirección.</p>
         <div
           className={`mpag-delivery-card${deliveryType === 'andreani' ? ' mpag-delivery-card--selected' : ''}`}
           onClick={() => setDeliveryType('andreani')}
@@ -1354,7 +1360,7 @@ export default function ProyectoPage() {
           <svg width="18" height="14" viewBox="0 0 18 14" fill="none">
             <path d="M1.5 7L6.5 12L16.5 1.5" stroke="white" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"/>
           </svg>
-          <span>¡Recibimos tu material! En menos de 48hs el diseño va a estar listo.</span>
+          <span>¡Recibimos tu material! En menos de 48hs vas a tener tu primera propuesta de diseño.</span>
         </div>
       )}
 

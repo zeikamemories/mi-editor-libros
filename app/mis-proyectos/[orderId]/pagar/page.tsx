@@ -205,6 +205,7 @@ function PagarContent() {
       {/* Entrega */}
       <div className="mpag-entrega-section">
         <span className="mpag-section-label">Entrega</span>
+        <p className="mpag-section-hint">Calculá tu envío antes de comprar: elegí cómo lo recibís y, si es por correo, completá tu dirección.</p>
 
         <div
           className={`mpag-delivery-card${deliveryType === 'andreani' ? ' mpag-delivery-card--selected' : ''}`}

@@ -56,6 +56,19 @@
   padding: 0;
 }
 
+/* ── Title ── */
+.csm__title {
+  margin: 0;
+  padding-top: 44px;
+  font-family: "forma-djr-display", sans-serif;
+  font-weight: 500;
+  font-size: 22px;
+  letter-spacing: 0.88px;
+  text-transform: lowercase;
+  color: var(--color-black);
+  text-align: center;
+}
+
 /* ── Diagram ── */
 .csm__canvas-wrap {
   flex: 1;

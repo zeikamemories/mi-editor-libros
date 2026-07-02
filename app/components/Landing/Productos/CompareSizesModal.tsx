@@ -62,6 +62,9 @@ export default function CompareSizesModal({ onClose }: Props) {
           className="csm__hand-toggle"
         />
 
+        {/* Title */}
+        <p className="csm__title">comparar tamaños de libros</p>
+
         {/* Diagram */}
         <div className="csm__canvas-wrap">
           <div className="csm__canvas">

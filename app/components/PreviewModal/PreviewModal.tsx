@@ -121,6 +121,15 @@ export default function PreviewModal({
   const autoSaveTimer  = useRef<ReturnType<typeof setTimeout> | null>(null)
   const saveParamsRef  = useRef<{ w: number; h: number; page: number }>({ w: 0, h: 0, page: 0 })
 
+  // ── Toast — confirms a comment/drawing actually reached the design team ──
+  const [toastMsg, setToastMsg] = useState<string | null>(null)
+  const toastTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const showToast = useCallback((msg: string) => {
+    setToastMsg(msg)
+    if (toastTimer.current) clearTimeout(toastTimer.current)
+    toastTimer.current = setTimeout(() => setToastMsg(null), 2800)
+  }, [])
+
   useEffect(() => {
     if (initialAnnotations) setAnnotations(initialAnnotations)
   }, [initialAnnotations])
@@ -162,6 +171,7 @@ export default function PreviewModal({
   // Clean up timer on unmount
   useEffect(() => () => {
     if (autoSaveTimer.current) clearTimeout(autoSaveTimer.current)
+    if (toastTimer.current)    clearTimeout(toastTimer.current)
   }, [])
 
   // ── Scale ──────────────────────────────────────────────────────────────────
@@ -276,12 +286,17 @@ export default function PreviewModal({
         page:         initialPage,
       })
 
+      // Disable input while a page-turn animation is running — otherwise a
+      // fast swipe on mobile queues up several turns and the reader loses
+      // track of where they are in the book.
       $book.bind('turning', (_e: any, page: number) => {
         setCurrentPage(page)
         onPageChange?.(page)
+        $book.turn('disable', true)
       })
       $book.bind('turned', (_e: any, page: number) => {
         setCurrentPage(page)
+        $book.turn('disable', false)
       })
 
       $bookRef.current = $book
@@ -418,6 +433,7 @@ export default function PreviewModal({
       setAnnotations(prev => [...prev, ann])
       setStrokeCount(0)
       setDrawAutoSaved(true)
+      showToast('✓ Dibujo guardado')
       // Only clear canvas if the user isn't mid-stroke during the async wait
       if (!isDrawingRef.current) {
         const c = drawCanvasRef.current
@@ -521,6 +537,7 @@ export default function PreviewModal({
       setAnnotations(prev => [...prev, ann])
       setCommentText('')
       setPendingComment(null)
+      showToast('✓ Comentario enviado')
     }
     setSavingComment(false)
   }
@@ -537,6 +554,7 @@ export default function PreviewModal({
       setAnnotations(prev => prev.map(a => a.id === activeCommentId ? { ...a, content: newContent } : a))
       setActiveCommentId(null)
       setEditText('')
+      showToast('✓ Comentario actualizado')
     }
     setSavingEdit(false)
   }
@@ -589,6 +607,8 @@ export default function PreviewModal({
 
   return (
     <div className="preview-overlay">
+
+      {toastMsg && <div className="preview-toast">{toastMsg}</div>}
 
       {/* ── Title bar ── */}
       <div className="preview-titlebar">
