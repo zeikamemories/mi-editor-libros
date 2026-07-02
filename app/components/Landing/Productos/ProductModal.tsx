@@ -319,7 +319,7 @@ export default function ProductModal({ product, onClose }: Props) {
               if (session?.user) {
                 window.location.href = '/orden'
               } else {
-                sessionStorage.setItem('zeika_after_login', '/#productos')
+                sessionStorage.setItem('zeika_after_login', '/orden')
                 window.location.href = '/login'
               }
             }}

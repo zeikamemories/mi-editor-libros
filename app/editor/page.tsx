@@ -208,6 +208,7 @@ export default function EditorPage() {
   const [dbLoaded,  setDbLoaded] = useState(false)
   const dbLoadedRef              = useRef(false)
   const supabaseSaveTimer        = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const spreadCountSaveTimer     = useRef<ReturnType<typeof setTimeout> | null>(null)
   const [saveStatus,   setSaveStatus]   = useState<'idle' | 'saving' | 'saved'>('idle')
   const [projectName,  setProjectName]  = useState('')
   const [orderIdForNr, setOrderIdForNr] = useState<string | null>(null)
@@ -441,12 +442,20 @@ export default function EditorPage() {
 
   // ── Save total_spreads to Supabase when spread count changes ─────────────
   // canvas onChange doesn't fire when spreads are added/removed, so we need this.
+  // Debounced: clicking "add spread" repeatedly fires this effect once per click,
+  // and those requests can resolve out of order over the network — an earlier
+  // (smaller) total_spreads response landing after a later (bigger) one would
+  // silently overwrite the DB with a stale count, truncating the shared preview.
+  // Coalescing into one request (reading the live refs at fire time) avoids that.
   useEffect(() => {
     if (!projectIdRef.current || !dbLoadedRef.current) return
-    supabase.from('projects').update({
-      total_spreads: totalContentSpreads,
-      spreads:       spreadsData.current,
-    }).eq('id', projectIdRef.current)
+    if (spreadCountSaveTimer.current) clearTimeout(spreadCountSaveTimer.current)
+    spreadCountSaveTimer.current = setTimeout(() => {
+      supabase.from('projects').update({
+        total_spreads: totalContentSpreadsRef.current,
+        spreads:       spreadsData.current,
+      }).eq('id', projectIdRef.current!)
+    }, 600)
   }, [totalContentSpreads]) // eslint-disable-line react-hooks/exhaustive-deps
 
   // ── Recompute used photos by scanning all saved spreads ───────────────────
@@ -655,6 +664,10 @@ export default function EditorPage() {
 
   // ── Back navigation: flush save + cover thumbnail before leaving ─────────
   const handleBack = useCallback(async () => {
+    if (spreadCountSaveTimer.current) {
+      clearTimeout(spreadCountSaveTimer.current)
+      spreadCountSaveTimer.current = null
+    }
     if (supabaseSaveTimer.current) {
       clearTimeout(supabaseSaveTimer.current)
       supabaseSaveTimer.current = null
@@ -1410,9 +1423,23 @@ export default function EditorPage() {
 
   const handleClosePreview = useCallback(() => setPreviewOpen(false), [])
 
-  // ── Share: save project to localStorage so the preview route can load it ──
+  // ── Share: push the latest state to Supabase (what /preview/[id] actually
+  // reads) and also mirror it to localStorage as a fallback for projects with
+  // no DB row. Without the immediate Supabase write, the shared link could
+  // read a stale total_spreads/spreads still sitting behind the 2s/600ms
+  // debounces (or an older value from an out-of-order write), cutting the
+  // shared preview off before the real last spread.
   const handleShare = useCallback(() => {
     saveCurrentSpread()
+    if (projectIdRef.current) {
+      if (supabaseSaveTimer.current)    { clearTimeout(supabaseSaveTimer.current);    supabaseSaveTimer.current = null }
+      if (spreadCountSaveTimer.current) { clearTimeout(spreadCountSaveTimer.current); spreadCountSaveTimer.current = null }
+      supabase.from('projects').update({
+        spreads:       spreadsData.current,
+        photos:        photosRef.current,
+        total_spreads: totalContentSpreadsRef.current,
+      }).eq('id', projectIdRef.current)
+    }
     const pid = projectIdRef.current ?? 'local'
     localStorage.setItem(
       `zeika_project_${pid}`,
