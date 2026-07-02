@@ -48,9 +48,14 @@ export default function PreviewPage() {
         .single()
 
       if (!error && data?.spreads) {
+        // `total_spreads` in Supabase stores content spreads only (as written
+        // by the editor, /nuevo, and /orden/confirmado) — it excludes the 3
+        // extra spreads (front cover, inside-front, back/inside-back) that
+        // the editor always adds on top. PreviewModal expects the full count
+        // (matching spreadsData's actual key range), so add them back here.
         setProject({
           spreadsData:  data.spreads as Record<number, SpreadData>,
-          totalSpreads: data.total_spreads ?? 16,
+          totalSpreads: (data.total_spreads ?? 13) + 3,
           bookSizeId:   data.book_size ?? 'vertical',
         })
 
