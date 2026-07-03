@@ -1,0 +1,108 @@
+/* ─── Section ────────────────────────────────────────────────────────────── */
+
+.disenos {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  width: 100%;
+  padding: 40px 0;
+  background: #FAF8F4;
+  overflow: hidden;
+}
+
+.disenos__label {
+  font-family: "forma-djr-display", sans-serif;
+  font-weight: 600;
+  font-size: 16px;
+  line-height: normal;
+  letter-spacing: 0.64px;
+  text-transform: uppercase;
+  color: var(--color-black);
+  margin: 0;
+  text-align: center;
+}
+
+/* ─── Carousel ───────────────────────────────────────────────────────────── */
+
+.disenos__carousel {
+  width: 100%;
+  overflow: hidden;
+}
+
+.disenos__track {
+  display: flex;
+  align-items: flex-end;
+  gap: 10px;
+  width: max-content;
+  animation: disenos-scroll 34s linear infinite;
+}
+
+.disenos__item {
+  flex-shrink: 0;
+  height: 220px;
+  overflow: hidden;
+  background: #E0DDD8;
+}
+
+.disenos__item--h { width: 280px; }
+.disenos__item--v { width: 150px; }
+.disenos__item--s { width: 210px; }
+
+.disenos__img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+@keyframes disenos-scroll {
+  from { transform: translateX(0); }
+  to   { transform: translateX(-50%); }
+}
+
+/* ─── Ver más button ─────────────────────────────────────────────────────── */
+
+.disenos__ver-mas {
+  align-self: flex-end;
+  margin-right: 20px;
+  background: white;
+  border: 0.5px solid var(--color-black);
+  padding: 10px 30px;
+  font-family: "forma-djr-display", sans-serif;
+  font-weight: 400;
+  font-size: 14px;
+  letter-spacing: 0.56px;
+  cursor: pointer;
+  color: var(--color-black);
+  white-space: nowrap;
+}
+
+/* ─── Desktop ────────────────────────────────────────────────────────────── */
+
+@media (min-width: 1024px) {
+  .disenos {
+    padding: 60px 0;
+  }
+
+  .disenos__label {
+    font-size: 22px;
+    letter-spacing: 0.88px;
+    text-align: left;
+    padding: 0 50px;
+  }
+
+  .disenos__item {
+    height: 320px;
+  }
+
+  .disenos__item--h { width: 440px; }
+  .disenos__item--v { width: 230px; }
+  .disenos__item--s { width: 320px; }
+
+  .disenos__ver-mas {
+    margin-right: 50px;
+    padding: 10px 40px;
+    font-size: 16px;
+    letter-spacing: 0.64px;
+  }
+}

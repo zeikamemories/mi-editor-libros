@@ -361,6 +361,12 @@ export default function EditorPage() {
   // Fabric object:added/removed events fired mid-restore don't overwrite the
   // target spread's saved data with partial canvas state.
   const isDeserializing  = useRef(false)
+  // Guard: blocks handleSpreadSelect/handleUndo/handleRedo from re-entering
+  // while a previous call's deserializePage (sequential per-photo image loads)
+  // is still in flight. Without this, a second call's synchronous serializePage
+  // read captures the first call's partially-loaded canvas and permanently
+  // overwrites that spread's saved data with it.
+  const isSpreadBusy      = useRef(false)
 
   // ── Helpers ────────────────────────────────────────────────────────────────
   const getActiveFabric   = () => activePageRef.current === 'right' ? fabricRight.current : fabricLeft.current
@@ -798,18 +804,21 @@ export default function EditorPage() {
   // ── Undo ───────────────────────────────────────────────────────────────────
   const handleUndo = useCallback(async () => {
     if (historyIndex.current <= 0) return
+    if (isSpreadBusy.current) return
     const prevIdx  = historyIndex.current - 1
     const snapshot = JSON.parse(history.current[prevIdx]) as SpreadSnapshot
     const lc = fabricLeft.current
     const rc = fabricRight.current
     if (!lc || !rc) return
 
+    isSpreadBusy.current = true
     isDeserializing.current = true
     try {
       await deserializePage(lc, snapshot.left,  PAGE_W, PAGE_H)
       await deserializePage(rc, snapshot.right, PAGE_W, PAGE_H)
     } finally {
       isDeserializing.current = false
+      isSpreadBusy.current = false
     }
 
     historyIndex.current = prevIdx
@@ -820,18 +829,21 @@ export default function EditorPage() {
   // ── Redo ───────────────────────────────────────────────────────────────────
   const handleRedo = useCallback(async () => {
     if (historyIndex.current >= history.current.length - 1) return
+    if (isSpreadBusy.current) return
     const nextIdx  = historyIndex.current + 1
     const snapshot = JSON.parse(history.current[nextIdx]) as SpreadSnapshot
     const lc = fabricLeft.current
     const rc = fabricRight.current
     if (!lc || !rc) return
 
+    isSpreadBusy.current = true
     isDeserializing.current = true
     try {
       await deserializePage(lc, snapshot.left,  PAGE_W, PAGE_H)
       await deserializePage(rc, snapshot.right, PAGE_W, PAGE_H)
     } finally {
       isDeserializing.current = false
+      isSpreadBusy.current = false
     }
 
     historyIndex.current = nextIdx
@@ -841,9 +853,11 @@ export default function EditorPage() {
 
   // ── Spread select: save current → load new ────────────────────────────────
   const handleSpreadSelect = useCallback(async (newSpread: number) => {
+    if (isSpreadBusy.current) return
     const lc = fabricLeft.current
     const rc = fabricRight.current
     if (!lc || !rc) return
+    isSpreadBusy.current = true
 
     // 1. Save current spread BEFORE changing the index.
     //    saveCurrentSpread reads currentSpreadRef, so it must still point to
@@ -885,6 +899,7 @@ export default function EditorPage() {
       }
     } finally {
       isDeserializing.current = false
+      isSpreadBusy.current = false
     }
 
     // Reset undo history for this spread

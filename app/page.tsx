@@ -4,6 +4,7 @@ import Hero        from './components/Landing/Hero/Hero'
 import FloatingCta from './components/Landing/Hero/FloatingCta'
 import Intro       from './components/Landing/Intro/Intro'
 import Productos   from './components/Landing/Productos/Productos'
+import NuestrosDisenos from './components/Landing/NuestrosDisenos/NuestrosDisenos'
 import ComoHacerlo   from './components/Landing/ComoHacerlo/ComoHacerlo'
 import QuienesSomos  from './components/Landing/QuienesSomos/QuienesSomos'
 import FAQs          from './components/Landing/FAQs/FAQs'
@@ -18,6 +19,8 @@ export default function LandingPage() {
       <Intro />
       <hr className="landing-separator" />
       <Productos />
+      <hr className="landing-separator" />
+      <NuestrosDisenos />
       <hr className="landing-separator" />
       <ComoHacerlo />
       <QuienesSomos />

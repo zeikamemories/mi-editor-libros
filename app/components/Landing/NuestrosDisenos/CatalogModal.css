@@ -1,0 +1,96 @@
+.catalog-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(25, 25, 25, 0.6);
+  z-index: 200;
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+  padding: 20px 0 60px;
+  overflow-y: auto;
+}
+
+.catalog {
+  position: relative;
+  width: 100%;
+  max-width: 900px;
+  margin: 0 20px;
+  background: var(--color-cream);
+  padding: 30px 15px 40px;
+}
+
+.catalog__header {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  margin-bottom: 20px;
+}
+
+.catalog__title {
+  font-family: "forma-djr-display", sans-serif;
+  font-weight: 600;
+  font-size: 16px;
+  letter-spacing: 0.64px;
+  text-transform: uppercase;
+  color: var(--color-black);
+  margin: 0;
+}
+
+.catalog__close {
+  position: absolute;
+  right: 0;
+  top: -6px;
+  background: none;
+  border: none;
+  font-size: 28px;
+  line-height: 1;
+  cursor: pointer;
+  color: var(--color-black);
+}
+
+/* Irregular / masonry grid via CSS columns — packs the mixed vertical & horizontal images */
+.catalog__grid {
+  column-count: 2;
+  column-gap: 10px;
+}
+
+.catalog__item {
+  break-inside: avoid;
+  margin-bottom: 10px;
+  overflow: hidden;
+  background: #E0DDD8;
+}
+
+.catalog__img {
+  width: 100%;
+  height: auto;
+  display: block;
+}
+
+@media (min-width: 1024px) {
+  .catalog {
+    max-width: 1100px;
+    margin: 0 auto;
+    padding: 40px;
+  }
+
+  .catalog__title {
+    font-size: 22px;
+    letter-spacing: 0.88px;
+  }
+
+  .catalog__close {
+    font-size: 35px;
+    top: -8px;
+  }
+
+  .catalog__grid {
+    column-count: 4;
+    column-gap: 15px;
+  }
+
+  .catalog__item {
+    margin-bottom: 15px;
+  }
+}
