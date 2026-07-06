@@ -2,7 +2,14 @@
 // Todos los valores son decimales (0–1) relativos al ancho/alto de la página.
 
 export const MARGIN = 0.06   // margen de página en los 4 lados
-export const GAP    = 0.025  // separación entre frames — siempre este valor
+export const GAP    = 0.020  // separación entre frames — siempre este valor
+
+// GAP is a fraction of its own axis (x-gaps are a fraction of page width, y-gaps a fraction
+// of page height). On landscape books (width > height) that makes a vertical gap render
+// thinner in pixels than a horizontal gap of the same GAP value. GAP_V compensates using the
+// average width/height ratio of the 3 landscape sizes (chico/mediano/grande ≈ 1.38) so
+// stacked frames read as evenly spaced as side-by-side ones.
+export const GAP_V = GAP * 1.38
 
 export type Frame = {
   x: number; // fracción del ancho desde el borde izquierdo  (0–1)
@@ -277,6 +284,24 @@ const layout_4_10: Layout = {
       { x: cellW+G,  y: mV,             w: cellW, h: cellH },
       { x: 0,        y: mV + cellH + G, w: cellW, h: cellH },
       { x: cellW+G,  y: mV + cellH + G, w: cellW, h: cellH },
+    ]
+  })(),
+}
+
+const layout_4_11: Layout = {
+  id: 'layout_4_11',
+  nombre: 'Grilla 2×2 con margen (horizontal)',
+  photoCount: 4,
+  orientation: 'landscape',
+  // Same as layout_4_1 but with GAP_V between rows so the vertical gap visually matches
+  // the horizontal gap on landscape (wider-than-tall) books.
+  frames: (() => {
+    const cellH = (1 - M * 2 - GAP_V) / 2
+    return [
+      { x: cx(0, 2), y: M,                 w: fw(2), h: cellH },
+      { x: cx(1, 2), y: M,                 w: fw(2), h: cellH },
+      { x: cx(0, 2), y: M + cellH + GAP_V, w: fw(2), h: cellH },
+      { x: cx(1, 2), y: M + cellH + GAP_V, w: fw(2), h: cellH },
     ]
   })(),
 }
@@ -599,16 +624,18 @@ const layout_3_10: Layout = {
   nombre: 'Dos izquierda, grande derecha',
   photoCount: 3,
   orientation: 'landscape',
-  // 2 stacked photos left, 1 large photo right
+  // 2 stacked photos left, 1 large photo right. Uses GAP_V (not the shared ry() helper)
+  // between the stacked frames so it visually matches the left/right GAP.
   frames: (() => {
     const avail  = 1 - M * 2 - G
     const leftW  = avail * 0.45
     const rightW = avail * 0.55
     const rx     = M + leftW + G
+    const cellH  = (1 - M * 2 - GAP_V) / 2
     return [
-      { x: M,  y: ry(0, 2), w: leftW,  h: fh(2)     },
-      { x: M,  y: ry(1, 2), w: leftW,  h: fh(2)     },
-      { x: rx, y: M,        w: rightW, h: 1 - M * 2 },
+      { x: M,  y: M,                 w: leftW,  h: cellH },
+      { x: M,  y: M + cellH + GAP_V, w: leftW,  h: cellH },
+      { x: rx, y: M,                 w: rightW, h: 1 - M * 2 },
     ]
   })(),
 }
@@ -618,16 +645,18 @@ const layout_3_15: Layout = {
   nombre: 'Grande izquierda, dos derecha',
   photoCount: 3,
   orientation: 'landscape',
-  // Mirror of layout_3_10: 1 large photo left + 2 stacked photos right
+  // Mirror of layout_3_10: 1 large photo left + 2 stacked photos right. Uses GAP_V (not the
+  // shared ry() helper) between the stacked frames so it visually matches the left/right GAP.
   frames: (() => {
     const avail  = 1 - M * 2 - G
     const leftW  = avail * 0.55
     const rightW = avail * 0.45
     const rx     = M + leftW + G
+    const cellH  = (1 - M * 2 - GAP_V) / 2
     return [
-      { x: M,  y: M,        w: leftW,  h: 1 - M * 2 },
-      { x: rx, y: ry(0, 2), w: rightW, h: fh(2)     },
-      { x: rx, y: ry(1, 2), w: rightW, h: fh(2)     },
+      { x: M,  y: M,                 w: leftW,  h: 1 - M * 2 },
+      { x: rx, y: M,                 w: rightW, h: cellH },
+      { x: rx, y: M + cellH + GAP_V, w: rightW, h: cellH },
     ]
   })(),
 }
@@ -1636,7 +1665,7 @@ export const LAYOUTS: Layout[] = [
   layout_3_1, layout_3_9, layout_3_2, layout_3_11, layout_3_3, layout_3_4,
   layout_3_5, layout_3_12, layout_3_13, layout_3_14, layout_3_10, layout_3_15, layout_3_16, layout_3_17,
   // 4 fotos
-  layout_4_1, layout_4_2, layout_4_3, layout_4_10,
+  layout_4_1, layout_4_2, layout_4_3, layout_4_10, layout_4_11,
   layout_4_5, layout_4_9, layout_4_7, layout_4_8,
   // 5 fotos
   layout_5_2, layout_5_5, layout_5_3p, layout_5_3pf, layout_5_6p, layout_5_6pf, layout_5_3, layout_5_6, layout_5_12, layout_5_13,

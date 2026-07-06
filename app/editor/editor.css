@@ -200,3 +200,18 @@
   background: #d0d0d0;
   cursor: default;
 }
+
+.add-pages-add-one {
+  background: none;
+  color: var(--color-blue);
+  border: none;
+  border-radius: 0;
+  padding: 4px;
+  font-family: var(--font-body);
+  font-size: 12px;
+  font-weight: 500;
+  letter-spacing: 0.04em;
+  cursor: pointer;
+  text-decoration: underline;
+}
+.add-pages-add-one:hover { opacity: 0.75; }

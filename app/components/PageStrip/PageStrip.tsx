@@ -95,7 +95,7 @@ export default function PageStrip({
   const isVariable = (spreadIndex: number) =>
     spreadIndex >= 2 && spreadIndex <= totalContentSpreads + 1
 
-  const canDelete = totalContentSpreads > 13
+  const canDelete = totalContentSpreads > 1
 
   // ── Drag handlers for layout drop ─────────────────────────────────────────
 

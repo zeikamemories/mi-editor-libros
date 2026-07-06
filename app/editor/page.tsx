@@ -56,12 +56,14 @@ function AddPagesModal({
   defaultSelected,
   sizeId,
   onConfirm,
+  onAddOne,
   onClose,
 }: {
   currentPages: number
   defaultSelected: number
   sizeId: string
   onConfirm: (pages: number) => void
+  onAddOne: () => void
   onClose: () => void
 }) {
   const pageOpts = getPageOptions(sizeId)
@@ -103,6 +105,9 @@ function AddPagesModal({
           disabled={selected === currentPages}
         >
           {selected === currentPages ? 'Sin cambios' : `Aplicar ${selected} páginas`}
+        </button>
+        <button className="add-pages-add-one" onClick={onAddOne}>
+          + Agregar 1 página (2 carillas)
         </button>
       </div>
     </div>
@@ -940,7 +945,7 @@ export default function EditorPage() {
 
   // ── Delete spread ──────────────────────────────────────────────────────────
   const handleDeleteSpread = useCallback(async (spreadIndex: number) => {
-    if (totalContentSpreads <= 13) return
+    if (totalContentSpreads <= 1) return
 
     // Shift in-memory entries: everything after spreadIndex moves down by 1
     const lastIndex = totalContentSpreads + 2
@@ -1056,15 +1061,53 @@ export default function EditorPage() {
 
     const blankPage = (): PageData => ({ background: '#FFFFFF', pageW: PAGE_W, pageH: PAGE_H, objects: [] })
 
+    // Auto-create's preferred layout id per photo count, for landscape (horizontal) book
+    // formats — chosen from the LayoutPanel's landscape-only options rather than the
+    // orientation-agnostic defaults used for portrait/square books below.
+    const isLandscapeBook = bookSize.orientation === 'landscape'
+    const landscape3Ids = ['layout_3_10', 'layout_3_15']
+
+    // Varied per-page photo-count distribution — mostly 3, with some 4s and occasional
+    // single-photo pages — instead of the old rigid/uniform spread (which barely varied:
+    // almost every page ended up as 3, a few as 2). Weighted random pick per page, then a
+    // correction pass nudges counts up/down so the total still matches exactly `total` photos.
+    const pageCounts: number[] = (() => {
+      const WEIGHTS: Array<[number, number]> = [[1, 0.12], [2, 0.10], [3, 0.58], [4, 0.20]]
+      const pick = () => {
+        let r = Math.random()
+        for (const [n, w] of WEIGHTS) { if (r < w) return n; r -= w }
+        return 3
+      }
+      const counts = Array.from({ length: pages }, pick)
+      let diff = total - counts.reduce((a, b) => a + b, 0)
+      const order = Array.from({ length: pages }, (_, idx) => idx).sort(() => Math.random() - 0.5)
+
+      // Bring every page to at least 1 photo (or add more) — never leave a page empty just
+      // to balance the total when there are enough photos to cover every available page.
+      let guard = 0
+      while (diff !== 0 && guard < pages * 20) {
+        const idx = order[guard % pages]
+        if (diff > 0 && counts[idx] < 5)      { counts[idx]++; diff-- }
+        else if (diff < 0 && counts[idx] > 1) { counts[idx]--; diff++ }
+        guard++
+      }
+      // Genuine shortage (fewer photos than available pages): only now allow some pages
+      // to end up empty, spread across random pages rather than always the last ones.
+      guard = 0
+      while (diff < 0 && guard < pages * 2) {
+        const idx = order[guard % pages]
+        if (counts[idx] > 0) { counts[idx]--; diff++ }
+        guard++
+      }
+      return counts
+    })()
+
     let photoIdx = 0
 
     for (let i = 0; i < available.length; i++) {
       if (photoIdx >= total) break
 
-      // Bresenham distribution: spreads extras (and empty slots) evenly across all pages
-      const count = Math.min(5,
-        Math.floor(total * (i + 1) / pages) - Math.floor(total * i / pages)
-      )
+      const count = pageCounts[i]
       if (count === 0) continue  // not enough photos for this slot — leave page empty and move on
 
       const { spreadIndex, side } = available[i]
@@ -1074,11 +1117,13 @@ export default function EditorPage() {
       const layout = count === 1
         ? (LAYOUTS.find((l) => l.id === 'layout_1_3') ?? matching[0])
         : count === 2
-        ? (LAYOUTS.find((l) => l.id === 'layout_2_2') ?? matching[0])
+        ? (LAYOUTS.find((l) => l.id === (isLandscapeBook ? 'layout_2_9' : 'layout_2_2')) ?? matching[0])
         : count === 3
-          ? (LAYOUTS.find((l) => l.id === 'layout_3_1') ?? matching[0])
+          ? (LAYOUTS.find((l) => l.id === (isLandscapeBook
+              ? landscape3Ids[Math.floor(Math.random() * landscape3Ids.length)]
+              : 'layout_3_1')) ?? matching[0])
           : count === 4
-          ? (LAYOUTS.find((l) => l.id === 'layout_4_1') ?? matching[0])
+          ? (LAYOUTS.find((l) => l.id === (isLandscapeBook ? 'layout_4_11' : 'layout_4_1')) ?? matching[0])
           : matching[Math.floor(Math.random() * matching.length)]
 
       // Collect the batch for this page
@@ -1613,6 +1658,7 @@ export default function EditorPage() {
           defaultSelected={defaultSel}
           sizeId={bookSize.id}
           onConfirm={handleSetPageCount}
+          onAddOne={() => { handleAddSpread(); setAddPagesModalOpen(false) }}
           onClose={() => setAddPagesModalOpen(false)}
         />
       )
