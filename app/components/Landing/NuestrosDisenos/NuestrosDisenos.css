@@ -7,7 +7,7 @@
   width: 100%;
   padding: 40px 0;
   background: #FAF8F4;
-  overflow: hidden;
+  overflow-x: hidden;
 }
 
 .disenos__label {
@@ -26,13 +26,15 @@
 
 .disenos__carousel {
   width: 100%;
-  overflow: hidden;
+  overflow-x: hidden;
+  padding-bottom: 12px;
+  margin-top: 32px;
 }
 
 .disenos__track {
   display: flex;
   align-items: flex-end;
-  gap: 10px;
+  gap: 24px;
   width: max-content;
   animation: disenos-scroll 34s linear infinite;
 }
@@ -47,6 +49,11 @@
 .disenos__item--h { width: 280px; }
 .disenos__item--v { width: 150px; }
 .disenos__item--s { width: 210px; }
+
+.disenos__item--shadow {
+  overflow: visible;
+  box-shadow: 4px 8px 5px 0 rgba(0, 0, 0, 0.3);
+}
 
 .disenos__img {
   width: 100%;
@@ -75,6 +82,8 @@
   cursor: pointer;
   color: var(--color-black);
   white-space: nowrap;
+  display: inline-block;
+  text-decoration: none;
 }
 
 /* ─── Desktop ────────────────────────────────────────────────────────────── */
@@ -98,6 +107,10 @@
   .disenos__item--h { width: 440px; }
   .disenos__item--v { width: 230px; }
   .disenos__item--s { width: 320px; }
+
+  .disenos__track {
+    gap: 36px;
+  }
 
   .disenos__ver-mas {
     margin-right: 50px;

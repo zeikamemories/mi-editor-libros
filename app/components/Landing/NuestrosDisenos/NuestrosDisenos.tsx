@@ -1,16 +1,11 @@
-'use client'
-
-import { useState } from 'react'
-import CatalogModal from './CatalogModal'
+import Link from 'next/link'
 import { DESIGNS } from './designsData'
 import './NuestrosDisenos.css'
 
-// Subset shown in the scrolling carousel — "Ver más" opens the full catalog with all of them
-const CAROUSEL_ITEMS = DESIGNS.slice(0, 12)
+// Subset shown in the scrolling carousel — "Ver más" opens the full catalog page with all of them
+const CAROUSEL_ITEMS = DESIGNS.slice(0, 14)
 
 export default function NuestrosDisenos() {
-  const [showCatalog, setShowCatalog] = useState(false)
-
   return (
     <section className="disenos" id="disenos">
       <p className="disenos__label">Nuestros Diseños</p>
@@ -18,18 +13,25 @@ export default function NuestrosDisenos() {
       <div className="disenos__carousel">
         <div className="disenos__track">
           {[...CAROUSEL_ITEMS, ...CAROUSEL_ITEMS].map((item, i) => (
-            <div key={i} className={`disenos__item disenos__item--${item.orientation}`}>
-              <img src={item.src} alt="" className="disenos__img" />
+            <div
+              key={i}
+              className={`disenos__item disenos__item--${item.orientation}${item.shadow ? ' disenos__item--shadow' : ''}`}
+            >
+              <img
+                src={item.src}
+                alt=""
+                width={item.width}
+                height={item.height}
+                className="disenos__img"
+              />
             </div>
           ))}
         </div>
       </div>
 
-      <button className="disenos__ver-mas" onClick={() => setShowCatalog(true)}>
+      <Link href="/disenos" className="disenos__ver-mas">
         Ver más
-      </button>
-
-      {showCatalog && <CatalogModal onClose={() => setShowCatalog(false)} />}
+      </Link>
     </section>
   )
 }

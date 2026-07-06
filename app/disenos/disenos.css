@@ -1,0 +1,103 @@
+.disenos-page {
+  min-height: 100vh;
+  width: 100%;
+  background: #FAF8F4;
+}
+
+.disenos-page__inner {
+  padding: 20px;
+}
+
+.disenos-page__header {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-bottom: 20px;
+}
+
+.disenos-page__back {
+  font-family: "forma-djr-display", sans-serif;
+  font-weight: 500;
+  font-size: 14px;
+  letter-spacing: 0.56px;
+  color: var(--color-black);
+  text-decoration: none;
+  align-self: flex-start;
+}
+
+.disenos-page__title {
+  font-family: "forma-djr-display", sans-serif;
+  font-weight: 600;
+  font-size: 16px;
+  letter-spacing: 0.64px;
+  text-transform: uppercase;
+  color: var(--color-black);
+  margin: 0;
+  text-align: center;
+}
+
+/* Irregular / masonry grid via CSS columns — packs the mixed vertical & horizontal images */
+.disenos-page__grid {
+  column-count: 2;
+  column-gap: 24px;
+}
+
+.disenos-page__item {
+  display: block;
+  width: 100%;
+  break-inside: avoid;
+  margin-bottom: 24px;
+  overflow: hidden;
+  background: #E0DDD8;
+  border: none;
+  padding: 0;
+  cursor: pointer;
+}
+
+.disenos-page__item--shadow {
+  overflow: visible;
+  box-shadow: 4px 8px 5px 0 rgba(0, 0, 0, 0.3);
+}
+
+.disenos-page__img {
+  width: 100%;
+  height: auto;
+  display: block;
+}
+
+@media (min-width: 1024px) {
+  .disenos-page__inner {
+    padding: 40px 50px;
+    max-width: 1440px;
+    margin: 0 auto;
+  }
+
+  .disenos-page__header {
+    flex-direction: row;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+    margin-bottom: 30px;
+  }
+
+  .disenos-page__back {
+    position: absolute;
+    left: 0;
+    font-size: 16px;
+    letter-spacing: 0.64px;
+  }
+
+  .disenos-page__title {
+    font-size: 22px;
+    letter-spacing: 0.88px;
+  }
+
+  .disenos-page__grid {
+    column-count: 5;
+    column-gap: 32px;
+  }
+
+  .disenos-page__item {
+    margin-bottom: 32px;
+  }
+}
