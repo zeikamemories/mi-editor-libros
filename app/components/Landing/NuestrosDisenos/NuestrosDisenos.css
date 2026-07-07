@@ -36,7 +36,7 @@
   align-items: flex-end;
   gap: 24px;
   width: max-content;
-  animation: disenos-scroll 34s linear infinite;
+  animation: disenos-scroll 28s linear infinite;
 }
 
 .disenos__item {
@@ -110,6 +110,7 @@
 
   .disenos__track {
     gap: 36px;
+    animation-duration: 34s;
   }
 
   .disenos__ver-mas {
