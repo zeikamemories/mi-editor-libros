@@ -38,6 +38,31 @@ import './editor.css'
 
 type SpreadSnapshot = { left: PageData; right: PageData }
 
+// ─── Last-spread logo page ───────────────────────────────────────────────────
+// The last spread's left page is decorative/non-editable (a DOM <img> overlay in
+// Canvas.tsx, a canvas-drawn thumbnail below) — neither is real PageData, so it
+// never showed up in Preview/ZIP/PDF export. buildLogoPage() produces real
+// PageData for that slot so exports render the same logo the editor shows.
+const LOGO_SRC       = '/fotos/LogoNuevoZeika.jpg'
+const LOGO_NATURAL_W = 4410
+const LOGO_NATURAL_H = 4412
+// Fraction of page width the logo should occupy — matches the canvas overlay's
+// 260px-on-816px page (~0.32), slightly reduced per design feedback.
+const LOGO_WIDTH_FRACTION = 0.27
+function buildLogoPage(pageW: number, pageH: number): PageData {
+  const frameW = pageW * LOGO_WIDTH_FRACTION
+  const frameH = frameW * (LOGO_NATURAL_H / LOGO_NATURAL_W)
+  const layout: Layout = {
+    id: '__logo_full_bleed', nombre: '', photoCount: 1, orientation: 'any',
+    frames: [{ x: (pageW - frameW) / 2 / pageW, y: (pageH - frameH) / 2 / pageH, w: frameW / pageW, h: frameH / pageH }],
+  }
+  return buildPageFromLayout(
+    layout,
+    [{ src: LOGO_SRC, naturalW: LOGO_NATURAL_W, naturalH: LOGO_NATURAL_H }],
+    pageW, pageH,
+  )
+}
+
 // ─── Page options per book size ──────────────────────────────────────────────
 
 const PAGE_OPTIONS: Record<string, number[]> = {
@@ -352,7 +377,7 @@ export default function EditorPage() {
         return next
       })
     }
-    img.src = '/LogoZeika.jpg'
+    img.src = LOGO_SRC
   }, []) // eslint-disable-line react-hooks/exhaustive-deps
 
   // ── Active page (last clicked page in Canvas) ──────────────────────────────
@@ -1418,7 +1443,9 @@ export default function EditorPage() {
 
     for (const { spreadIndex, side, name } of pageExports) {
       const spread     = spreadsData.current[spreadIndex]
-      const page       = spread?.[side] ?? blankPage()
+      const page       = (spreadIndex === lastIdx && side === 'left')
+        ? buildLogoPage(PAGE_W, PAGE_H)
+        : (spread?.[side] ?? blankPage())
       const otherSide  = side === 'left' ? 'right' : 'left'
       const adjData    = spread?.[otherSide]
       const adjacent   = adjData ? { data: adjData, fromSide: otherSide as 'left' | 'right' } : undefined
@@ -1458,7 +1485,7 @@ export default function EditorPage() {
 
     for (let i = 0; i < totalSpreads; i++) {
       const spread = spreadsData.current[i]
-      const leftData  = spread?.left  ?? blankPage()
+      const leftData  = i === totalSpreads - 1 ? buildLogoPage(PAGE_W, PAGE_H) : (spread?.left ?? blankPage())
       const rightData = spread?.right ?? blankPage()
 
       const leftUrl  = await exportPageAsJpg(leftData,  PAGE_W, PAGE_H, 1, { data: rightData, fromSide: 'right' })
@@ -1477,9 +1504,15 @@ export default function EditorPage() {
   const handleOpenPreview = useCallback(() => {
     // Flush the current spread into spreadsData before snapshotting
     saveCurrentSpread()
-    setPreviewSnapshot({ ...spreadsData.current })
+    const snapshot = { ...spreadsData.current }
+    const lastIdx = totalContentSpreads + 2
+    snapshot[lastIdx] = {
+      left:  buildLogoPage(PAGE_W, PAGE_H),
+      right: snapshot[lastIdx]?.right ?? { background: '#FFFFFF', pageW: PAGE_W, pageH: PAGE_H, objects: [] },
+    }
+    setPreviewSnapshot(snapshot)
     setPreviewOpen(true)
-  }, [saveCurrentSpread])
+  }, [saveCurrentSpread, totalContentSpreads, PAGE_W, PAGE_H])
 
   const handleClosePreview = useCallback(() => setPreviewOpen(false), [])
 

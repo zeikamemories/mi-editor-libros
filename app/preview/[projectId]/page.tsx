@@ -4,12 +4,36 @@ import { useEffect, useState } from 'react'
 import { useParams, useRouter } from 'next/navigation'
 import dynamic from 'next/dynamic'
 import { supabase } from '../../lib/supabase'
-import type { PageData } from '../../components/Canvas/fabricHelpers'
+import { buildPageFromLayout, type PageData } from '../../components/Canvas/fabricHelpers'
 import type { Annotation } from '../../components/PreviewModal/PreviewModal'
+import type { Layout } from '../../components/LayoutPanel/LayoutPanel'
 import { getBookSize } from '../../config/bookSize'
 import './preview.css'
 
 type SpreadData = { left: PageData; right: PageData }
+
+// Same last-spread logo fix as the editor's own Preview/export (app/editor/page.tsx) —
+// the last spread's left page is decorative-only in the live editor (DOM overlay, not
+// real PageData), so this shared/public preview needs the same synthetic override.
+const LOGO_SRC       = '/fotos/LogoNuevoZeika.jpg'
+const LOGO_NATURAL_W = 4410
+const LOGO_NATURAL_H = 4412
+// Fraction of page width the logo should occupy — matches the canvas overlay's
+// 260px-on-816px page (~0.32), slightly reduced per design feedback.
+const LOGO_WIDTH_FRACTION = 0.27
+function buildLogoPage(pageW: number, pageH: number): PageData {
+  const frameW = pageW * LOGO_WIDTH_FRACTION
+  const frameH = frameW * (LOGO_NATURAL_H / LOGO_NATURAL_W)
+  const layout: Layout = {
+    id: '__logo_full_bleed', nombre: '', photoCount: 1, orientation: 'any',
+    frames: [{ x: (pageW - frameW) / 2 / pageW, y: (pageH - frameH) / 2 / pageH, w: frameW / pageW, h: frameH / pageH }],
+  }
+  return buildPageFromLayout(
+    layout,
+    [{ src: LOGO_SRC, naturalW: LOGO_NATURAL_W, naturalH: LOGO_NATURAL_H }],
+    pageW, pageH,
+  )
+}
 
 interface SavedProject {
   spreadsData:  Record<number, SpreadData>
@@ -154,6 +178,14 @@ export default function PreviewPage() {
   )
 
   const size = getBookSize(project.bookSizeId ?? 'vertical')
+  const lastIdx = project.totalSpreads - 1
+  const spreadsData: Record<number, SpreadData> = {
+    ...project.spreadsData,
+    [lastIdx]: {
+      left:  buildLogoPage(size.widthPx, size.heightPx),
+      right: project.spreadsData[lastIdx]?.right ?? { background: '#FFFFFF', pageW: size.widthPx, pageH: size.heightPx, objects: [] },
+    },
+  }
 
   return (
     <>
@@ -189,7 +221,7 @@ export default function PreviewPage() {
     )}
 
     <PreviewModal
-      spreadsData={project.spreadsData}
+      spreadsData={spreadsData}
       totalSpreads={project.totalSpreads}
       initialSpread={0}
       pageW={size.widthPx}

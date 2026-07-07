@@ -2544,7 +2544,7 @@ export default function Canvas({
                   {rulerMode && <GuidesOverlay pageW={PAGE_W} pageH={PAGE_H} zoom={zoom} guides={guides} onGuidesChange={onGuidesChange} pageWrapRef={leftPageWrapRef} />}
                   {isLastSpread && (
                     <div className="canvas-logo-overlay" aria-hidden="true">
-                      <img src="/LogoZeika.jpg" alt="Zeika Memories" className="canvas-logo-img" />
+                      <img src="/fotos/LogoNuevoZeika.jpg" alt="Zeika Memories" className="canvas-logo-img" />
                     </div>
                   )}
                   {isFirstInside && (
