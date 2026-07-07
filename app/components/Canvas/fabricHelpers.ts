@@ -27,6 +27,7 @@ type PhotoData = {
   coverScale: number // Math.max(frameW/naturalW, frameH/naturalH) — base cover scale
   editScale: number  // zoom multiplier inside frame (≥ 1.0); combined with coverScale
   moved?: boolean
+  angle?: number
   border?: PhotoBorder
   dropShadow?: PhotoDropShadow
 }
@@ -712,6 +713,7 @@ type PhotoEntry = {
   cropY:      number
   naturalW:   number
   naturalH:   number
+  angle?:      number
   border?:     PhotoBorder
   dropShadow?: PhotoDropShadow
 }
@@ -852,6 +854,7 @@ export function serializePage(
         cropY:      obj.cropY ?? 0,
         naturalW:   pd.naturalW,
         naturalH:   pd.naturalH,
+        angle:      obj.angle ?? 0,
         border:     pd.border,
         dropShadow: pd.dropShadow,
       })
@@ -1153,13 +1156,17 @@ export async function deserializePage(
       } else if (entry.kind === 'photo') {
         const img = await fabric.FabricImage.fromURL(entry.photo, { crossOrigin: 'anonymous' })
         const { frameX, frameY, frameW, frameH, naturalW, naturalH, coverScale, editScale } = entry
+        const angle   = entry.angle ?? 0
+        const is90    = angle % 180 !== 0
         const scaleXY = coverScale * editScale
-        const virtW   = frameW / scaleXY
-        const virtH   = frameH / scaleXY
+        // At 90°/270°, width/height swap relative to the frame — mirrors rotateActivePhoto (Canvas.tsx).
+        const virtW   = (is90 ? frameH : frameW) / scaleXY
+        const virtH   = (is90 ? frameW : frameH) / scaleXY
         img.set({
           originX: 'center', originY: 'center',
           left:    frameX + frameW / 2,
           top:     frameY + frameH / 2,
+          angle,
           scaleX:  scaleXY, scaleY: scaleXY,
           width:   virtW,   height: virtH,
           cropX:   entry.cropX, cropY: entry.cropY,
@@ -1169,7 +1176,7 @@ export async function deserializePage(
         img.clipPath = makeClipRect(frameX, frameY, frameW, frameH)
         img.setControlsVisibility({ mt: true, mb: true, ml: true, mr: true, tl: true, tr: true, bl: true, br: true, mtr: true })
         ;(img as unknown as fabric.FabricObject & { data: PhotoData }).data = {
-          type: 'photo', frameX, frameY, frameW, frameH, naturalW, naturalH, coverScale, editScale,
+          type: 'photo', frameX, frameY, frameW, frameH, naturalW, naturalH, coverScale, editScale, angle,
         }
         if (entry.border) applyPhotoBorder(img, entry.border)
         if (entry.dropShadow) applyPhotoShadow(img, entry.dropShadow)
