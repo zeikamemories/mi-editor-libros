@@ -1149,6 +1149,8 @@ export default function EditorPage() {
               : 'layout_3_1')) ?? matching[0])
           : count === 4
           ? (LAYOUTS.find((l) => l.id === (isLandscapeBook ? 'layout_4_11' : 'layout_4_1')) ?? matching[0])
+          : count === 5
+          ? (LAYOUTS.find((l) => l.id === (isLandscapeBook ? 'layout_5_9' : 'layout_5_10')) ?? matching[0])
           : matching[Math.floor(Math.random() * matching.length)]
 
       // Collect the batch for this page
