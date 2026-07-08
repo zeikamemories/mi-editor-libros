@@ -38,6 +38,31 @@ import './editor.css'
 
 type SpreadSnapshot = { left: PageData; right: PageData }
 
+// Scans every saved spread for photo `src` references — shared by recomputeUsedPhotos
+// (drives the PhotoPanel "no usadas" filter) and handleAutoCreate (must not redistribute
+// photos that are already placed on other pages).
+function getUsedPhotoSrcs(spreadsData: Record<number, SpreadSnapshot>): Set<string> {
+  const usedSrcs = new Set<string>()
+  for (const snapshot of Object.values(spreadsData)) {
+    for (const page of [snapshot.left, snapshot.right]) {
+      if (page.objects !== undefined) {
+        for (const entry of page.objects) {
+          if (entry.kind === 'photo') usedSrcs.add(entry.photo)
+          if (entry.kind === 'freePhoto') usedSrcs.add(entry.src)
+        }
+      } else {
+        for (const frame of page.frames ?? []) {
+          if (!frame.isEmpty && frame.photo) usedSrcs.add(frame.photo)
+        }
+        for (const fp of page.freePhotos ?? []) {
+          usedSrcs.add(fp.src)
+        }
+      }
+    }
+  }
+  return usedSrcs
+}
+
 // ─── Last-spread logo page ───────────────────────────────────────────────────
 // The last spread's left page is decorative/non-editable (a DOM <img> overlay in
 // Canvas.tsx, a canvas-drawn thumbnail below) — neither is real PageData, so it
@@ -498,24 +523,7 @@ export default function EditorPage() {
   // Runs after every saveCurrentSpread so filters stay accurate even when
   // photos are deleted from the canvas or the user navigates between spreads.
   const recomputeUsedPhotos = useCallback(() => {
-    const usedSrcs = new Set<string>()
-    for (const snapshot of Object.values(spreadsData.current)) {
-      for (const page of [snapshot.left, snapshot.right]) {
-        if (page.objects !== undefined) {
-          for (const entry of page.objects) {
-            if (entry.kind === 'photo') usedSrcs.add(entry.photo)
-            if (entry.kind === 'freePhoto') usedSrcs.add(entry.src)
-          }
-        } else {
-          for (const frame of page.frames ?? []) {
-            if (!frame.isEmpty && frame.photo) usedSrcs.add(frame.photo)
-          }
-          for (const fp of page.freePhotos ?? []) {
-            usedSrcs.add(fp.src)
-          }
-        }
-      }
-    }
+    const usedSrcs = getUsedPhotoSrcs(spreadsData.current)
     setUsedPhotoIds(new Set(
       photosRef.current.filter((p) => usedSrcs.has(p.src)).map((p) => p.id)
     ))
@@ -1060,7 +1068,13 @@ export default function EditorPage() {
 
   // ── Auto-crear ────────────────────────────────────────────────────────────
   const handleAutoCreate = useCallback(async () => {
-    const allPhotos = photosRef.current
+    // Only distribute photos that aren't already placed on some other page — otherwise
+    // auto-create tries to spread the WHOLE library (used + unused) across just the
+    // handful of empty carillas, maxing out per-page capacity long before it reaches
+    // the actually-unused photos at the end of the array, leaving them unplaced while
+    // some empty pages never get filled.
+    const usedSrcs  = getUsedPhotoSrcs(spreadsData.current)
+    const allPhotos = photosRef.current.filter((p) => !usedSrcs.has(p.src))
     if (allPhotos.length === 0) return
 
     // Editable pages: spread-1 right, then spreads 2…totalContentSpreads+1 both sides
@@ -1190,7 +1204,8 @@ export default function EditorPage() {
   }, [totalContentSpreads, recomputeUsedPhotos, handleSpreadSelect, captureThumbnail, regenerateThumbnails])
 
   const requestAutoCreate = useCallback(async () => {
-    const allPhotos = photosRef.current
+    const usedSrcs  = getUsedPhotoSrcs(spreadsData.current)
+    const allPhotos = photosRef.current.filter((p) => !usedSrcs.has(p.src))
     if (allPhotos.length === 0) return
 
     const pageHasPhoto = (page: PageData | undefined) =>
