@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useLayoutEffect, useRef, useState } from 'react'
 import Link from 'next/link'
 import { DESIGNS } from '../components/Landing/NuestrosDisenos/designsData'
 import DesignModal from './DesignModal'
@@ -41,6 +41,18 @@ export default function DisenosPage() {
   const [selected, setSelected] = useState<number | null>(null)
   const itemRefs = useRef<(HTMLButtonElement | null)[]>([])
   const [visualOrder, setVisualOrder] = useState<number[]>(() => DESIGNS.map((_, i) => i))
+
+  useLayoutEffect(() => {
+    // Next.js client-side navigation can leave the previous page's scroll position painted
+    // for a frame before this runs — use useLayoutEffect (before paint) instead of useEffect.
+    // Also disable `scroll-behavior: smooth` momentarily: Safari/WebKit sometimes ignores
+    // `behavior: 'instant'` when that's set globally, animating instead of jumping.
+    const root = document.documentElement
+    const prevBehavior = root.style.scrollBehavior
+    root.style.scrollBehavior = 'auto'
+    window.scrollTo(0, 0)
+    root.style.scrollBehavior = prevBehavior
+  }, [])
 
   useEffect(() => {
     const recompute = () => setVisualOrder(computeVisualOrder(itemRefs.current))

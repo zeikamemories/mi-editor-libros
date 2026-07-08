@@ -7,7 +7,7 @@ const STEPS: Step[] = [
   {
     number: '01',
     title:  'Elegir formato',
-    body:   'Elegís 1 tamaño dentro de los 5 disponibles.',
+    body:   'Elegís el producto y la opción que más te guste.',
     Icon:   Pencil,
     bg:     '#e8f3ff',
   },
@@ -22,7 +22,7 @@ const STEPS: Step[] = [
   {
     number: '03',
     title:  'Nosotras diseñamos',
-    body:   'Diseñamos tu libro en menos de 2 días hábiles siguiendo tus indicaciones.',
+    body:   'Diseñamos tu pieza en menos de 2 días hábiles siguiendo tus indicaciones.',
     img:    '/icons/step3.svg',
     bg:     '#adc9ea',
     large:  true,

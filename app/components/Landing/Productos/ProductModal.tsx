@@ -34,14 +34,14 @@ const TEXT_EXTRA_BY_SIZE: Record<string, number> = {
 }
 
 const PAGE_OPTIONS_SMALL = [
-  { photos: 'hasta ~100 fotos',  pages: 20 },
-  { photos: 'hasta ~180 fotos',  pages: 30 },
-  { photos: 'hasta ~240 fotos',  pages: 40 },
+  { photos: 'hasta 100 fotos',  pages: 20 },
+  { photos: 'hasta 180 fotos',  pages: 30 },
+  { photos: 'hasta 240 fotos',  pages: 40 },
 ]
 const PAGE_OPTIONS_LARGE = [
-  { photos: 'hasta ~160 fotos',  pages: 20 },
-  { photos: 'hasta ~240 fotos',  pages: 30 },
-  { photos: 'hasta ~350 fotos',  pages: 40 },
+  { photos: 'hasta 160 fotos',  pages: 20 },
+  { photos: 'hasta 240 fotos',  pages: 30 },
+  { photos: 'hasta 350 fotos',  pages: 40 },
 ]
 
 function fmt(n: number) {
@@ -225,7 +225,7 @@ export default function ProductModal({ product, onClose }: Props) {
                 ))}
               </div>
               <p className="pm__section-note">
-                Podés subir la cantidad de fotos que quieras — estas son solo orientativas basadas en ~3 fotos por carilla.
+                Podés subir la cantidad de fotos que quieras — estas son solo orientativas basadas en 3 fotos por carilla.
               </p>
             </div>
 
