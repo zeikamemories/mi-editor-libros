@@ -6,7 +6,16 @@ import ProductModal from './ProductModal'
 import MobileProductModal from './MobileProductModal'
 import CompareSizesModal from './CompareSizesModal'
 import MobileCompareModal from './MobileCompareModal'
+import VinoModal from './VinoModal'
+import MobileVinoModal from './MobileVinoModal'
 import './Productos.css'
+
+const VINO_PRODUCT: ProductData = {
+  sizeId:     'vinos',
+  name:       'Vinos Personalizados',
+  price:      'Desde $45.000',
+  dimensions: '750 ml',
+}
 
 const PRODUCTS: ProductData[] = [
   { sizeId: 'chico',    name: 'Chico Horizontal',  mobileLabel: 'CHICO H',   price: '$1',       dimensions: '21 x 14,8 cm' },
@@ -20,11 +29,16 @@ export default function Productos() {
   const [selected,           setSelected]           = useState<ProductData | null>(null)
   const [showCompare,        setShowCompare]        = useState(false)
   const [showMobileCompare,  setShowMobileCompare]  = useState(false)
+  const [showVinoModal,      setShowVinoModal]      = useState(false)
 
   useLayoutEffect(() => {
     const backProduct = sessionStorage.getItem('zeika_back_product')
     if (!backProduct) return
     sessionStorage.removeItem('zeika_back_product')
+    if (backProduct === 'vinos') {
+      setShowVinoModal(true)
+      return
+    }
     const product = PRODUCTS.find(p => p.sizeId === backProduct)
     if (product) setSelected(product)
   }, [])
@@ -33,6 +47,10 @@ export default function Productos() {
     <section className="productos" id="productos">
       <div className="productos__header">
         <p className="productos__label">Nuestros Productos</p>
+      </div>
+
+      <div className="productos__sublabel-row">
+        <p className="productos__sublabel">Fotolibros personalizados</p>
         <button className="productos__comparar" onClick={() => setShowCompare(true)}>Comparar tamaños</button>
       </div>
 
@@ -46,6 +64,12 @@ export default function Productos() {
         Comparar con otros tamaños
       </button>
 
+      <p className="productos__sublabel productos__sublabel--vinos">Vinos personalizados</p>
+
+      <div className="productos__vinos-grid">
+        <ProductCard {...VINO_PRODUCT} onOpen={() => setShowVinoModal(true)} />
+      </div>
+
       {selected && (
         <ProductModal product={selected} onClose={() => setSelected(null)} />
       )}
@@ -57,6 +81,12 @@ export default function Productos() {
       )}
       {showMobileCompare && (
         <MobileCompareModal onClose={() => setShowMobileCompare(false)} />
+      )}
+      {showVinoModal && (
+        <VinoModal onClose={() => setShowVinoModal(false)} />
+      )}
+      {showVinoModal && (
+        <MobileVinoModal onClose={() => setShowVinoModal(false)} />
       )}
     </section>
   )
