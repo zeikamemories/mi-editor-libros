@@ -23,6 +23,7 @@ export const TEXT_FONTS = [
   { label: 'Bauer Bodoni',          value: 'BauerBodoni' },
   { label: 'Handwriting Ernie',     value: 'adobe-handwriting-ernie' },
   { label: 'Handwriting Frank',     value: 'adobe-handwriting-frank' },
+  { label: 'Home Education',        value: 'HomeEducation' },
 ] as const
 
 // ─── Types ────────────────────────────────────────────────────────────────────
