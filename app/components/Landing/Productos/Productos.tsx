@@ -8,7 +8,10 @@ import CompareSizesModal from './CompareSizesModal'
 import MobileCompareModal from './MobileCompareModal'
 import VinoModal from './VinoModal'
 import MobileVinoModal from './MobileVinoModal'
+import AgeGateModal from './AgeGateModal'
 import './Productos.css'
+
+const AGE_CONFIRMED_KEY = 'zeika_age_confirmed'
 
 const VINO_PRODUCT: ProductData = {
   sizeId:     'vinos',
@@ -30,18 +33,33 @@ export default function Productos() {
   const [showCompare,        setShowCompare]        = useState(false)
   const [showMobileCompare,  setShowMobileCompare]  = useState(false)
   const [showVinoModal,      setShowVinoModal]      = useState(false)
+  const [showAgeGate,        setShowAgeGate]        = useState(false)
 
   useLayoutEffect(() => {
     const backProduct = sessionStorage.getItem('zeika_back_product')
     if (!backProduct) return
     sessionStorage.removeItem('zeika_back_product')
     if (backProduct === 'vinos') {
-      setShowVinoModal(true)
+      openVinoModal()
       return
     }
     const product = PRODUCTS.find(p => p.sizeId === backProduct)
     if (product) setSelected(product)
   }, [])
+
+  function openVinoModal() {
+    if (sessionStorage.getItem(AGE_CONFIRMED_KEY) === 'true') {
+      setShowVinoModal(true)
+    } else {
+      setShowAgeGate(true)
+    }
+  }
+
+  function confirmAgeGate() {
+    sessionStorage.setItem(AGE_CONFIRMED_KEY, 'true')
+    setShowAgeGate(false)
+    setShowVinoModal(true)
+  }
 
   return (
     <section className="productos" id="productos">
@@ -67,7 +85,7 @@ export default function Productos() {
       <p className="productos__sublabel productos__sublabel--vinos">Vinos personalizados</p>
 
       <div className="productos__vinos-grid">
-        <ProductCard {...VINO_PRODUCT} onOpen={() => setShowVinoModal(true)} />
+        <ProductCard {...VINO_PRODUCT} onOpen={openVinoModal} />
       </div>
 
       {selected && (
@@ -81,6 +99,9 @@ export default function Productos() {
       )}
       {showMobileCompare && (
         <MobileCompareModal onClose={() => setShowMobileCompare(false)} />
+      )}
+      {showAgeGate && (
+        <AgeGateModal onConfirm={confirmAgeGate} onDecline={() => setShowAgeGate(false)} />
       )}
       {showVinoModal && (
         <VinoModal onClose={() => setShowVinoModal(false)} />

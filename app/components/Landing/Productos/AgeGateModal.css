@@ -1,0 +1,123 @@
+.agv-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 600;
+  padding: 20px;
+}
+
+.agv {
+  position: relative;
+  width: 100%;
+  max-width: 460px;
+  background: #F0EFEB;
+  border: 1px solid var(--color-black);
+  padding: 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.agv__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.agv__label {
+  font-family: "forma-djr-display", sans-serif;
+  font-weight: 700;
+  font-size: 13px;
+  letter-spacing: 0.52px;
+  text-transform: uppercase;
+  color: var(--color-black);
+}
+
+.agv__close {
+  width: 28px;
+  height: 28px;
+  background: white;
+  border: 1px solid var(--color-black);
+  cursor: pointer;
+  font-size: 18px;
+  line-height: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  color: var(--color-black);
+}
+
+.agv__title {
+  font-family: "Times New Roman", Times, serif;
+  font-weight: 400;
+  font-size: 32px;
+  line-height: 1.15;
+  letter-spacing: -0.64px;
+  color: var(--color-black);
+  margin: 0;
+}
+
+.agv__body {
+  font-family: "forma-djr-display", sans-serif;
+  font-weight: 500;
+  font-size: 16px;
+  letter-spacing: 0.04em;
+  color: var(--color-black);
+  margin: 0;
+  line-height: 1.4;
+}
+
+.agv__fine {
+  font-family: "forma-djr-display", sans-serif;
+  font-weight: 500;
+  font-size: 12px;
+  letter-spacing: 0.04em;
+  color: #666;
+  margin: 0;
+  line-height: 1.4;
+}
+
+.agv__actions {
+  display: flex;
+  gap: 12px;
+  margin-top: 8px;
+}
+
+.agv__btn {
+  flex: 1;
+  padding: 12px;
+  border: 1px solid var(--color-black);
+  border-radius: 999px;
+  background: white;
+  font-family: "forma-djr-display", sans-serif;
+  font-weight: 600;
+  font-size: 14px;
+  letter-spacing: 0.56px;
+  text-transform: uppercase;
+  color: var(--color-black);
+  cursor: pointer;
+}
+
+.agv__btn:hover {
+  background: var(--color-blue);
+  border-color: var(--color-blue);
+  color: white;
+}
+
+@media (min-width: 1024px) {
+  .agv {
+    padding: 32px;
+  }
+
+  .agv__title {
+    font-size: 38px;
+  }
+
+  .agv__body {
+    font-size: 17px;
+  }
+}
