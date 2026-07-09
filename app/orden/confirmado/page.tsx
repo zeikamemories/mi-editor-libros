@@ -18,6 +18,13 @@ const STEPS_REORDER = [
   { main: 'Te enviamos el seguimiento',  sub: 'Andreani te lo lleva a casa.',               arrow: false },
 ]
 
+const STEPS_VINO = [
+  { main: 'Te contactamos por WhatsApp', sub: 'Coordinamos el diseño de tu etiqueta.',      arrow: false },
+  { main: 'Recibís tu primera propuesta', sub: 'En 48hs hábiles.',                          arrow: false },
+  { main: 'Revisás y aprobás el diseño', sub: '',                                           arrow: false },
+  { main: 'Lo mandamos a producción',    sub: '',                                           arrow: false },
+]
+
 function ConfirmadoContent() {
   const params       = useSearchParams()
   const orderId      = params.get('order_id') || (typeof window !== 'undefined' ? sessionStorage.getItem('zeika_pending_order_id') : null)
@@ -25,22 +32,36 @@ function ConfirmadoContent() {
   const reorderFrom  = params.get('reorderFrom')
   const [done,       setDone]       = useState(false)
   const [isReorder,  setIsReorder]  = useState(false)
+  const [isVino,     setIsVino]     = useState(false)
 
   useEffect(() => {
-    if (!orderId || status === 'failure') { setDone(true); return }
+    if (!orderId) { setDone(true); return }
+
+    if (status === 'failure') {
+      supabase.from('orders').select('product_type').eq('id', orderId).single()
+        .then(({ data }) => { setIsVino(data?.product_type === 'vino'); setDone(true) })
+      return
+    }
 
     async function confirm() {
       const newStatus = status === 'pending' ? 'pendiente_pago' : 'confirmado'
       const now       = new Date().toISOString()
 
       const [{ data: orderData }, { data: { user } }] = await Promise.all([
-        supabase.from('orders').select('book_name, size, extra_text, pages_base, extra_pages').eq('id', orderId!).single(),
+        supabase.from('orders').select('book_name, size, extra_text, pages_base, extra_pages, product_type').eq('id', orderId!).single(),
         supabase.auth.getUser(),
         supabase.from('orders').update({
           status:       newStatus,
           status_dates: { confirmado: now },
         }).eq('id', orderId!),
       ])
+
+      if (orderData?.product_type === 'vino') {
+        // Los vinos no tienen proyecto/carpeta de Drive — el diseño se coordina por WhatsApp.
+        setIsVino(true)
+        setDone(true)
+        return
+      }
 
       if (orderData) {
         const { data: existing } = await supabase
@@ -148,7 +169,7 @@ function ConfirmadoContent() {
           </div>
           <h1 className="conf__title">El pago no se completó</h1>
           <p className="conf__subtitle">Podés intentarlo de nuevo desde tu pedido.</p>
-          <a className="conf__cta" href="/orden">Volver al pedido</a>
+          <a className="conf__cta" href={isVino ? '/orden-vino' : '/orden'}>Volver al pedido</a>
         </div>
       ) : (
         <div className="conf__body">
@@ -162,16 +183,18 @@ function ConfirmadoContent() {
           <p className="conf__subtitle">
             {isPending
               ? 'Tu pago está siendo procesado. Te avisamos cuando se confirme.'
-              : isReorder
-                ? 'Usamos el diseño de tu pedido anterior. ¡Ya lo mandamos a producción!'
-                : 'Gracias por tu compra. Cargá tu material dentro del proyecto, nosotras diseñamos.'}
+              : isVino
+                ? 'Gracias por tu compra. Te contactamos por WhatsApp para definir el diseño de tu etiqueta.'
+                : isReorder
+                  ? 'Usamos el diseño de tu pedido anterior. ¡Ya lo mandamos a producción!'
+                  : 'Gracias por tu compra. Cargá tu material dentro del proyecto, nosotras diseñamos.'}
           </p>
 
           {!isPending && (
             <>
               <p className="conf__steps-label">Próximos pasos</p>
               <div className="conf__steps">
-                {(isReorder ? STEPS_REORDER : STEPS).map((step, i) =>
+                {(isVino ? STEPS_VINO : isReorder ? STEPS_REORDER : STEPS).map((step, i) =>
                   step.arrow ? (
                     <a key={i} className="conf__step conf__step--link" href={orderId ? `/mis-proyectos/${orderId}?open=material` : '/mis-proyectos'}>
                       <div className="conf__step-num">{i + 1}</div>
@@ -195,7 +218,7 @@ function ConfirmadoContent() {
             </>
           )}
 
-          <a className="conf__cta" href={orderId ? `/mis-proyectos/${orderId}?open=material` : '/mis-proyectos'}>IR A MI PROYECTO</a>
+          <a className="conf__cta" href={orderId ? `/mis-proyectos/${orderId}${isVino ? '' : '?open=material'}` : '/mis-proyectos'}>IR A MI PROYECTO</a>
         </div>
       )}
     </div>

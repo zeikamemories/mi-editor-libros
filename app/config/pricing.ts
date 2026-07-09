@@ -74,3 +74,32 @@ export function computeBookTotal(sizeId: string, pagesBase: number, extraText: b
 export function copiesDiscount(copies: number): number {
   return copies >= 3 ? 0.8 : 1
 }
+
+// ─── Vinos ──────────────────────────────────────────────────────────────────
+// Precios placeholder — a definir con el dueño del producto antes de lanzar.
+
+export const VINO_PRICE_BASE: Record<'tinto' | 'blanco', number> = {
+  tinto:  45000,
+  blanco: 45000,
+}
+
+export const VINO_DESIGN_EXTRA: Record<'foto_y_texto' | 'diseno_personalizado', number> = {
+  foto_y_texto:         0,
+  diseno_personalizado: 15000,
+}
+
+export const VINO_CANTIDADES = [1, 6] as const
+
+/**
+ * Recalcula el precio total de un pedido de vino a partir de campos guardados en la orden.
+ * Usado server-side para no confiar en el monto que manda el navegador.
+ */
+export function computeVinoTotal(
+  variedad: string, disenoTipo: string, cantidad: number,
+): number | null {
+  const base  = VINO_PRICE_BASE[variedad as 'tinto' | 'blanco']
+  const extra = VINO_DESIGN_EXTRA[disenoTipo as 'foto_y_texto' | 'diseno_personalizado']
+  if (base === undefined || extra === undefined) return null
+  if (!VINO_CANTIDADES.includes(cantidad as 1 | 6)) return null
+  return (base + extra) * cantidad
+}

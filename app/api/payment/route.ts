@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { MercadoPagoConfig, Preference } from 'mercadopago'
 import { createClient } from '@supabase/supabase-js'
-import { computeBookTotal, REORDER_UNIT_PRICE, copiesDiscount } from '../../config/pricing'
+import { computeBookTotal, computeVinoTotal, REORDER_UNIT_PRICE, copiesDiscount } from '../../config/pricing'
 import { fetchShippingPrice } from '../../lib/shippingQuote'
 
 const client = new MercadoPagoConfig({
@@ -27,7 +27,7 @@ export async function POST(req: NextRequest) {
 
     const { data: order, error: orderError } = await admin
       .from('orders')
-      .select('size, pages_base, extra_text, price_paid, status')
+      .select('size, pages_base, extra_text, price_paid, status, product_type, variedad, diseno_tipo, copies')
       .eq('id', orderId)
       .single()
 
@@ -35,10 +35,18 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Pedido no encontrado' }, { status: 404 })
     }
 
+    const isVino = order.product_type === 'vino'
     let amount: number
 
-    if (order.status === 'pendiente_pago') {
-      // Primer pago (recién creado el pedido en /orden): 50% del precio recalculado acá.
+    if (order.status === 'pendiente_pago' && isVino) {
+      // Primer pago de un vino (recién creado en /orden-vino): 50% del precio recalculado acá.
+      const total = computeVinoTotal(order.variedad, order.diseno_tipo, order.copies ?? 1)
+      if (total === null) {
+        return NextResponse.json({ error: 'No se pudo calcular el precio del pedido' }, { status: 400 })
+      }
+      amount = Math.round(total / 2)
+    } else if (order.status === 'pendiente_pago') {
+      // Primer pago de un fotolibro (recién creado en /orden): 50% del precio recalculado acá.
       const total = computeBookTotal(order.size, order.pages_base, order.extra_text)
       if (total === null) {
         return NextResponse.json({ error: 'No se pudo calcular el precio del pedido' }, { status: 400 })
@@ -84,7 +92,7 @@ export async function POST(req: NextRequest) {
         items: [
           {
             id:         orderId,
-            title:      `Fotolibro Zeika — ${bookName}`,
+            title:      isVino ? `Vino personalizado Zeika — ${bookName}` : `Fotolibro Zeika — ${bookName}`,
             quantity:   1,
             unit_price: amount,
             currency_id: 'ARS',

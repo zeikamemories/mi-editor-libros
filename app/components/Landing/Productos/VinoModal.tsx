@@ -2,19 +2,10 @@
 
 import { useState, useEffect, useRef } from 'react'
 import { supabase } from '../../../lib/supabase'
+import { VINO_PRICE_BASE, VINO_DESIGN_EXTRA } from '../../../config/pricing'
 import './VinoModal.css'
 
 const IMAGE = '/fotos/vinos.jpg'
-
-// Precios placeholder — a definir
-const PRICE_BASE: Record<'tinto' | 'blanco', number> = {
-  tinto:  45000,
-  blanco: 45000,
-}
-const DESIGN_EXTRA: Record<'foto_y_texto' | 'diseno_personalizado', number> = {
-  foto_y_texto:        0,
-  diseno_personalizado: 15000,
-}
 
 const WHATSAPP_NUMBER = '5491133521921'
 
@@ -39,7 +30,7 @@ export default function VinoModal({ onClose }: Props) {
 
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
-  const unitPrice  = PRICE_BASE[variedad] + DESIGN_EXTRA[disenoTipo]
+  const unitPrice  = VINO_PRICE_BASE[variedad] + VINO_DESIGN_EXTRA[disenoTipo]
   const totalPrice = unitPrice * cantidad
 
   useEffect(() => {
