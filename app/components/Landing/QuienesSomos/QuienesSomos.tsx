@@ -53,7 +53,7 @@ export default function QuienesSomos() {
           <p className="qs__founder-text">
             Hola! Mi nombre es Maika. Desde muy chica disfruto viajar y vivir diferentes experiencias. Soy una persona nostálgica y, de alguna manera siempre termino volviendo a esos recuerdos.
             <br />
-            Zeika nace en 2020 a partir de ese deseo: hacer eternos momentos vividos.
+            Zeika nace en 2020 a partir de ese deseo: hacer eternos los momentos vividos.
             {' '}Creo profundamente en las conexiones humanas y en cómo los recuerdos pueden fortalecer estas.
             {' '}Hoy ya somos un equipo que cree en lo mismo y trabaja todos los días para ayudarte a recordar tu historia de la mejor manera posible.
           </p>

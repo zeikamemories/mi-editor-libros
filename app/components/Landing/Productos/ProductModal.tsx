@@ -4,6 +4,7 @@ import { useState, useEffect, useRef } from 'react'
 import { supabase } from '../../../lib/supabase'
 import SizeComparison from './SizeComparison'
 import type { ProductData } from './ProductCard'
+import { PRICES_BY_PAGES, TEXT_EXTRA_BY_SIZE, PAGE_OPTIONS_SMALL, PAGE_OPTIONS_LARGE, LARGE_SIZES } from '../../../config/pricing'
 import './ProductModal.css'
 
 const SHARED_DESK = ['/fotos/foto2-desk.jpg', '/fotos/foto3-desk.jpg', '/fotos/foto4-desk.jpg', '/fotos/foto5-desk.jpg']
@@ -15,34 +16,6 @@ const IMAGES: Record<string, string[]> = {
   vertical: ['/fotos/vertical2.jpg', ...SHARED_DESK],
   cuadrado: ['/fotos/cuadrado2.jpg', ...SHARED_DESK],
 }
-
-// [20 pag, 30 pag, 40 pag]
-const PRICES_BY_PAGES: Record<string, [number, number, number]> = {
-  chico:    [1,  104300, 118700],
-  mediano:  [94700,  116700, 138700],
-  grande:   [128800, 164800, 200800],
-  vertical: [94700,  116700, 138700],
-  cuadrado: [125800, 161800, 197800],
-}
-
-const TEXT_EXTRA_BY_SIZE: Record<string, number> = {
-  chico:    1,
-  mediano:  10000,
-  grande:   10000,
-  vertical: 10000,
-  cuadrado: 10000,
-}
-
-const PAGE_OPTIONS_SMALL = [
-  { photos: 'hasta 100 fotos',  pages: 20 },
-  { photos: 'hasta 180 fotos',  pages: 30 },
-  { photos: 'hasta 240 fotos',  pages: 40 },
-]
-const PAGE_OPTIONS_LARGE = [
-  { photos: 'hasta 160 fotos',  pages: 20 },
-  { photos: 'hasta 240 fotos',  pages: 30 },
-  { photos: 'hasta 350 fotos',  pages: 40 },
-]
 
 function fmt(n: number) {
   return '$' + n.toLocaleString('es-AR')

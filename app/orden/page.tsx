@@ -4,6 +4,7 @@ import Image from 'next/image'
 import { useRouter } from 'next/navigation'
 import { supabase } from '../lib/supabase'
 import type { User } from '@supabase/supabase-js'
+import { PRICES_BY_PAGES, TEXT_EXTRA_BY_SIZE } from '../config/pricing'
 import './orden.css'
 
 const SIZES = [
@@ -20,22 +21,6 @@ const PRODUCT_IMAGES: Record<string, string> = {
   grande_h:  '/fotos/grande.jpg',
   vertical:  '/fotos/vertical.jpg',
   cuadrado:  '/fotos/cuadrado.jpg',
-}
-
-const PRICES_BY_PAGES: Record<string, [number, number, number]> = {
-  chico_h:   [1,  104300, 118700],
-  mediano_h: [94700,  116700, 138700],
-  grande_h:  [128800, 164800, 200800],
-  vertical:  [94700,  116700, 138700],
-  cuadrado:  [125800, 161800, 197800],
-}
-
-const TEXT_EXTRA_BY_SIZE: Record<string, number> = {
-  chico_h:   1,
-  mediano_h: 10000,
-  grande_h:  10000,
-  vertical:  10000,
-  cuadrado:  10000,
 }
 
 const PAGE_OPTIONS_SMALL = [
@@ -157,7 +142,6 @@ export default function OrdenPage() {
       body: JSON.stringify({
         orderId:    order.id,
         bookName:   bookName.trim() || 'Sin título',
-        amount:     payNow,
         successUrl,
         failureUrl: `${siteUrl}/orden?error=1`,
       }),

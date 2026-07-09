@@ -5,13 +5,10 @@ import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { Trash2, List, LayoutGrid } from 'lucide-react'
 import { supabase } from '../lib/supabase'
+import { isAdminEmail } from '../lib/adminEmails'
+import { authHeaders } from '../lib/authFetch'
 import Navbar from '../components/Landing/Navbar/Navbar'
 import './dashboard.css'
-
-const ADMIN_EMAILS = [
-  'maikasacerdote@gmail.com',
-  'zeika.memories@gmail.com',
-]
 
 type FilterTab = 'TODOS' | 'NUEVOS' | 'EN PROCESO' | 'EN PRODUCCIÓN' | 'FINALIZADOS'
 
@@ -97,7 +94,7 @@ export default function DashboardPage() {
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
       const email = session?.user?.email
-      if (!email || !ADMIN_EMAILS.includes(email)) {
+      if (!isAdminEmail(email)) {
         router.replace('/login')
       } else {
         setAuthChecked(true)
@@ -109,7 +106,7 @@ export default function DashboardPage() {
     if (!authChecked) return
     async function fetchOrders() {
       const [res, { data: projects }] = await Promise.all([
-        fetch('/api/admin/orders'),
+        fetch('/api/admin/orders', { headers: await authHeaders() }),
         supabase.from('projects').select('order_id, cover_thumbnail').not('order_id', 'is', null),
       ])
 
@@ -144,7 +141,7 @@ export default function DashboardPage() {
 
   async function deleteOrder(id: string, bookName: string) {
     if (!window.confirm(`¿Eliminar el pedido "${bookName}"? Esta acción no se puede deshacer.`)) return
-    const res = await fetch('/api/admin/orders', { method: 'DELETE', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ ids: [id] }) })
+    const res = await fetch('/api/admin/orders', { method: 'DELETE', headers: { 'Content-Type': 'application/json', ...(await authHeaders()) }, body: JSON.stringify({ ids: [id] }) })
     if (!res.ok) { alert('Error al eliminar'); return }
     setOrders(prev => prev.filter(o => o.id !== id))
   }
@@ -169,7 +166,7 @@ export default function DashboardPage() {
     if (!window.confirm(`¿Eliminar ${selected.size} pedido${selected.size > 1 ? 's' : ''}? Esta acción no se puede deshacer.`)) return
     setDeleting(true)
     const ids = Array.from(selected)
-    const res = await fetch('/api/admin/orders', { method: 'DELETE', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ ids }) })
+    const res = await fetch('/api/admin/orders', { method: 'DELETE', headers: { 'Content-Type': 'application/json', ...(await authHeaders()) }, body: JSON.stringify({ ids }) })
     if (!res.ok) { setDeleting(false); alert('Error al eliminar'); return }
     setOrders(prev => prev.filter(o => !ids.includes(o.id)))
     setSelected(new Set())
