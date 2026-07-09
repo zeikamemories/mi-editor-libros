@@ -4,18 +4,18 @@ import './QuienesSomos.css'
 const VALORES = [
   {
     num:   '[01]',
-    title: 'Cercanía',
-    body:  'Cada historia es distinta. Nos gusta acompañarte durante el proceso y diseñar cada libro con atención y cuidado.',
+    title: 'Memoria',
+    body:  'Cada historia merece ser recordada. Diseñamos para preservar lo que realmente importa.',
   },
   {
     num:   '[02]',
-    title: 'Cuidado en los detalles',
-    body:  'Prestamos atención a cada foto, cada texto y cada elección para que el resultado se sienta realmente tuyo.',
+    title: 'Diseño',
+    body:  'Prestamos atención a cada detalle para crear piezas auténticas, cuidadas y con identidad.',
   },
   {
     num:   '[03]',
-    title: 'Lo tangible importa',
-    body:  'En un mundo lleno de pantallas, creemos en el valor de poder tocar, guardar y volver a abrir los recuerdos.',
+    title: 'Permanencia',
+    body:  'Creamos objetos pensados para durar, acompañar y trascender el paso del tiempo.',
   },
 ]
 
@@ -52,8 +52,8 @@ export default function QuienesSomos() {
         <div className="qs__founder-letter">
           <p className="qs__founder-text">
             Hola! Mi nombre es Maika. Desde muy chica disfruto viajar y vivir diferentes experiencias. Soy una persona nostálgica y, de alguna manera siempre termino volviendo a esos recuerdos.
-            {' '}Zeika nace de ese deseo: hacer eternos momentos vividos. 
-            {' '}En 2020 —el año de la nostalgia, como me gusta llamarlo— empecé a vender estos libros.
+            <br />
+            Zeika nace en 2020 a partir de ese deseo: hacer eternos los momentos vividos.
             {' '}Creo profundamente en las conexiones humanas y en cómo los recuerdos pueden fortalecer estas.
             {' '}Hoy ya somos un equipo que cree en lo mismo y trabaja todos los días para ayudarte a recordar tu historia de la mejor manera posible.
           </p>

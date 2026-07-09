@@ -4,6 +4,7 @@ import { useEffect, useRef, useState, Suspense } from 'react'
 import { useRouter, useParams, useSearchParams } from 'next/navigation'
 import { supabase } from '../../../lib/supabase'
 import Navbar from '../../../components/Landing/Navbar/Navbar'
+import { REORDER_UNIT_PRICE, copiesDiscount } from '../../../config/pricing'
 import '../../mis-proyectos.css'
 
 interface Order {
@@ -12,14 +13,6 @@ interface Order {
   size: string
   price_total: number
   price_paid: number
-}
-
-const PRICES: Record<string, number> = {
-  chico_h:   1,
-  mediano_h: 81500,
-  grande_h:  100000,
-  vertical:  81500,
-  cuadrado:  97000,
 }
 
 const SIZE_NAMES: Record<string, string> = {
@@ -109,8 +102,8 @@ function PagarContent() {
     <div className="mp-loading"><div className="mp-spinner" /></div>
   )
 
-  const unitPrice      = PRICES[order.size] ?? order.price_total
-  const discount       = copies >= 3 ? 0.8 : 1
+  const unitPrice      = REORDER_UNIT_PRICE[order.size] ?? order.price_total
+  const discount       = copiesDiscount(copies)
   const subtotal       = copies * unitPrice * discount
   const shippingTotal  = deliveryType === 'andreani' ? (shippingPrice ?? 0) : 0
   const effectivePaid  = isReorder ? 0 : order.price_paid
@@ -143,11 +136,14 @@ function PagarContent() {
       method:  'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
-        orderId:    order!.id,
-        bookName:   order!.book_name,
-        amount:     payNow,
-        successUrl: `${siteUrl}/mis-proyectos/${order!.id}/confirmado`,
-        failureUrl: `${siteUrl}/mis-proyectos/${order!.id}/pagar?error=1`,
+        orderId:      order!.id,
+        bookName:     order!.book_name,
+        copies,
+        deliveryType,
+        cp:           deliveryType === 'andreani' ? cp : undefined,
+        isReorder,
+        successUrl:   `${siteUrl}/mis-proyectos/${order!.id}/confirmado`,
+        failureUrl:   `${siteUrl}/mis-proyectos/${order!.id}/pagar?error=1`,
       }),
     })
     const data = await res.json()

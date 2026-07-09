@@ -4,9 +4,9 @@ import { useEffect, useState } from 'react'
 import { useRouter, useParams } from 'next/navigation'
 import Link from 'next/link'
 import { supabase } from '../../../lib/supabase'
+import { authHeaders } from '../../../lib/authFetch'
+import { isAdminEmail } from '../../../lib/adminEmails'
 import './pedido.css'
-
-const ADMIN_EMAILS = ['maikasacerdote@gmail.com', 'zeika.memories@gmail.com']
 
 const ALL_STATUSES = [
   { value: 'confirmado',        label: 'Cargar material'   },
@@ -136,7 +136,7 @@ export default function PedidoAdminPage() {
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
       const email = session?.user?.email
-      if (!email || !ADMIN_EMAILS.includes(email)) { router.replace('/dashboard'); return }
+      if (!isAdminEmail(email)) { router.replace('/dashboard'); return }
       setAdminUserId(session!.user.id)
 
       Promise.all([
@@ -283,7 +283,7 @@ export default function PedidoAdminPage() {
     setAssignMsg('')
     const res  = await fetch('/api/assign-order', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: { 'Content-Type': 'application/json', ...(await authHeaders()) },
       body: JSON.stringify({ orderId: order.id, email: assignEmail.trim() }),
     })
     const json = await res.json()

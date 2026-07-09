@@ -4,9 +4,8 @@ import { useEffect, useState, Suspense } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import Image from 'next/image'
 import { supabase } from '../lib/supabase'
+import { isAdminEmail } from '../lib/adminEmails'
 import './login.css'
-
-const ADMIN_EMAILS = ['maikasacerdote@gmail.com', 'zeika.memories@gmail.com']
 
 function redirectDest(email: string | undefined | null, afterParam?: string | null) {
   // afterParam (from URL) takes priority — it survives Google OAuth redirects
@@ -15,7 +14,7 @@ function redirectDest(email: string | undefined | null, afterParam?: string | nu
     sessionStorage.removeItem('zeika_after_login')
     return after
   }
-  return email && ADMIN_EMAILS.includes(email) ? '/dashboard' : '/mis-proyectos'
+  return isAdminEmail(email) ? '/dashboard' : '/mis-proyectos'
 }
 
 function LoginContent() {

@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from 'react'
 import { useRouter, useParams, useSearchParams } from 'next/navigation'
 import { supabase } from '../../lib/supabase'
 import Navbar from '../../components/Landing/Navbar/Navbar'
+import { REORDER_UNIT_PRICE } from '../../config/pricing'
 import '../mis-proyectos.css'
 
 // ── Types ────────────────────────────────────────────────────────────────────
@@ -45,14 +46,6 @@ const SIZE_INFO: Record<string, { name: string; dims: string }> = {
   grande_h:  { name: 'Grande Horizontal',  dims: '41 × 29 cm'   },
   vertical:  { name: 'Vertical',           dims: '28 × 21,6 cm' },
   cuadrado:  { name: 'Cuadrado',           dims: '29 × 29 cm'   },
-}
-
-const UNIT_PRICES: Record<string, number> = {
-  chico_h:   75000,
-  mediano_h: 81500,
-  grande_h:  100000,
-  vertical:  81500,
-  cuadrado:  97000,
 }
 
 const STATUS_LABEL: Record<string, string> = {
@@ -283,7 +276,7 @@ export default function ProyectoPage() {
       const openParam = searchParams.get('open')
       if (openParam === 'confirmado' && o.status === 'preview_listo') {
         const discount   = (o.copies ?? 1) >= 3 ? 0.8 : 1
-        const unitPrice  = UNIT_PRICES[o.size] ?? o.price_total
+        const unitPrice  = REORDER_UNIT_PRICE[o.size] ?? o.price_total
         const total      = (o.copies ?? 1) * unitPrice * discount
         const secondPaid = Math.round(total - o.price_paid)
         const nowIso     = new Date().toISOString()
@@ -420,11 +413,6 @@ export default function ProyectoPage() {
   // Inline pagar (desktop)
   async function handleReorderDesktop() {
     if (!order || paying) return
-    const unitPriceR     = UNIT_PRICES[order.size] ?? order.price_total
-    const discountR      = copies >= 3 ? 0.8 : 1
-    const subtotalR      = copies * unitPriceR * discountR
-    const shippingTotalR = deliveryType === 'andreani' ? (shippingPrice ?? 0) : 0
-    const payNowR        = Math.round(subtotalR + shippingTotalR)
     const fullAddress    = [
       calle, numero, piso && `Piso ${piso}`, depto && `Depto ${depto}`,
       ciudad, provincia, pais, cp && `CP ${cp}`,
@@ -440,11 +428,14 @@ export default function ProyectoPage() {
       method:  'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
-        orderId:    order.id,
-        bookName:   order.book_name,
-        amount:     payNowR,
-        successUrl: `${siteUrl}/mis-proyectos/${order.id}/confirmado`,
-        failureUrl: `${siteUrl}/mis-proyectos/${order.id}?open=reorder`,
+        orderId:      order.id,
+        bookName:     order.book_name,
+        copies,
+        deliveryType,
+        cp:           deliveryType === 'andreani' ? cp : undefined,
+        isReorder:    true,
+        successUrl:   `${siteUrl}/mis-proyectos/${order.id}/confirmado`,
+        failureUrl:   `${siteUrl}/mis-proyectos/${order.id}?open=reorder`,
       }),
     })
     const data = await res.json()
@@ -454,11 +445,6 @@ export default function ProyectoPage() {
 
   async function handlePayDesktop() {
     if (!order || paying) return
-    const unitPrice     = UNIT_PRICES[order.size] ?? order.price_total
-    const discount      = copies >= 3 ? 0.8 : 1
-    const subtotal      = copies * unitPrice * discount
-    const shippingTotal = deliveryType === 'andreani' ? (shippingPrice ?? 0) : 0
-    const payNow        = Math.round(subtotal - order.price_paid + shippingTotal)
 
     const fullAddress = [
       calle, numero, piso && `Piso ${piso}`, depto && `Depto ${depto}`,
@@ -477,11 +463,14 @@ export default function ProyectoPage() {
       method:  'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
-        orderId:    order.id,
-        bookName:   order.book_name,
-        amount:     payNow,
-        successUrl: `${siteUrl}/mis-proyectos/${order.id}?open=confirmado`,
-        failureUrl: `${siteUrl}/mis-proyectos/${order.id}?open=pagar`,
+        orderId:      order.id,
+        bookName:     order.book_name,
+        copies,
+        deliveryType,
+        cp:           deliveryType === 'andreani' ? cp : undefined,
+        isReorder:    false,
+        successUrl:   `${siteUrl}/mis-proyectos/${order.id}?open=confirmado`,
+        failureUrl:   `${siteUrl}/mis-proyectos/${order.id}?open=pagar`,
       }),
     })
     const data = await res.json()
@@ -541,7 +530,7 @@ export default function ProyectoPage() {
   const hasReview          = notes.some(n => n.type === 'review')
 
   // Pagar calculations
-  const unitPrice     = UNIT_PRICES[order.size] ?? order.price_total
+  const unitPrice     = REORDER_UNIT_PRICE[order.size] ?? order.price_total
   const discount      = copies >= 3 ? 0.8 : 1
   const subtotal      = copies * unitPrice * discount
   const shippingTotal = deliveryType === 'andreani' ? (shippingPrice ?? 0) : 0

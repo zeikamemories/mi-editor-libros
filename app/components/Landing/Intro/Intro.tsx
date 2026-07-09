@@ -25,7 +25,7 @@ export default function Intro() {
 
       <div className="intro__body-row">
         <p className="intro__body">
-          Diseñamos fotolibros personalizados a partir de tus fotos, viajes e historias. Vos compartís tus recuerdos, nosotras nos encargamos de transformarlos en un libro pensado para durar y revivir esos momentos una y otra vez.
+          En Zeika creemos en el poder de la memoria y la permanencia. Somos un estudio de diseño que materializa historias e identidades en piezas con significado, pensadas para perdurar en el tiempo.
         </p>
       </div>
 

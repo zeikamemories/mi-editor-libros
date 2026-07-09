@@ -26,13 +26,13 @@ export default function Hero() {
       <div className="hero__overlay">
         <h1 className="hero__title hero__title--desktop">
           Eternizamos momentos<br />
-          a través de fotolibros<br />
+          a través de productos<br />
           personalizados.
         </h1>
         <h1 className="hero__title hero__title--mobile">
           Eternizamos momentos<br />
           a través<br />
-          de fotolibros personalizados
+          de productos personalizados
         </h1>
       </div>
     </section>
