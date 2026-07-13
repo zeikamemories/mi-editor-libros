@@ -1,0 +1,96 @@
+/* ─── Mobile ─────────────────────────────────────────────────────────────── */
+
+.cotizacion {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 100%;
+  padding: 40px 20px;
+  background: var(--color-blue);
+  text-align: center;
+}
+
+.cotizacion__content {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+}
+
+.cotizacion__label {
+  font-family: "forma-djr-display", sans-serif;
+  font-weight: 600;
+  font-size: 16px;
+  letter-spacing: 0.64px;
+  text-transform: uppercase;
+  color: var(--color-white);
+  margin: 0;
+}
+
+.cotizacion__title {
+  font-family: "Times New Roman", Times, serif;
+  font-weight: 400;
+  font-size: 32px;
+  letter-spacing: -0.64px;
+  color: var(--color-white);
+  margin: 0;
+}
+
+.cotizacion__body {
+  font-family: "forma-djr-display", sans-serif;
+  font-weight: 500;
+  font-size: 15px;
+  line-height: 21px;
+  letter-spacing: 0.64px;
+  color: var(--color-white);
+  margin: 0;
+  max-width: 353px;
+}
+
+.cotizacion__link {
+  margin-top: 8px;
+  font-family: "forma-djr-display", sans-serif;
+  font-weight: 600;
+  font-size: 15px;
+  letter-spacing: 0.6px;
+  color: var(--color-white);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+/* ─── Desktop ────────────────────────────────────────────────────────────── */
+
+@media (min-width: 1024px) {
+  .cotizacion {
+    padding: 60px 50px;
+    align-items: flex-start;
+    text-align: left;
+  }
+
+  .cotizacion__content {
+    align-items: flex-start;
+    gap: 16px;
+    width: 40%;
+  }
+
+  .cotizacion__label {
+    font-size: 22px;
+    letter-spacing: 0.88px;
+  }
+
+  .cotizacion__title {
+    font-size: 46px;
+    letter-spacing: -0.92px;
+  }
+
+  .cotizacion__body {
+    font-size: 18px;
+    letter-spacing: 0.72px;
+    max-width: 500px;
+  }
+
+  .cotizacion__link {
+    font-size: 17px;
+    letter-spacing: 0.68px;
+  }
+}

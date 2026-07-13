@@ -1257,7 +1257,7 @@ export default function ProyectoPage() {
       <div className="mpd-body">
 
         <div className="mpd-hero">
-          <a href="/mis-proyectos" className="mpd-back">‹ Mis proyectos</a>
+          <a href="/mis-proyectos" className="mpd-back">‹ Mis pedidos</a>
           <h1 className="mpd-title">{order.book_name}</h1>
           <p className="mpd-order-num">{orderNumber(order.id, order.created_at)}</p>
           <div className={`mpd-status-badge mpd-status-badge--${order.status}`}>

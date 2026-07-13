@@ -6,7 +6,7 @@
   gap: 20px;
   padding: 40px 0;
   width: 100%;
-  background: var(--color-blue);
+  background: #FAF8F4;
 }
 
 .como__label {
@@ -15,7 +15,7 @@
   font-size: 16px;
   letter-spacing: 0.64px;
   text-transform: uppercase;
-  color: var(--color-white);
+  color: var(--color-black);
   text-align: center;
   margin: 0;
   padding: 0 20px;

@@ -93,7 +93,7 @@ export default function Navbar({ hideLinks, hideMisProyectos }: { hideLinks?: bo
                   <div className="navbar__user-dropdown">
                     {!hideMisProyectos && (
                       <a href="/mis-proyectos" className="navbar__dropdown-item" onClick={() => setDropOpen(false)}>
-                        Mis proyectos
+                        Mis pedidos
                       </a>
                     )}
                     <button className="navbar__dropdown-item navbar__dropdown-item--btn" onClick={signOut}>
@@ -141,7 +141,7 @@ export default function Navbar({ hideLinks, hideMisProyectos }: { hideLinks?: bo
               {mounted && user ? (
                 <>
                   <a href="/mis-proyectos" className="navbar__overlay-auth-link" onClick={() => setOpen(false)}>
-                    Mis proyectos
+                    Mis pedidos
                   </a>
                   <button className="navbar__overlay-auth-link navbar__overlay-auth-btn" onClick={signOut}>
                     Cerrar sesión

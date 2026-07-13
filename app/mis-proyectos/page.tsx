@@ -95,7 +95,7 @@ export default function MisProyectosPage() {
       </div>
 
       <main className="mp-main">
-        <h1 className="mp-title">Mis proyectos</h1>
+        <h1 className="mp-title">Mis pedidos</h1>
 
         <div className="mp-grid">
           {orders.map(order => {

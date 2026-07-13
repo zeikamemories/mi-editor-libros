@@ -243,7 +243,7 @@ export default function OrdenPage() {
         <div className="orden__right-col">
           <h1 className="orden__title">Contar mi historia</h1>
           <p className="orden__subtitle-blue">
-            Una vez abonado, este pedido aparece en "Mis proyectos" con tu propia carpeta de Drive donde vas a cargar el material
+            Una vez abonado, este pedido aparece en "Mis pedidos" con tu propia carpeta de Drive donde vas a cargar el material
           </p>
           {summaryContent}
           <button
@@ -262,7 +262,7 @@ export default function OrdenPage() {
           <a className="orden__back-link" href="/">←</a>
           <h1 className="orden__title">Contar mi historia</h1>
           <p className="orden__subtitle-blue">
-            Una vez abonado, este pedido aparece en "Mis proyectos" con tu propia carpeta de Drive donde vas a cargar el material
+            Una vez abonado, este pedido aparece en "Mis pedidos" con tu propia carpeta de Drive donde vas a cargar el material
           </p>
           {summaryContent}
         </div>
