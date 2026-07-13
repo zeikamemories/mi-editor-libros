@@ -8,6 +8,7 @@ import { supabase } from '../lib/supabase'
 import { isAdminEmail } from '../lib/adminEmails'
 import { authHeaders } from '../lib/authFetch'
 import Navbar from '../components/Landing/Navbar/Navbar'
+import ConfirmModal from '../components/ConfirmModal/ConfirmModal'
 import './dashboard.css'
 
 type FilterTab = 'TODOS' | 'NUEVOS' | 'EN PROCESO' | 'EN PRODUCCIÓN' | 'FINALIZADOS'
@@ -75,9 +76,11 @@ export default function DashboardPage() {
   const [projectMap, setProjectMap] = useState<Record<string, { cover_thumbnail: { left: string; right: string } | null }>>({})
 
   const [authChecked, setAuthChecked]     = useState(false)
+  const [loadError, setLoadError]         = useState(false)
   const [editMode, setEditMode]           = useState(false)
   const [selected, setSelected]           = useState<Set<string>>(new Set())
   const [deleting, setDeleting]           = useState(false)
+  const [pendingDelete, setPendingDelete] = useState<{ ids: string[]; message: string } | null>(null)
   const [designerPopup, setDesignerPopup] = useState<string | null>(null)
   useEffect(() => {
     if (!designerPopup) return
@@ -105,6 +108,7 @@ export default function DashboardPage() {
   useEffect(() => {
     if (!authChecked) return
     async function fetchOrders() {
+      setLoadError(false)
       const [res, { data: projects }] = await Promise.all([
         fetch('/api/admin/orders', { headers: await authHeaders() }),
         supabase.from('projects').select('order_id, cover_thumbnail').not('order_id', 'is', null),
@@ -116,7 +120,19 @@ export default function DashboardPage() {
       }
       setProjectMap(map)
 
-      if (!res.ok) { console.error('Failed to fetch orders'); setLoading(false); return }
+      if (res.status === 401) {
+        // La sesión local parece vigente pero el servidor la rechazó (vencida o revocada) —
+        // forzar re-login en vez de mostrar "no hay pedidos" en silencio.
+        await supabase.auth.signOut()
+        router.replace('/login')
+        return
+      }
+      if (!res.ok) {
+        console.error('Failed to fetch orders')
+        setLoadError(true)
+        setLoading(false)
+        return
+      }
       const data = await res.json()
 
       const rows: OrderRow[] = (data ?? []).map((o: any) => ({
@@ -139,11 +155,8 @@ export default function DashboardPage() {
     fetchOrders()
   }, [authChecked])
 
-  async function deleteOrder(id: string, bookName: string) {
-    if (!window.confirm(`¿Eliminar el pedido "${bookName}"? Esta acción no se puede deshacer.`)) return
-    const res = await fetch('/api/admin/orders', { method: 'DELETE', headers: { 'Content-Type': 'application/json', ...(await authHeaders()) }, body: JSON.stringify({ ids: [id] }) })
-    if (!res.ok) { alert('Error al eliminar'); return }
-    setOrders(prev => prev.filter(o => o.id !== id))
+  function deleteOrder(id: string, bookName: string) {
+    setPendingDelete({ ids: [id], message: `¿Eliminar el pedido "${bookName}"? Esta acción no se puede deshacer.` })
   }
 
   function toggleSelect(id: string) {
@@ -162,16 +175,22 @@ export default function DashboardPage() {
     }
   }
 
-  async function deleteSelected() {
-    if (!window.confirm(`¿Eliminar ${selected.size} pedido${selected.size > 1 ? 's' : ''}? Esta acción no se puede deshacer.`)) return
-    setDeleting(true)
+  function deleteSelected() {
     const ids = Array.from(selected)
+    setPendingDelete({ ids, message: `¿Eliminar ${ids.length} pedido${ids.length > 1 ? 's' : ''}? Esta acción no se puede deshacer.` })
+  }
+
+  async function confirmPendingDelete() {
+    if (!pendingDelete) return
+    const { ids } = pendingDelete
+    setDeleting(true)
     const res = await fetch('/api/admin/orders', { method: 'DELETE', headers: { 'Content-Type': 'application/json', ...(await authHeaders()) }, body: JSON.stringify({ ids }) })
     if (!res.ok) { setDeleting(false); alert('Error al eliminar'); return }
     setOrders(prev => prev.filter(o => !ids.includes(o.id)))
     setSelected(new Set())
     setEditMode(false)
     setDeleting(false)
+    setPendingDelete(null)
   }
 
   async function selectDesigner(id: string, value: Designer) {
@@ -273,6 +292,8 @@ export default function DashboardPage() {
 
         {loading ? (
           <p className="dash-loading">Cargando pedidos...</p>
+        ) : loadError ? (
+          <p className="dash-empty">Error al cargar los pedidos. Recargá la página o volvé a intentar.</p>
         ) : filtered.length === 0 ? (
           <p className="dash-empty">No hay pedidos en esta categoría.</p>
         ) : viewMode === 'grid' ? (
@@ -433,6 +454,17 @@ export default function DashboardPage() {
           </div>
         )}
       </main>
+
+      {pendingDelete && (
+        <ConfirmModal
+          title="Eliminar pedido"
+          message={pendingDelete.message}
+          confirmLabel="Eliminar"
+          loading={deleting}
+          onConfirm={confirmPendingDelete}
+          onCancel={() => setPendingDelete(null)}
+        />
+      )}
     </div>
   )
 }
