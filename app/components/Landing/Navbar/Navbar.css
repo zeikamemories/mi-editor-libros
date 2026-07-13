@@ -7,9 +7,10 @@
 }
 
 .navbar__inner {
-  display: flex;
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
+  grid-template-areas: "hamburger logo auth";
   align-items: center;
-  justify-content: space-between;
   padding: 6px 20px;
   width: 100%;
   box-sizing: border-box;
@@ -19,6 +20,8 @@
   display: flex;
   align-items: center;
   line-height: 0;
+  grid-area: logo;
+  justify-self: center;
 }
 
 .navbar__logo img {
@@ -42,6 +45,8 @@
   border: none;
   padding: 4px;
   cursor: pointer;
+  grid-area: hamburger;
+  justify-self: start;
 }
 
 .navbar__hamburger span {
@@ -49,6 +54,36 @@
   width: 24px;
   height: 1.5px;
   background: var(--color-black);
+}
+
+/* Mobile avatar / user icon */
+.navbar__mobile-auth {
+  display: flex;
+  align-items: center;
+  grid-area: auth;
+  justify-self: end;
+}
+
+.navbar__mobile-avatar {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: var(--color-blue);
+  color: var(--color-white);
+  font-family: "forma-djr-display", sans-serif;
+  font-weight: 600;
+  font-size: 14px;
+  text-decoration: none;
+}
+
+.navbar__mobile-user-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--color-black);
 }
 
 /* Mobile overlay */
@@ -172,8 +207,19 @@
 /* ── Desktop ── */
 @media (min-width: 1024px) {
   .navbar__inner {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
     padding: 6px 24px;
     position: relative;
+  }
+
+  .navbar__logo {
+    justify-self: auto;
+  }
+
+  .navbar__mobile-auth {
+    display: none;
   }
 
   /* Nav links absolutely centered in the bar */

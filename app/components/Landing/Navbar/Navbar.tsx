@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from 'react'
 import Image from 'next/image'
+import { User } from 'lucide-react'
 import { supabase } from '../../../lib/supabase'
 import './Navbar.css'
 
@@ -114,6 +115,19 @@ export default function Navbar({ hideLinks, hideMisProyectos }: { hideLinks?: bo
           <button className="navbar__hamburger" onClick={() => setOpen(true)} aria-label="Abrir menú">
             <span /><span /><span />
           </button>
+
+          {/* Mobile avatar / user icon */}
+          <div className="navbar__mobile-auth">
+            {mounted && user ? (
+              <a href="/mis-proyectos" className="navbar__mobile-avatar" aria-label="Mis pedidos">
+                {user.initial}
+              </a>
+            ) : (
+              <a href="/login" className="navbar__mobile-user-icon" aria-label="Iniciar sesión">
+                <User size={22} strokeWidth={1.75} />
+              </a>
+            )}
+          </div>
         </div>
       </header>
 
@@ -137,23 +151,13 @@ export default function Navbar({ hideLinks, hideMisProyectos }: { hideLinks?: bo
 
           <div className="navbar__overlay-footer">
             <hr className="navbar__overlay-divider" />
-            <div className="navbar__overlay-auth">
-              {mounted && user ? (
-                <>
-                  <a href="/mis-proyectos" className="navbar__overlay-auth-link" onClick={() => setOpen(false)}>
-                    Mis pedidos
-                  </a>
-                  <button className="navbar__overlay-auth-link navbar__overlay-auth-btn" onClick={signOut}>
-                    Cerrar sesión
-                  </button>
-                </>
-              ) : mounted ? (
-                <>
-                  <a href="/login?mode=signup" className="navbar__overlay-auth-link" onClick={() => setOpen(false)}>Registrarse</a>
-                  <a href="/login" className="navbar__overlay-auth-link" onClick={() => setOpen(false)}>Iniciar Sesión</a>
-                </>
-              ) : null}
-            </div>
+            {mounted && user && (
+              <div className="navbar__overlay-auth">
+                <button className="navbar__overlay-auth-link navbar__overlay-auth-btn" onClick={signOut}>
+                  Cerrar sesión
+                </button>
+              </div>
+            )}
             <div className="navbar__overlay-socials">
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <a href="#" aria-label="Facebook"><img src="/icons/social/facebook.svg"  alt="Facebook"  className="navbar__overlay-social-icon" /></a>

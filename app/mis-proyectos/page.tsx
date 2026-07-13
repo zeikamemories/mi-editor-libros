@@ -82,6 +82,11 @@ export default function MisProyectosPage() {
 
   const firstName = userName.split(' ')[0]
 
+  async function signOut() {
+    await supabase.auth.signOut()
+    window.location.href = '/'
+  }
+
   return (
     <div className="mp-root">
       <Navbar hideLinks />
@@ -92,6 +97,7 @@ export default function MisProyectosPage() {
           <p className="mp-user-strip__name">{userName}</p>
           <p className="mp-user-strip__email">{userEmail}</p>
         </div>
+        <button className="mp-user-strip__signout" onClick={signOut}>Cerrar sesión</button>
       </div>
 
       <main className="mp-main">

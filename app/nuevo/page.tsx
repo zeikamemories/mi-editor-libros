@@ -5,6 +5,7 @@ import Link from 'next/link'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { Monitor } from 'lucide-react'
 import { supabase } from '../lib/supabase'
+import { compressImage } from '../lib/imageCompress'
 import Navbar from '../components/Landing/Navbar/Navbar'
 import './nuevo.css'
 
@@ -47,8 +48,9 @@ const BOOK_SIZES: BookSize[] = [
 // ── Upload helper (mirrors PhotoPanel logic) ──────────────────────────────────
 
 async function uploadFile(file: File): Promise<Photo> {
+  const compressed = await compressImage(file)
   const form = new FormData()
-  form.append('file', file)
+  form.append('file', compressed)
   const res  = await fetch('/api/upload', { method: 'POST', body: form })
   const data = await res.json() as { url?: string; width?: number; height?: number; error?: string }
   if (!res.ok || !data.url) throw new Error(data.error ?? 'Upload failed')
@@ -346,17 +348,23 @@ function NuevoContent() {
   const handleUpload = useCallback(async (files: FileList) => {
     const arr = Array.from(files)
     setUploadingCount(arr.length)
-    const results = await Promise.allSettled(arr.map(async (file, i) => {
+    const results = await Promise.allSettled(arr.map(async (file) => {
       const photo = await uploadFile(file)
       setUploadingCount((c) => Math.max(0, c - 1))
       return photo
     }))
     const uploaded: Photo[] = []
-    for (const r of results) {
+    const failed: string[] = []
+    arr.forEach((file, i) => {
+      const r = results[i]
       if (r.status === 'fulfilled') uploaded.push(r.value)
-    }
+      else failed.push(file.name)
+    })
     setPhotos((prev) => [...prev, ...uploaded])
     setUploadingCount(0)
+    if (failed.length > 0) {
+      alert(`No se pudieron subir ${failed.length} foto(s): ${failed.join(', ')}`)
+    }
   }, [])
 
   const handleDeletePhoto = (id: string) => setPhotos((prev) => prev.filter((p) => p.id !== id))
