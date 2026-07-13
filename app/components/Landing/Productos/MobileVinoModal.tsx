@@ -81,9 +81,9 @@ export default function MobileVinoModal({ onClose }: Props) {
       <div className="mpm__scroll">
 
         {/* Image */}
-        <div className="mpm__carousel">
-          <div className="mpm__images">
-            <img src={IMAGE} alt="Vino personalizado" className="mpm__image" />
+        <div className="mvm__carousel">
+          <div className="mvm__images">
+            <img src={IMAGE} alt="Vino personalizado" className="mvm__image" />
           </div>
         </div>
 

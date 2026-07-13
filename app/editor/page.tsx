@@ -515,7 +515,9 @@ export default function EditorPage() {
       supabase.from('projects').update({
         total_spreads: totalContentSpreadsRef.current,
         spreads:       spreadsData.current,
-      }).eq('id', projectIdRef.current!)
+      }).eq('id', projectIdRef.current!).then(({ error }) => {
+        if (error) console.error('Error guardando total_spreads:', error.message)
+      })
     }, 600)
   }, [totalContentSpreads]) // eslint-disable-line react-hooks/exhaustive-deps
 
@@ -547,8 +549,11 @@ export default function EditorPage() {
         const coverR = rc.toDataURL(coverOpts)
         supabase.from('projects').update({ cover_thumbnail: { left: coverL, right: coverR } })
           .eq('id', projectIdRef.current)
+          .then(({ error }) => {
+            if (error) console.error('Error guardando cover_thumbnail:', error.message)
+          })
       }
-    } catch (_) { /* canvas not ready */ }
+    } catch (e) { console.error('Error capturando thumbnail:', e) }
   }, [])
 
   // ── Render a single page to a small thumbnail from saved PageData ─────────
@@ -691,6 +696,9 @@ export default function EditorPage() {
   const savePhotosToSupabase = useCallback((updated: Photo[]) => {
     if (!projectIdRef.current) return
     supabase.from('projects').update({ photos: updated }).eq('id', projectIdRef.current)
+      .then(({ error }) => {
+        if (error) console.error('Error guardando fotos:', error.message)
+      })
   }, [])
 
   const handlePhotoUpload = useCallback((uploaded: Photo[]) => {

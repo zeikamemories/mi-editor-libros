@@ -1323,6 +1323,7 @@
   font-weight: 500;
   letter-spacing: 0.04em;
   color: var(--color-black);
+  text-align: right;
 }
 
 @media (min-width: 1024px) {

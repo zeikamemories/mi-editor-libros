@@ -27,9 +27,7 @@ export default function Footer() {
           <div className="footer__col">
             <p className="footer__col-title">Perfil</p>
             <div className="footer__col-items">
-              <a href="#" className="footer__link">Mi cuenta</a>
-              <a href="#" className="footer__link">Mis pedidos</a>
-              <a href="#" className="footer__link">Favoritos</a>
+              <a href="/mis-proyectos" className="footer__link">Mis pedidos</a>
             </div>
           </div>
           <div className="footer__col">
@@ -53,23 +51,27 @@ export default function Footer() {
         <div className="footer__contact">
           <p className="footer__contact-title">Contactanos</p>
           <div className="footer__socials">
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img src="/icons/social/facebook.svg"  alt="Facebook"  className="footer__social-icon" />
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img src="/icons/social/instagram.svg" alt="Instagram" className="footer__social-icon" />
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img src="/icons/social/whatsapp.svg"  alt="WhatsApp"  className="footer__social-icon" />
+            <a href="https://www.instagram.com/zeika.memories/" target="_blank" rel="noopener noreferrer">
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img src="/icons/social/instagram.svg" alt="Instagram" className="footer__social-icon" />
+            </a>
+            <a href="https://wa.me/5491133521921" target="_blank" rel="noopener noreferrer">
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img src="/icons/social/whatsapp.svg"  alt="WhatsApp"  className="footer__social-icon" />
+            </a>
           </div>
         </div>
 
         {/* Desktop socials (different position) */}
         <div className="footer__desktop-socials">
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img src="/icons/social/facebook.svg"  alt="Facebook"  className="footer__desktop-social-icon" />
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img src="/icons/social/instagram.svg" alt="Instagram" className="footer__desktop-social-icon" />
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img src="/icons/social/whatsapp.svg"  alt="WhatsApp"  className="footer__desktop-social-icon" />
+          <a href="https://www.instagram.com/zeika.memories/" target="_blank" rel="noopener noreferrer">
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img src="/icons/social/instagram.svg" alt="Instagram" className="footer__desktop-social-icon" />
+          </a>
+          <a href="https://wa.me/5491133521921" target="_blank" rel="noopener noreferrer">
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img src="/icons/social/whatsapp.svg"  alt="WhatsApp"  className="footer__desktop-social-icon" />
+          </a>
         </div>
         {/* Legal strip — inside card */}
         <p className="footer__legal">

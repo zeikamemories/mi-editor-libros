@@ -6,8 +6,13 @@ import { useRouter, useSearchParams } from 'next/navigation'
 import { Monitor } from 'lucide-react'
 import { supabase } from '../lib/supabase'
 import { compressImage } from '../lib/imageCompress'
+import { PRICES_BY_PAGES } from '../config/pricing'
 import Navbar from '../components/Landing/Navbar/Navbar'
 import './nuevo.css'
+
+function fmtPrice(n: number) {
+  return '$' + n.toLocaleString('es-AR')
+}
 
 // ── Types ────────────────────────────────────────────────────────────────────
 
@@ -23,7 +28,6 @@ interface BookSize {
   id:    string
   nombre: string
   dims:   string
-  price:  string
   img:    string
 }
 
@@ -38,11 +42,11 @@ interface BookDetails {
 // ── Data ─────────────────────────────────────────────────────────────────────
 
 const BOOK_SIZES: BookSize[] = [
-  { id: 'chico',    nombre: 'CHICO HORIZONTAL',  dims: '21 x 14,8 CM', price: '$75.500',  img: '/fotos/chico-mobile.jpg'    },
-  { id: 'mediano',  nombre: 'MEDIANO HORIZONTAL', dims: '28 x 21,6 CM', price: '$81.500',  img: '/fotos/mediano-mobile.jpg'  },
-  { id: 'grande',   nombre: 'GRANDE HORIZONTAL',  dims: '41 x 29 CM',   price: '$100.000', img: '/fotos/grande-mobile.jpg'   },
-  { id: 'vertical', nombre: 'VERTICAL',           dims: '21,6 x 28 CM', price: '$81.500',  img: '/fotos/vertical-mobile.jpg' },
-  { id: 'cuadrado', nombre: 'CUADRADO',           dims: '29 x 29 CM',   price: '$97.000',  img: '/fotos/cuadrado-mobile.jpg' },
+  { id: 'chico',    nombre: 'CHICO HORIZONTAL',  dims: '21 x 14,8 CM', img: '/fotos/chico-mobile.jpg'    },
+  { id: 'mediano',  nombre: 'MEDIANO HORIZONTAL', dims: '28 x 21,6 CM', img: '/fotos/mediano-mobile.jpg'  },
+  { id: 'grande',   nombre: 'GRANDE HORIZONTAL',  dims: '41 x 29 CM',   img: '/fotos/grande-mobile.jpg'   },
+  { id: 'vertical', nombre: 'VERTICAL',           dims: '21,6 x 28 CM', img: '/fotos/vertical-mobile.jpg' },
+  { id: 'cuadrado', nombre: 'CUADRADO',           dims: '29 x 29 CM',   img: '/fotos/cuadrado-mobile.jpg' },
 ]
 
 // ── Upload helper (mirrors PhotoPanel logic) ──────────────────────────────────
@@ -100,7 +104,7 @@ function Step1({ selected, onSelect }: { selected: string | null; onSelect: (id:
                 <span className="nuevo-size-card-dims">{book.dims}</span>
               </div>
               <div className="nuevo-size-card-divider" />
-              <span className="nuevo-size-card-price">{book.price}</span>
+              <span className="nuevo-size-card-price">{fmtPrice(PRICES_BY_PAGES[book.id][0])}</span>
             </div>
           </button>
         ))}
@@ -178,6 +182,8 @@ const DEFAULT_PAGE_OPTIONS = ['20', '30', '40']
 
 function Step2({ selectedBook, details, onChange }: Step2Props) {
   const pageOptions = (selectedBook && PAGE_OPTIONS[selectedBook.id]) ?? DEFAULT_PAGE_OPTIONS
+  const pageIdx      = Math.max(0, pageOptions.indexOf(details.paginas))
+  const selectedPrice = selectedBook ? PRICES_BY_PAGES[selectedBook.id][pageIdx] : 0
   return (
     <div className="nuevo-body">
       <h1 className="nuevo-step-title">2. DETALLES DEL PEDIDO</h1>
@@ -228,7 +234,7 @@ function Step2({ selectedBook, details, onChange }: Step2Props) {
                   <span className="nuevo-size-card-dims">{selectedBook.dims}</span>
                 </div>
                 <div className="nuevo-size-card-divider" />
-                <span className="nuevo-size-card-price">{selectedBook.price}</span>
+                <span className="nuevo-size-card-price">{fmtPrice(selectedPrice)}</span>
               </div>
             </div>
           )}

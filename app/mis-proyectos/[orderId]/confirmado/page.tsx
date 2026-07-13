@@ -4,6 +4,7 @@ import { useEffect, useState, Suspense } from 'react'
 import { useSearchParams, useParams } from 'next/navigation'
 import { useRouter } from 'next/navigation'
 import { supabase } from '../../../lib/supabase'
+import { REORDER_UNIT_PRICE } from '../../../config/pricing'
 import Navbar from '../../../components/Landing/Navbar/Navbar'
 import '../../mis-proyectos.css'
 
@@ -17,10 +18,6 @@ interface Order {
   price_total: number
   price_paid: number
   status_dates: Record<string, string> | null
-}
-
-const PRICES: Record<string, number> = {
-  chico_h: 1, mediano_h: 81500, grande_h: 100000, vertical: 81500, cuadrado: 97000,
 }
 
 const STEPS = [
@@ -56,7 +53,7 @@ function ConfirmadoContent() {
       .then(async ({ data }) => {
         if (!data) { setDone(true); return }
         const discount   = (data.copies ?? 1) >= 3 ? 0.8 : 1
-        const total      = (data.copies ?? 1) * (PRICES[data.size] ?? data.price_total) * discount
+        const total      = (data.copies ?? 1) * (REORDER_UNIT_PRICE[data.size] ?? data.price_total) * discount
         const secondPaid = Math.round(total - data.price_paid)
         const nowIso     = new Date().toISOString()
         const newDates   = { ...(data.status_dates ?? {}), en_produccion: nowIso }

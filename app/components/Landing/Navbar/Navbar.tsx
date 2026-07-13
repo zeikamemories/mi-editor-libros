@@ -159,14 +159,14 @@ export default function Navbar({ hideLinks, hideMisProyectos }: { hideLinks?: bo
               </div>
             )}
             <div className="navbar__overlay-socials">
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <a href="#" aria-label="Facebook"><img src="/icons/social/facebook.svg"  alt="Facebook"  className="navbar__overlay-social-icon" /></a>
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <a href="#" aria-label="X"><img src="/icons/social/twitter.svg"   alt="Twitter"   className="navbar__overlay-social-icon" /></a>
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <a href="#" aria-label="Instagram"><img src="/icons/social/instagram.svg" alt="Instagram" className="navbar__overlay-social-icon" /></a>
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <a href="#" aria-label="WhatsApp"><img src="/icons/social/whatsapp.svg"  alt="WhatsApp"  className="navbar__overlay-social-icon" /></a>
+              <a href="https://www.instagram.com/zeika.memories/" target="_blank" rel="noopener noreferrer" aria-label="Instagram">
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img src="/icons/social/instagram.svg" alt="Instagram" className="navbar__overlay-social-icon" />
+              </a>
+              <a href="https://wa.me/5491133521921" target="_blank" rel="noopener noreferrer" aria-label="WhatsApp">
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img src="/icons/social/whatsapp.svg"  alt="WhatsApp"  className="navbar__overlay-social-icon" />
+              </a>
             </div>
           </div>
         </div>

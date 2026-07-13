@@ -9,23 +9,29 @@ import MobileCompareModal from './MobileCompareModal'
 import VinoModal from './VinoModal'
 import MobileVinoModal from './MobileVinoModal'
 import AgeGateModal from './AgeGateModal'
+import { PRICES_BY_PAGES, VINO_PRICE_BASE } from '../../../config/pricing'
 import './Productos.css'
 
 const AGE_CONFIRMED_KEY = 'zeika_age_confirmed'
 
+function fmtPrice(n: number) {
+  return '$' + n.toLocaleString('es-AR')
+}
+
+// Precio "desde" = el de la base de 20 páginas (fuente única: app/config/pricing.ts)
 const VINO_PRODUCT: ProductData = {
   sizeId:     'vinos',
   name:       'Vinos Personalizados',
-  price:      'Desde $45.000',
+  price:      `Desde ${fmtPrice(VINO_PRICE_BASE.tinto)}`,
   dimensions: '750 ml',
 }
 
 const PRODUCTS: ProductData[] = [
-  { sizeId: 'chico',    name: 'Chico Horizontal',  mobileLabel: 'CHICO H',   price: '$1',       dimensions: '21 x 14,8 cm' },
-  { sizeId: 'mediano',  name: 'Mediano Horizontal', mobileLabel: 'MEDIANO H', price: '$94.700',  dimensions: '28 x 21,6 cm' },
-  { sizeId: 'grande',   name: 'Grande Horizontal',  price: '$128.800', dimensions: '41 x 29 cm'   },
-  { sizeId: 'vertical', name: 'Vertical',           price: '$94.700',  dimensions: '28 x 21,6 cm' },
-  { sizeId: 'cuadrado', name: 'Cuadrado',           price: '$125.800', dimensions: '29 x 29 cm'   },
+  { sizeId: 'chico',    name: 'Chico Horizontal',  mobileLabel: 'CHICO H',   price: fmtPrice(PRICES_BY_PAGES.chico[0]),    dimensions: '21 x 14,8 cm' },
+  { sizeId: 'mediano',  name: 'Mediano Horizontal', mobileLabel: 'MEDIANO H', price: fmtPrice(PRICES_BY_PAGES.mediano[0]),  dimensions: '28 x 21,6 cm' },
+  { sizeId: 'grande',   name: 'Grande Horizontal',  price: fmtPrice(PRICES_BY_PAGES.grande[0]),   dimensions: '41 x 29 cm'   },
+  { sizeId: 'vertical', name: 'Vertical',           price: fmtPrice(PRICES_BY_PAGES.vertical[0]), dimensions: '28 x 21,6 cm' },
+  { sizeId: 'cuadrado', name: 'Cuadrado',           price: fmtPrice(PRICES_BY_PAGES.cuadrado[0]), dimensions: '29 x 29 cm'   },
 ]
 
 export default function Productos() {

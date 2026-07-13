@@ -43,14 +43,15 @@ export const PAGE_OPTIONS_LARGE = [
 
 export const LARGE_SIZES = ['grande', 'grande_h', 'cuadrado']
 
-// Precio plano por unidad — usado para copias extra / reórdenes (no depende de cantidad de páginas).
+// Precio plano por unidad — usado para copias extra / reórdenes (no depende de cantidad de páginas,
+// se toma el precio base de 20 páginas de PRICES_BY_PAGES como valor único).
 // "chico_h" está intencionalmente en $1 — se usa para testear el flujo de compra, no cambiar.
 export const REORDER_UNIT_PRICE: Record<string, number> = {
   chico_h:   1,
-  mediano_h: 81500,
-  grande_h:  100000,
-  vertical:  81500,
-  cuadrado:  97000,
+  mediano_h: 94700,
+  grande_h:  128800,
+  vertical:  94700,
+  cuadrado:  125800,
 }
 
 /**

@@ -104,16 +104,22 @@
 
 .qs__team-photos {
   display: flex;
+  flex-wrap: wrap;
   gap: 10px;
   padding: 0 20px;
   width: 100%;
 }
 
 .qs__team-member {
-  flex: 1;
+  flex: 1 1 calc(50% - 5px);
   display: flex;
   flex-direction: column;
   gap: 5px;
+}
+
+.qs__team-member--extra {
+  flex: 0 0 calc(50% - 5px);
+  margin: 0 auto;
 }
 
 .qs__team-name {
@@ -359,19 +365,32 @@
   /* ── Equipo desktop ── */
   .qs__equipo {
     align-items: flex-start;
-    padding-left: 615px;
+    padding-left: 390px;
     padding-right: 50px;
   }
 
   .qs__team-photos {
     padding: 0;
     gap: 19px;
+    flex-wrap: nowrap;
   }
 
   .qs__team-member {
     width: 317px;
     flex: 0 0 317px;
     gap: 9px;
+  }
+
+  .qs__team-photos .qs__team-member:nth-child(2) {
+    order: 3;
+  }
+
+  .qs__team-member--extra {
+    order: 2;
+  }
+
+  .qs__team-member--extra {
+    margin: 0;
   }
 
   .qs__team-name {

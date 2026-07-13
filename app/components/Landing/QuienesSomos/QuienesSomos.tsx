@@ -77,6 +77,11 @@ export default function QuienesSomos() {
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img src="/fotos/jose.jpg" alt="Josefina De Vicentis" className="qs__team-photo" />
           </div>
+          <div className="qs__team-member qs__team-member--extra">
+            <p className="qs__team-name">Azucena Uranga</p>
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img src="/fotos/azu.jpg" alt="Azucena Uranga" className="qs__team-photo" />
+          </div>
         </div>
       </div>
 
