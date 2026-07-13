@@ -86,13 +86,10 @@
 }
 
 .qs__signature {
-  font-family: "Meow Script", cursive;
-  font-size: 40px;
-  letter-spacing: 1.6px;
-  color: var(--color-black);
-  text-transform: capitalize;
-  text-align: right;
-  margin: 0;
+  height: 125px;
+  width: auto;
+  align-self: flex-end;
+  margin: -35px 0 0;
 }
 
 /* ── Equipo ──────────────────────────────────────────────────────────────── */
@@ -349,9 +346,14 @@
     letter-spacing: 0.64px;
   }
 
+  .qs__break-mobile {
+    display: none;
+  }
+
   .qs__signature {
-    font-size: 75px;
-    letter-spacing: 3px;
+    height: 155px;
+    align-self: flex-end;
+    margin-top: -40px;
   }
 
   /* ── Equipo desktop ── */

@@ -54,10 +54,12 @@ export default function QuienesSomos() {
             Hola! Mi nombre es Maika. Desde muy chica disfruto viajar y vivir diferentes experiencias. Soy una persona nostálgica y, de alguna manera siempre termino volviendo a esos recuerdos.
             <br />
             Zeika nace en 2020 a partir de ese deseo: hacer eternos los momentos vividos.
+            <br className="qs__break-mobile" />
             {' '}Creo profundamente en las conexiones humanas y en cómo los recuerdos pueden fortalecer estas.
             {' '}Hoy ya somos un equipo que cree en lo mismo y trabaja todos los días para ayudarte a recordar tu historia de la mejor manera posible.
           </p>
-          <p className="qs__signature">maika</p>
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img src="/firma.png" alt="Maika" className="qs__signature" />
         </div>
       </div>
 
