@@ -254,19 +254,47 @@ export function createFrameAtPx(
 }
 
 // ─── 2. applyLayout ─────────────────────────────────────────────────────────
+// Switching layouts keeps any photos already placed — they're remapped onto
+// the new layout's frames in reading order (top-to-bottom, left-to-right)
+// and recropped to fit. If the new layout has more frames than there were
+// photos, the extras stay empty (dashed placeholder). If it has fewer, the
+// overflow photos are dropped — nowhere left to put them.
 
-export function applyLayout(
+export async function applyLayout(
   canvas: fabric.Canvas,
   layout: Layout,
   pageW: number,
   pageH: number,
-): void {
+): Promise<void> {
+  const existingPhotos = canvas.getObjects()
+    .filter(isPhotoObj)
+    .map((obj) => {
+      const pd = (obj as FabricObjectWithData).data as PhotoData
+      return {
+        src:        (obj as unknown as fabric.FabricImage).getSrc(),
+        border:     pd.border,
+        dropShadow: pd.dropShadow,
+        frameX:     pd.frameX,
+        frameY:     pd.frameY,
+      }
+    })
+    .sort((a, b) => a.frameY - b.frameY || a.frameX - b.frameX)
+
   // Remove empty frames and any placed photos; preserve text objects
   const toRemove = canvas.getObjects().filter((o) => isFrameObj(o) || isPhotoObj(o))
   canvas.remove(...toRemove)
 
-  for (const frame of layout.frames) {
-    createEmptyFrame(canvas, frame, pageW, pageH)
+  for (let i = 0; i < layout.frames.length; i++) {
+    const frameRect = createEmptyFrame(canvas, layout.frames[i], pageW, pageH)
+    const photo = existingPhotos[i]
+    if (!photo) continue
+
+    await dropPhotoOnFrame(canvas, frameRect, photo.src, pageW, pageH)
+    if (photo.border || photo.dropShadow) {
+      const img = canvas.getActiveObject() as unknown as fabric.FabricImage
+      if (photo.border)     applyPhotoBorder(img, photo.border)
+      if (photo.dropShadow) applyPhotoShadow(img, photo.dropShadow)
+    }
   }
 
   canvas.renderAll()

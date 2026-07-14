@@ -782,22 +782,22 @@ export default function EditorPage() {
   }, [saveCurrentSpread])
 
   // ── Layout select (panel click) → applies to active page ──────────────────
-  const handleLayoutSelect = useCallback((layout: Layout) => {
+  const handleLayoutSelect = useCallback(async (layout: Layout) => {
     const fc = getActiveFabric()
     if (!fc) return
     setSelectedLayoutId(layout.id)
-    applyLayout(fc, layout, PAGE_W, PAGE_H)
+    await applyLayout(fc, layout, PAGE_W, PAGE_H)
     saveCurrentSpread()
   }, [saveCurrentSpread]) // eslint-disable-line react-hooks/exhaustive-deps
 
   // ── Layout dropped onto a specific page in Canvas ─────────────────────────
-  const handleLayoutDropOnPage = useCallback((layoutId: string, page: 'left' | 'right') => {
+  const handleLayoutDropOnPage = useCallback(async (layoutId: string, page: 'left' | 'right') => {
     const layout = LAYOUTS.find((l) => l.id === layoutId)
     if (!layout) return
     const fc = page === 'right' ? fabricRight.current : fabricLeft.current
     if (!fc) return
     setSelectedLayoutId(layoutId)
-    applyLayout(fc, layout, PAGE_W, PAGE_H)
+    await applyLayout(fc, layout, PAGE_W, PAGE_H)
     saveCurrentSpread()
   }, [saveCurrentSpread])
 
@@ -1070,7 +1070,7 @@ export default function EditorPage() {
     const lc = fabricLeft.current
     if (!layout || !lc) return
     setSelectedLayoutId(layoutId)
-    applyLayout(lc, layout, PAGE_W, PAGE_H)
+    await applyLayout(lc, layout, PAGE_W, PAGE_H)
     saveCurrentSpread()
   }, [handleSpreadSelect, saveCurrentSpread])
 
