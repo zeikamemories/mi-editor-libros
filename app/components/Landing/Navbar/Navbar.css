@@ -4,6 +4,12 @@
   z-index: 100;
   background: white;
   border-bottom: 1px solid #c0bfbc;
+  box-shadow: 0 0 0 rgba(0, 0, 0, 0);
+  transition: box-shadow 0.3s ease;
+}
+
+.navbar--scrolled {
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
 }
 
 .navbar__inner {

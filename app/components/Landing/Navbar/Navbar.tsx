@@ -19,7 +19,15 @@ export default function Navbar({ hideLinks, hideMisProyectos }: { hideLinks?: bo
   const [open,      setOpen]      = useState(false)
   const [user,      setUser]      = useState<{ name: string; initial: string } | null>(null)
   const [dropOpen,  setDropOpen]  = useState(false)
+  const [scrolled,  setScrolled]  = useState(false)
   const dropRef = useRef<HTMLDivElement>(null)
+
+  useEffect(() => {
+    const onScroll = () => setScrolled(window.scrollY > 8)
+    onScroll()
+    window.addEventListener('scroll', onScroll, { passive: true })
+    return () => window.removeEventListener('scroll', onScroll)
+  }, [])
 
   useEffect(() => {
     setMounted(true)
@@ -63,7 +71,7 @@ export default function Navbar({ hideLinks, hideMisProyectos }: { hideLinks?: bo
 
   return (
     <>
-      <header className="navbar">
+      <header className={`navbar${scrolled ? ' navbar--scrolled' : ''}`}>
         <div className="navbar__inner">
           <a href="/" className="navbar__logo">
             <Image src="/LogoZeika.png" alt="Zeika" width={60} height={60} />

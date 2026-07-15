@@ -8,7 +8,7 @@ export type DesignItem = {
   height: number
 }
 
-const DIR = '/fotos/buenas/'
+const DIR = '/fotos/buenas-web/'
 
 // Real design covers & spreads from public/fotos/buenas — orientation set from each
 // image's actual aspect ratio (h: landscape, v: portrait, s: near-square).

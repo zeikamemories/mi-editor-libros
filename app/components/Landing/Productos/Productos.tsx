@@ -34,6 +34,17 @@ const PRODUCTS: ProductData[] = [
   { sizeId: 'cuadrado', name: 'Cuadrado',           price: fmtPrice(PRICES_BY_PAGES.cuadrado[0]), dimensions: '29 x 29 cm'   },
 ]
 
+// Reveal order difere por breakpoint porque el layout reordena las cards:
+// mobile → chico, mediano, vertical, cuadrado, grande (grande ocupa su propia fila al final)
+// desktop → chico, mediano, grande (fila 1), vertical, cuadrado (fila 2)
+const REVEAL_DELAY: Record<string, { mobile: number; desktop: number }> = {
+  chico:    { mobile: 0,   desktop: 0   },
+  mediano:  { mobile: 100, desktop: 100 },
+  vertical: { mobile: 200, desktop: 300 },
+  cuadrado: { mobile: 300, desktop: 400 },
+  grande:   { mobile: 400, desktop: 200 },
+}
+
 export default function Productos() {
   const [selected,           setSelected]           = useState<ProductData | null>(null)
   const [showCompare,        setShowCompare]        = useState(false)
@@ -80,7 +91,13 @@ export default function Productos() {
 
       <div className="productos__grid">
         {PRODUCTS.map(p => (
-          <ProductCard key={p.sizeId} {...p} onOpen={() => setSelected(p)} />
+          <ProductCard
+            key={p.sizeId}
+            {...p}
+            onOpen={() => setSelected(p)}
+            mobileDelay={REVEAL_DELAY[p.sizeId]?.mobile}
+            desktopDelay={REVEAL_DELAY[p.sizeId]?.desktop}
+          />
         ))}
       </div>
 

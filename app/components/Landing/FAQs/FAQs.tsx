@@ -18,7 +18,7 @@ const FAQS = [
   {
     num: '[03]',
     q: '¿Hacen envíos?',
-    a: 'Sí, enviamos a todo el país y también a Uruguay a través de Andreani. Una vez despachado tu libro, te compartimos el número de seguimiento para que puedas rastrearlo en tiempo real.',
+    a: 'Sí, enviamos a todo Argentina a través de Andreani. Una vez despachado tu libro, te compartimos el número de seguimiento para que puedas rastrearlo en tiempo real.',
   },
   {
     num: '[04]',

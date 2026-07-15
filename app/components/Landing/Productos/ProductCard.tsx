@@ -1,6 +1,7 @@
 'use client'
 
 import { useState } from 'react'
+import { useReveal } from '../useReveal'
 import './Productos.css'
 
 export type ProductData = {
@@ -11,14 +12,17 @@ export type ProductData = {
   dimensions:  string
 }
 
-type Props = ProductData & { onOpen?: () => void }
+type Props = ProductData & { onOpen?: () => void; mobileDelay?: number; desktopDelay?: number }
 
-export default function ProductCard({ sizeId, name, mobileLabel, price, dimensions, onOpen }: Props) {
+export default function ProductCard({ sizeId, name, mobileLabel, price, dimensions, onOpen, mobileDelay = 0, desktopDelay = 0 }: Props) {
   const [hovered, setHovered] = useState(false)
+  const { ref, visible } = useReveal<HTMLElement>()
 
   return (
     <article
-      className={`product-card product-card--${sizeId}`}
+      ref={ref}
+      className={`product-card product-card--${sizeId}${visible ? ' product-card--visible' : ''}`}
+      style={{ '--reveal-delay-mobile': `${mobileDelay}ms`, '--reveal-delay-desktop': `${desktopDelay}ms` } as React.CSSProperties}
       onMouseEnter={() => setHovered(true)}
       onMouseLeave={() => setHovered(false)}
     >

@@ -131,6 +131,27 @@
   padding: 0;
   cursor: pointer;
   text-align: left;
+  opacity: 0;
+  transform: scale(0.85);
+  transition: opacity 0.6s ease-out, transform 0.6s ease-out;
+  transition-delay: var(--reveal-delay-mobile, 0ms);
+}
+
+.product-card--visible {
+  opacity: 1;
+  transform: scale(1);
+}
+
+.product-card--visible:hover {
+  transform: scale(1) translateY(-4px);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .product-card {
+    opacity: 1;
+    transform: none;
+    transition: none;
+  }
 }
 
 /* Grande spans full width on mobile */
@@ -163,6 +184,11 @@
   height: auto;
   display: block;
   object-fit: cover;
+  transition: transform 0.4s ease;
+}
+
+.product-card:hover .product-card__img {
+  transform: scale(1.04);
 }
 
 /* Per-card aspect ratios on mobile */
@@ -238,6 +264,10 @@
 @media (min-width: 1024px) {
   .productos {
     padding: 60px 0;
+  }
+
+  .product-card {
+    transition-delay: var(--reveal-delay-desktop, 0ms);
   }
 
   .productos__header {

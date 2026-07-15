@@ -92,6 +92,8 @@ export default function DisenosPage() {
                 alt=""
                 width={item.width}
                 height={item.height}
+                loading="lazy"
+                decoding="async"
                 className="disenos-page__img"
               />
             </button>

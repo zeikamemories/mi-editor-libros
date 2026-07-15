@@ -10,6 +10,7 @@ import ComoHacerlo   from './components/Landing/ComoHacerlo/ComoHacerlo'
 import QuienesSomos  from './components/Landing/QuienesSomos/QuienesSomos'
 import FAQs          from './components/Landing/FAQs/FAQs'
 import Footer        from './components/Landing/Footer/Footer'
+import Reveal        from './components/Landing/Reveal'
 
 export default function LandingPage() {
   return (
@@ -17,17 +18,17 @@ export default function LandingPage() {
       <Navbar />
       <Hero />
       <FloatingCta />
-      <Intro />
+      <Reveal><Intro /></Reveal>
       <hr className="landing-separator" />
       <Productos />
       <hr className="landing-separator" />
-      <Cotizacion />
+      <Reveal className="reveal--fade"><Cotizacion /></Reveal>
       <hr className="landing-separator" />
-      <NuestrosDisenos />
+      <Reveal><NuestrosDisenos /></Reveal>
       <hr className="landing-separator" />
       <ComoHacerlo />
       <QuienesSomos />
-      <FAQs />
+      <Reveal><FAQs /></Reveal>
       <Footer />
     </main>
   )

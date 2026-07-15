@@ -22,6 +22,8 @@ export default function NuestrosDisenos() {
                 alt=""
                 width={item.width}
                 height={item.height}
+                loading="lazy"
+                decoding="async"
                 className="disenos__img"
               />
             </div>

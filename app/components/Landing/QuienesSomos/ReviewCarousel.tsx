@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
+import { useReveal } from '../useReveal'
 
 const REVIEWS = [
   { quote: '"Quedo hermoso la verdad, le va a encantar la sorpresa. Increíble la calidad de todo. Muchísimas gracias por todo"', name: 'Sofi L.' },
@@ -22,6 +23,7 @@ function Stars() {
 export default function ReviewCarousel() {
   const [active, setActive] = useState(0)
   const r = REVIEWS[active]
+  const { ref, visible } = useReveal<HTMLDivElement>()
 
   useEffect(() => {
     const timer = setInterval(() => {
@@ -32,7 +34,7 @@ export default function ReviewCarousel() {
 
   return (
     <div className="qs__reviews-mobile">
-      <div className="qs__review-card">
+      <div ref={ref} className={`qs__review-card${visible ? ' qs__review-card--visible' : ''}`}>
         <Stars />
         <p className="qs__review-quote">{r.quote}</p>
         <p className="qs__review-name">{r.name}</p>
