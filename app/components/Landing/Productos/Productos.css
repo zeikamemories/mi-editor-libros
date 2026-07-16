@@ -94,12 +94,14 @@
   margin-top: 8px;
 }
 
-.product-card--vinos {
+.product-card--vinos,
+.product-card--cartas {
   width: 100%;
   max-width: 328px;
 }
 
-.product-card--vinos .product-card__img { aspect-ratio: 3 / 2; }
+.product-card--vinos .product-card__img,
+.product-card--cartas .product-card__img { aspect-ratio: 3 / 2; }
 
 /* ─── Mobile comparar button ─────────────────────────────────────────────── */
 
@@ -312,7 +314,8 @@
     padding: 0 50px;
   }
 
-  .product-card--vinos {
+  .product-card--vinos,
+  .product-card--cartas {
     max-width: 700px;
   }
 

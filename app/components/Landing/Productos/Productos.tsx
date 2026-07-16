@@ -8,8 +8,10 @@ import CompareSizesModal from './CompareSizesModal'
 import MobileCompareModal from './MobileCompareModal'
 import VinoModal from './VinoModal'
 import MobileVinoModal from './MobileVinoModal'
+import CartaModal from './CartaModal'
+import MobileCartaModal from './MobileCartaModal'
 import AgeGateModal from './AgeGateModal'
-import { PRICES_BY_PAGES, VINO_PRICE_BASE } from '../../../config/pricing'
+import { PRICES_BY_PAGES, VINO_PRICE_BASE, CARTA_PRICE } from '../../../config/pricing'
 import './Productos.css'
 
 const AGE_CONFIRMED_KEY = 'zeika_age_confirmed'
@@ -24,6 +26,13 @@ const VINO_PRODUCT: ProductData = {
   name:       'Vinos Personalizados',
   price:      `Desde ${fmtPrice(VINO_PRICE_BASE.tinto)}`,
   dimensions: '750 ml',
+}
+
+const CARTA_PRODUCT: ProductData = {
+  sizeId:     'cartas',
+  name:       'Cartas Personalizadas',
+  price:      fmtPrice(CARTA_PRICE),
+  dimensions: 'Truco o poker',
 }
 
 const PRODUCTS: ProductData[] = [
@@ -50,6 +59,7 @@ export default function Productos() {
   const [showCompare,        setShowCompare]        = useState(false)
   const [showMobileCompare,  setShowMobileCompare]  = useState(false)
   const [showVinoModal,      setShowVinoModal]      = useState(false)
+  const [showCartaModal,     setShowCartaModal]     = useState(false)
   const [showAgeGate,        setShowAgeGate]        = useState(false)
 
   useLayoutEffect(() => {
@@ -58,6 +68,10 @@ export default function Productos() {
     sessionStorage.removeItem('zeika_back_product')
     if (backProduct === 'vinos') {
       openVinoModal()
+      return
+    }
+    if (backProduct === 'cartas') {
+      setShowCartaModal(true)
       return
     }
     const product = PRODUCTS.find(p => p.sizeId === backProduct)
@@ -111,6 +125,12 @@ export default function Productos() {
         <ProductCard {...VINO_PRODUCT} onOpen={openVinoModal} />
       </div>
 
+      <p className="productos__sublabel productos__sublabel--vinos">Cartas personalizadas</p>
+
+      <div className="productos__vinos-grid">
+        <ProductCard {...CARTA_PRODUCT} onOpen={() => setShowCartaModal(true)} />
+      </div>
+
       {selected && (
         <ProductModal product={selected} onClose={() => setSelected(null)} />
       )}
@@ -131,6 +151,12 @@ export default function Productos() {
       )}
       {showVinoModal && (
         <MobileVinoModal onClose={() => setShowVinoModal(false)} />
+      )}
+      {showCartaModal && (
+        <CartaModal onClose={() => setShowCartaModal(false)} />
+      )}
+      {showCartaModal && (
+        <MobileCartaModal onClose={() => setShowCartaModal(false)} />
       )}
     </section>
   )

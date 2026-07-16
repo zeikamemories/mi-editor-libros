@@ -1,0 +1,354 @@
+/* ── Backdrop ─────────────────────────────────────────────────────────────── */
+
+.pm-backdrop {
+  display: none;
+}
+
+@media (min-width: 1024px) {
+  .pm-backdrop {
+    display: flex;
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.5);
+    align-items: center;
+    justify-content: center;
+    z-index: 500;
+  }
+}
+
+/* ── Modal shell ──────────────────────────────────────────────────────────── */
+
+.pm {
+  position: relative;
+  width: 980px;
+  height: 660px;
+  background: white;
+  overflow: hidden;
+  display: flex;
+}
+
+/* ── Left panel ───────────────────────────────────────────────────────────── */
+
+.pm__left {
+  width: 433px;
+  height: 660px;
+  flex-shrink: 0;
+  position: relative;
+  overflow: hidden;
+  background: #e0dedd;
+}
+
+.pm__carousel {
+  position: relative;
+  width: 100%;
+  height: 100%;
+}
+
+.pm__slide {
+  width: 100%;
+  height: 100%;
+}
+
+.pm__img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+/* ── Close button ─────────────────────────────────────────────────────────── */
+
+.pm__close {
+  position: absolute;
+  top: 12px;
+  right: 15px;
+  width: 35px;
+  height: 35px;
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-size: 28px;
+  line-height: 1;
+  color: var(--color-black);
+  z-index: 10;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+}
+
+/* ── Right panel ──────────────────────────────────────────────────────────── */
+
+.pm__right {
+  flex: 1;
+  height: 660px;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.pm__content {
+  flex: 1;
+  overflow-y: auto;
+  padding: 64px 30px 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+/* ── Header: title + price ────────────────────────────────────────────────── */
+
+.pm__header-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.pm__name {
+  font-family: "Times New Roman", Times, serif;
+  font-weight: 400;
+  font-size: 34px;
+  line-height: 1;
+  letter-spacing: -0.68px;
+  color: var(--color-black);
+  margin: 0;
+  white-space: nowrap;
+  flex-shrink: 1;
+  min-width: 0;
+}
+
+.pm__price-header {
+  font-family: "forma-djr-display", sans-serif;
+  font-weight: 500;
+  font-size: 34px;
+  line-height: 1;
+  letter-spacing: 0.04em;
+  color: var(--color-blue);
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+/* ── Dims ─────────────────────────────────────────────────────────────────── */
+
+.pm__dims-row {
+  display: flex;
+  align-items: center;
+  gap: 18px;
+  margin-top: -12px;
+}
+
+.pm__dims {
+  font-family: "forma-djr-display", sans-serif;
+  font-weight: 500;
+  font-size: 15px;
+  letter-spacing: 0.6px;
+  color: var(--color-black);
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+/* ── Sections ─────────────────────────────────────────────────────────────── */
+
+.pm__section {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.pm__dims-row + .pm__section {
+  margin-top: 12px;
+}
+
+.pm__section-label {
+  font-family: "forma-djr-display", sans-serif;
+  font-weight: 700;
+  font-size: 14px;
+  letter-spacing: 0.56px;
+  color: var(--color-black);
+  margin: 0;
+}
+
+.pm__section-note {
+  font-family: "forma-djr-display", sans-serif;
+  font-weight: 500;
+  font-size: 13px;
+  letter-spacing: 0.5px;
+  color: #666;
+  margin: 0;
+  line-height: 1.5;
+}
+
+.pm__cards {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
+}
+
+.pm__cards--2 {
+  grid-template-columns: repeat(2, 1fr);
+}
+
+.pm__card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 3px;
+  padding: 12px 8px;
+  border: 1px solid var(--color-border);
+  background: white;
+  cursor: pointer;
+  transition: background 0.14s, border-color 0.14s;
+  text-align: center;
+}
+
+.pm__card:hover:not(.pm__card--selected) {
+  background: #f0f0ef;
+}
+
+.pm__card--selected {
+  background: #f0f0ef;
+  border: 2px solid var(--color-blue);
+}
+
+.pm__card-top {
+  font-family: "forma-djr-display", sans-serif;
+  font-weight: 700;
+  font-size: 13px;
+  letter-spacing: 0.26px;
+  color: var(--color-black);
+}
+
+.pm__name-input {
+  width: 100%;
+  padding: 12px 14px;
+  border: 1px solid var(--color-border);
+  font-family: "forma-djr-display", sans-serif;
+  font-size: 14px;
+  font-weight: 500;
+  letter-spacing: 0.56px;
+  color: var(--color-black);
+  outline: none;
+  box-sizing: border-box;
+  transition: border-color 0.15s;
+}
+
+.pm__name-input::placeholder { color: #bbb; }
+.pm__name-input:hover { border-color: #888; }
+.pm__name-input:focus { border-color: var(--color-black); }
+.pm__name-input--error { border-color: #e03535; animation: pm-shake 0.3s ease; }
+.pm__name-input--error:focus { border-color: #e03535; }
+
+@keyframes pm-shake {
+  0%, 100% { transform: translateX(0); }
+  25%       { transform: translateX(-4px); }
+  75%       { transform: translateX(4px); }
+}
+
+/* ── WhatsApp link ────────────────────────────────────────────────────────── */
+
+.pm__whatsapp-link {
+  font-family: "forma-djr-display", sans-serif;
+  font-weight: 600;
+  color: var(--color-blue);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+/* ── Details bullets ─────────────────────────────────────────────────────── */
+
+.pm__details {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.pm__details-label {
+  font-family: "forma-djr-display", sans-serif;
+  font-weight: 700;
+  font-size: 13px;
+  letter-spacing: 0.52px;
+  text-transform: uppercase;
+  color: var(--color-black);
+  margin: 0;
+}
+
+.pm__details-list {
+  margin: 0;
+  padding-left: 0;
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  font-family: "forma-djr-display", sans-serif;
+  font-weight: 500;
+  font-size: 13px;
+  letter-spacing: 0.5px;
+  color: #666;
+  line-height: 1.5;
+}
+
+/* ── CTA ──────────────────────────────────────────────────────────────────── */
+
+.pm__cta {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--color-blue);
+  color: white;
+  font-family: "forma-djr-display", sans-serif;
+  font-weight: 600;
+  font-size: 16px;
+  letter-spacing: 0.64px;
+  text-transform: uppercase;
+  text-decoration: none;
+  border: none;
+  cursor: pointer;
+  padding: 12px 15px;
+  margin: 0 30px 24px;
+}
+
+.pm__cta:hover { background: #4A80C1; }
+.pm__cta:disabled { opacity: 0.6; cursor: default; }
+
+/* ── Upload de foto ───────────────────────────────────────────────────────── */
+
+.carta-modal__file-input {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+}
+
+.carta-modal__upload-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: fit-content;
+  padding: 10px 20px;
+  border: 1px solid var(--color-black);
+  background: white;
+  font-family: "forma-djr-display", sans-serif;
+  font-weight: 600;
+  font-size: 13px;
+  letter-spacing: 0.52px;
+  text-transform: uppercase;
+  color: var(--color-black);
+  cursor: pointer;
+  transition: background 0.14s;
+}
+
+.carta-modal__upload-btn:hover { background: #f0f0ef; }
+.carta-modal__upload-btn--error { border-color: #e03535; color: #e03535; animation: pm-shake 0.3s ease; }
+.carta-modal__upload-btn--disabled { opacity: 0.45; cursor: not-allowed; }
+
+.carta-modal__error {
+  font-family: "forma-djr-display", sans-serif;
+  font-size: 13px;
+  color: #e03535;
+  margin: 0;
+}

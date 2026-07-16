@@ -57,6 +57,9 @@ interface Order {
   pages_base: number
   delivery_type: string | null
   delivery_address: string | null
+  product_type: string | null
+  card_type: string | null
+  card_photo_url: string | null
 }
 
 interface Note {
@@ -353,24 +356,40 @@ export default function PedidoAdminPage() {
         <div className="pedido-card">
           <h3 className="pedido-card-title">Detalles</h3>
           <div className="pedido-grid">
-            <div className="pedido-item"><label>Tamaño</label><span>{SIZE_NAMES[order.size] ?? order.size}</span></div>
-            <div className="pedido-item"><label>Páginas</label><span>{totalPages}</span></div>
-            <div className="pedido-item"><label>Textos extra</label><span>{order.extra_text ? 'Sí' : 'No'}</span></div>
-            {!order.extra_text && (
-              <div className="pedido-item pedido-item--full">
-                <label>&nbsp;</label>
-                <button className="pedido-save-btn" onClick={chargeExtraText} disabled={chargingText}>
-                  {chargingText ? 'Generando...' : `Cobrar textos extra (${fmt(TEXT_EXTRA_BY_SIZE[order.size] ?? 10000)})`}
-                </button>
-              </div>
-            )}
-            {textChargeLink && (
-              <div className="pedido-item pedido-item--full">
-                <label>Link de cobro</label>
-                <a className="pedido-link-btn" href={textChargeLink} target="_blank" rel="noreferrer">
-                  Copiá este link y mandalo por WhatsApp ↗
-                </a>
-              </div>
+            {order.product_type === 'cartas' ? (
+              <>
+                <div className="pedido-item"><label>Producto</label><span>Cartas personalizadas</span></div>
+                <div className="pedido-item"><label>Tipo</label><span>{order.card_type ?? 'A elegir por el cliente'}</span></div>
+                {order.card_photo_url && (
+                  <div className="pedido-item pedido-item--full">
+                    <label>Foto</label>
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img src={order.card_photo_url} alt="" style={{ width: 120, height: 120, objectFit: 'cover' }} />
+                  </div>
+                )}
+              </>
+            ) : (
+              <>
+                <div className="pedido-item"><label>Tamaño</label><span>{SIZE_NAMES[order.size] ?? order.size}</span></div>
+                <div className="pedido-item"><label>Páginas</label><span>{totalPages}</span></div>
+                <div className="pedido-item"><label>Textos extra</label><span>{order.extra_text ? 'Sí' : 'No'}</span></div>
+                {!order.extra_text && (
+                  <div className="pedido-item pedido-item--full">
+                    <label>&nbsp;</label>
+                    <button className="pedido-save-btn" onClick={chargeExtraText} disabled={chargingText}>
+                      {chargingText ? 'Generando...' : `Cobrar textos extra (${fmt(TEXT_EXTRA_BY_SIZE[order.size] ?? 10000)})`}
+                    </button>
+                  </div>
+                )}
+                {textChargeLink && (
+                  <div className="pedido-item pedido-item--full">
+                    <label>Link de cobro</label>
+                    <a className="pedido-link-btn" href={textChargeLink} target="_blank" rel="noreferrer">
+                      Copiá este link y mandalo por WhatsApp ↗
+                    </a>
+                  </div>
+                )}
+              </>
             )}
             <div className="pedido-item"><label>Total</label><span>{fmt(order.price_total)}</span></div>
             <div className="pedido-item"><label>50% pagado</label><span>{fmt(order.price_paid)}</span></div>
@@ -576,8 +595,8 @@ export default function PedidoAdminPage() {
           </div>
         </div>
 
-        {/* ── Proyecto / editor ───────────────────────────────────── */}
-        {!project ? (
+        {/* ── Proyecto / editor (no aplica a cartas — no hay editor de páginas) ── */}
+        {order.product_type === 'cartas' ? null : !project ? (
           <button
             className="pedido-nuevo-btn"
             onClick={createProject}

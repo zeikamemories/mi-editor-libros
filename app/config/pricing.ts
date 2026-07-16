@@ -104,3 +104,19 @@ export function computeVinoTotal(
   if (!VINO_CANTIDADES.includes(cantidad as 1 | 6)) return null
   return (base + extra) * cantidad
 }
+
+// ─── Cartas personalizadas ─────────────────────────────────────────────────
+// Mazo de truco o poker con la misma foto en todas las cartas. Mismo precio
+// para ambos tipos. Se paga 100% al comprar (sin seña) porque no hay etapa
+// de diseño/preview — el cliente sube una foto y se imprime tal cual.
+
+export const CARTA_PRICE = 25000
+
+/**
+ * Recalcula el precio total de un pedido de cartas a partir de la cantidad de mazos.
+ * Usado server-side para no confiar en el monto que manda el navegador.
+ */
+export function computeCartasTotal(copies: number): number | null {
+  if (!Number.isInteger(copies) || copies < 1) return null
+  return CARTA_PRICE * copies
+}

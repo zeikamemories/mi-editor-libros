@@ -4,7 +4,6 @@ import { useEffect, useRef, useState } from 'react'
 import { useRouter, useParams, useSearchParams } from 'next/navigation'
 import { supabase } from '../../lib/supabase'
 import Navbar from '../../components/Landing/Navbar/Navbar'
-import { REORDER_UNIT_PRICE } from '../../config/pricing'
 import '../mis-proyectos.css'
 
 // ── Types ────────────────────────────────────────────────────────────────────
@@ -29,6 +28,9 @@ interface Order {
   estimated_design_date: string | null
   estimated_delivery_date: string | null
   status_dates: Record<string, string>
+  product_type: string | null
+  card_type: string | null
+  card_photo_url: string | null
 }
 
 interface Note {
@@ -208,49 +210,12 @@ export default function ProyectoPage() {
   const [approved,      setApproved]      = useState(false)
   const [coverThumbnail, setCoverThumbnail] = useState<{ left?: string; right?: string } | null>(null)
 
-  // Pagar (inline for desktop)
-  const [copies,          setCopies]          = useState(1)
-  const [deliveryType,    setDeliveryType]    = useState<'andreani' | 'pickup'>('andreani')
-  const [shippingPrice,   setShippingPrice]   = useState<number | null>(null)
-  const [shippingLoading, setShippingLoading] = useState(false)
-  const [pais,      setPais]      = useState('')
-  const [provincia, setProvincia] = useState('')
-  const [ciudad,    setCiudad]    = useState('')
-  const [calle,     setCalle]     = useState('')
-  const [numero,    setNumero]    = useState('')
-  const [piso,      setPiso]      = useState('')
-  const [depto,     setDepto]     = useState('')
-  const [cp,        setCp]        = useState('')
-  const [paying,    setPaying]    = useState(false)
-  const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null)
-
   // Entregado
   const [reviewStars,       setReviewStars]       = useState(0)
   const [reviewText,        setReviewText]         = useState('')
   const [submittingReview,  setSubmittingReview]   = useState(false)
   const [confirmingDelivery, setConfirmingDelivery] = useState(false)
   const [copied, setCopied] = useState(false)
-
-  // Shipping quote debounce
-  useEffect(() => {
-    if (deliveryType !== 'andreani') return
-    if (debounceRef.current) clearTimeout(debounceRef.current)
-    const trimmed = cp.trim()
-    if (!/^\d{4}$/.test(trimmed)) { setShippingPrice(null); return }
-    setShippingLoading(true)
-    debounceRef.current = setTimeout(async () => {
-      try {
-        const res  = await fetch(`/api/shipping-quote?cp=${trimmed}`)
-        const data = await res.json()
-        setShippingPrice(res.ok ? (data.price as number) : null)
-      } catch {
-        setShippingPrice(null)
-      } finally {
-        setShippingLoading(false)
-      }
-    }, 600)
-    return () => { if (debounceRef.current) clearTimeout(debounceRef.current) }
-  }, [cp, deliveryType])
 
   useEffect(() => {
     async function init() {
@@ -272,23 +237,7 @@ export default function ProyectoPage() {
       ])
       if (!o) { router.replace('/mis-proyectos'); return }
 
-      // Handle coming back from MercadoPago with ?open=confirmado
       const openParam = searchParams.get('open')
-      if (openParam === 'confirmado' && o.status === 'preview_listo') {
-        const discount   = (o.copies ?? 1) >= 3 ? 0.8 : 1
-        const unitPrice  = REORDER_UNIT_PRICE[o.size] ?? o.price_total
-        const total      = (o.copies ?? 1) * unitPrice * discount
-        const secondPaid = Math.round(total - o.price_paid)
-        const nowIso     = new Date().toISOString()
-        const newDates   = { ...(o.status_dates ?? {}), en_produccion: nowIso }
-        await supabase.from('orders').update({
-          status:            'en_produccion',
-          second_price_paid: secondPaid,
-          status_dates:      newDates,
-        }).eq('id', orderId)
-        o.status       = 'en_produccion'
-        o.status_dates = newDates
-      }
 
       setOrder(o as Order)
       setDriveLink(o.drive_link ?? '')
@@ -410,74 +359,6 @@ export default function ProyectoPage() {
     setSubmittingReview(false)
   }
 
-  // Inline pagar (desktop)
-  async function handleReorderDesktop() {
-    if (!order || paying) return
-    const fullAddress    = [
-      calle, numero, piso && `Piso ${piso}`, depto && `Depto ${depto}`,
-      ciudad, provincia, pais, cp && `CP ${cp}`,
-    ].filter(Boolean).join(', ')
-    setPaying(true)
-    await supabase.from('orders').update({
-      copies,
-      delivery_type:    deliveryType,
-      delivery_address: deliveryType === 'andreani' ? fullAddress : 'Retiro en fábrica',
-    }).eq('id', order.id)
-    const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? window.location.origin
-    const res = await fetch('/api/payment', {
-      method:  'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        orderId:      order.id,
-        bookName:     order.book_name,
-        copies,
-        deliveryType,
-        cp:           deliveryType === 'andreani' ? cp : undefined,
-        isReorder:    true,
-        successUrl:   `${siteUrl}/mis-proyectos/${order.id}/confirmado`,
-        failureUrl:   `${siteUrl}/mis-proyectos/${order.id}?open=reorder`,
-      }),
-    })
-    const data = await res.json()
-    if (data.url) { window.location.href = data.url; return }
-    setPaying(false)
-  }
-
-  async function handlePayDesktop() {
-    if (!order || paying) return
-
-    const fullAddress = [
-      calle, numero, piso && `Piso ${piso}`, depto && `Depto ${depto}`,
-      ciudad, provincia, pais, cp && `CP ${cp}`,
-    ].filter(Boolean).join(', ')
-
-    setPaying(true)
-    await supabase.from('orders').update({
-      copies,
-      delivery_type:    deliveryType,
-      delivery_address: deliveryType === 'andreani' ? fullAddress : 'Retiro en fábrica',
-    }).eq('id', order.id)
-
-    const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? window.location.origin
-    const res = await fetch('/api/payment', {
-      method:  'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        orderId:      order.id,
-        bookName:     order.book_name,
-        copies,
-        deliveryType,
-        cp:           deliveryType === 'andreani' ? cp : undefined,
-        isReorder:    false,
-        successUrl:   `${siteUrl}/mis-proyectos/${order.id}?open=confirmado`,
-        failureUrl:   `${siteUrl}/mis-proyectos/${order.id}?open=pagar`,
-      }),
-    })
-    const data = await res.json()
-    if (data.url) { window.location.href = data.url; return }
-    setPaying(false)
-  }
-
   async function generateMaterialLinks() {
     if (!order || generatingLinks) return
     setGeneratingLinks(true)
@@ -516,6 +397,66 @@ export default function ProyectoPage() {
     <div className="mp-loading"><div className="mp-spinner" /></div>
   )
 
+  // Cartas no tiene etapa de diseño/preview — vista simplificada, sin los acordeones de fotolibro.
+  if (order.product_type === 'cartas') {
+    return (
+      <div className="mpd-root">
+        <Navbar hideLinks />
+        <div className="mp-user-strip">
+          <div className="mp-user-strip__initial">{userName[0]?.toUpperCase() ?? '?'}</div>
+          <div className="mp-user-strip__info">
+            <p className="mp-user-strip__name">{userName}</p>
+            <p className="mp-user-strip__email">{userEmail}</p>
+          </div>
+        </div>
+        <div className="mpd-body">
+          <div className="mpd-hero">
+            <a href="/mis-proyectos" className="mpd-back">‹ Mis pedidos</a>
+            <h1 className="mpd-title">{order.book_name}</h1>
+            <p className="mpd-order-num">{orderNumber(order.id, order.created_at)}</p>
+            <div className={`mpd-status-badge mpd-status-badge--${order.status}`}>
+              {STATUS_LABEL[order.status] ?? order.status}
+            </div>
+          </div>
+          <div className="mpd-preview-row">
+            <div className="mpd-preview-card">
+              <div className="mpd-preview-thumb">
+                {order.card_photo_url ? (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img src={order.card_photo_url} alt="Tu foto" className="mpd-preview-thumb-page" />
+                ) : (
+                  <div className="mpd-preview-thumb-empty" />
+                )}
+              </div>
+              <div className="mpd-preview-card-info">
+                <div className="mpd-preview-card-name">Mazo de cartas</div>
+                <span className="mpd-preview-pending">
+                  {order.card_type ? `Tipo: ${order.card_type}` : 'Todavía no elegiste truco/poker'}
+                </span>
+              </div>
+            </div>
+          </div>
+          {order.status === 'preview_listo' ? (
+            <div className="mpd-bottom">
+              <div className="mpd-cta-wrap">
+                <a
+                  className="mpd-cta-btn mpd-cta-btn--active"
+                  href={`/mis-proyectos?tab=listos&item=${order.id}`}
+                >
+                  Elegir tipo y comprar
+                </a>
+              </div>
+            </div>
+          ) : (
+            <div className="mpd-preview-approved">
+              Pedido confirmado — en producción.
+            </div>
+          )}
+        </div>
+      </div>
+    )
+  }
+
   const sizeInfo        = SIZE_INFO[order.size] ?? { name: order.size, dims: '' }
   const done            = STEP_DONE[order.status] ?? 0
   const allDone         = order.status === 'entregado'
@@ -528,18 +469,6 @@ export default function ProyectoPage() {
   const usedRounds         = order.change_requests_used ?? 0
   const deliveryConfirmed  = notes.some(n => n.type === 'delivery_confirmed')
   const hasReview          = notes.some(n => n.type === 'review')
-
-  // Pagar calculations
-  const unitPrice     = REORDER_UNIT_PRICE[order.size] ?? order.price_total
-  const discount      = copies >= 3 ? 0.8 : 1
-  const subtotal      = copies * unitPrice * discount
-  const shippingTotal = deliveryType === 'andreani' ? (shippingPrice ?? 0) : 0
-  const payNow        = Math.round(subtotal - order.price_paid + shippingTotal)
-  const shippingLabel = shippingLoading ? 'Calculando...' : shippingPrice !== null ? fmt(shippingPrice) : 'A calcular'
-  const shippingReady = deliveryType === 'pickup' || shippingPrice !== null
-  const addressFilled = deliveryType === 'pickup' || (
-    pais.trim() && provincia.trim() && ciudad.trim() && calle.trim() && numero.trim() && cp.trim()
-  )
 
   // ── Section content ───────────────────────────────────────────────────────
 
@@ -835,309 +764,6 @@ export default function ProyectoPage() {
     </>
   )
 
-  // ── Inline pagar content (desktop right panel) ────────────────────────────
-
-  const pagarContent = (
-    <div className="mpd-pagar-panel">
-      <div className="mpd-row mpd-row--white">
-        <span className="mpd-row__key">Nombre</span>
-        <span className="mpd-row__val">{order.book_name}</span>
-      </div>
-      <div className="mpd-row mpd-row--white">
-        <span className="mpd-row__key">Formato</span>
-        <span className="mpd-row__val">{sizeInfo.name} · {sizeInfo.dims}</span>
-      </div>
-
-      {/* Copias */}
-      <div className="mpag-copies-section">
-        <div className="mpag-copies-top">
-          <div className="mpag-copies-left">
-            <span className="mpag-section-label">Cantidad de copias</span>
-            <div className="mpag-counter">
-              <button className="mpag-counter-btn" onClick={() => setCopies(c => Math.max(1, c - 1))} disabled={copies <= 1}>−</button>
-              <span className="mpag-counter-num">{copies}</span>
-              <button className="mpag-counter-btn" onClick={() => setCopies(c => c + 1)}>+</button>
-            </div>
-          </div>
-          <div className="mpag-copies-right">
-            <span className="mpag-unit-price">{fmt(unitPrice * discount)} <span className="mpag-cu">c/u</span></span>
-            <span className="mpag-total-label">Total: {fmt(subtotal)}</span>
-          </div>
-        </div>
-        <div className="mpag-discount-banner">A partir de 3 copias: 20% de descuento</div>
-      </div>
-
-      {/* Entrega */}
-      <div className="mpag-entrega-section">
-        <span className="mpag-section-label">Entrega</span>
-        <p className="mpag-section-hint">Calculá tu envío antes de comprar: elegí cómo lo recibís y, si es por correo, completá tu dirección.</p>
-        <div
-          className={`mpag-delivery-card${deliveryType === 'andreani' ? ' mpag-delivery-card--selected' : ''}`}
-          onClick={() => setDeliveryType('andreani')}
-        >
-          <div className="mpag-delivery-card__header">
-            <div className="mpag-delivery-card__left">
-              <div className={`mpag-radio${deliveryType === 'andreani' ? ' mpag-radio--selected' : ''}`} />
-              <span className="mpag-delivery-name">Envío por Andreani</span>
-            </div>
-            <span className={`mpag-delivery-price${shippingPrice !== null ? ' mpag-delivery-price--known' : ''}`}>
-              {shippingLabel}
-            </span>
-          </div>
-          <p className="mpag-delivery-desc">Todo el país y Uruguay:<br />2-7 días hábiles</p>
-          {deliveryType === 'andreani' && (
-            <div className="mpag-address-fields" onClick={e => e.stopPropagation()}>
-              <div className="mpag-field">
-                <label className="mpag-field-label">País</label>
-                <input className="mpag-field-input" placeholder="País" value={pais} onChange={e => setPais(e.target.value)} />
-              </div>
-              <div className="mpag-field-row">
-                <div className="mpag-field">
-                  <label className="mpag-field-label">Provincia</label>
-                  <input className="mpag-field-input" placeholder="Provincia" value={provincia} onChange={e => setProvincia(e.target.value)} />
-                </div>
-                <div className="mpag-field">
-                  <label className="mpag-field-label">Ciudad</label>
-                  <input className="mpag-field-input" placeholder="Ciudad" value={ciudad} onChange={e => setCiudad(e.target.value)} />
-                </div>
-              </div>
-              <div className="mpag-field">
-                <label className="mpag-field-label">Calle</label>
-                <input className="mpag-field-input" placeholder="Calle" value={calle} onChange={e => setCalle(e.target.value)} />
-              </div>
-              <div className="mpag-field-row">
-                <div className="mpag-field">
-                  <label className="mpag-field-label">Número</label>
-                  <input className="mpag-field-input" placeholder="Número" value={numero} onChange={e => setNumero(e.target.value)} />
-                </div>
-                <div className="mpag-field mpag-field--sm">
-                  <label className="mpag-field-label">Piso</label>
-                  <input className="mpag-field-input" placeholder="Piso" value={piso} onChange={e => setPiso(e.target.value)} />
-                </div>
-                <div className="mpag-field mpag-field--sm">
-                  <label className="mpag-field-label">Depto</label>
-                  <input className="mpag-field-input" placeholder="Depto" value={depto} onChange={e => setDepto(e.target.value)} />
-                </div>
-              </div>
-              <div className="mpag-field">
-                <label className="mpag-field-label">Código postal</label>
-                <input className="mpag-field-input" placeholder="Código postal" value={cp} maxLength={6}
-                  onChange={e => setCp(e.target.value.replace(/\D/g, ''))} />
-              </div>
-            </div>
-          )}
-        </div>
-        <div
-          className={`mpag-delivery-card${deliveryType === 'pickup' ? ' mpag-delivery-card--selected' : ''}`}
-          onClick={() => setDeliveryType('pickup')}
-        >
-          <div className="mpag-delivery-card__header">
-            <div className="mpag-delivery-card__left">
-              <div className={`mpag-radio${deliveryType === 'pickup' ? ' mpag-radio--selected' : ''}`} />
-              <span className="mpag-delivery-name">Retiro en fábrica</span>
-            </div>
-            <span className="mpag-delivery-price mpag-delivery-price--free">Gratis</span>
-          </div>
-          <p className="mpag-delivery-desc">Retiro por Concepción Arenal 4501, Chacarita, Bs As,<br />Lunes a Viernes 10-18 hs</p>
-        </div>
-      </div>
-
-      {/* Resumen */}
-      <div className="mpag-resumen-section">
-        <span className="mpag-section-label">Resumen final</span>
-        <div className="mpd-row">
-          <span className="mpd-row__key">{copies} {copies === 1 ? 'copia' : 'copias'}</span>
-          <span className="mpd-row__val">{fmt(subtotal)}</span>
-        </div>
-        <div className="mpd-row">
-          <span className="mpd-row__key">Ya pagaste</span>
-          <span className="mpd-row__val">−{fmt(order.price_paid)}</span>
-        </div>
-        <div className="mpd-row">
-          <span className="mpd-row__key">Envío</span>
-          <span className="mpd-row__val">{deliveryType === 'pickup' ? 'Gratis' : shippingLabel}</span>
-        </div>
-        <div className="mpd-row mpd-row--balance">
-          <span className="mpd-row__key">Pagás ahora</span>
-          <span className="mpd-row__val">
-            {shippingReady ? fmt(payNow) : `${fmt(Math.round(subtotal - order.price_paid))} + envío`}
-          </span>
-        </div>
-      </div>
-
-      {/* CTA */}
-      <div className="mpag-cta-wrap">
-        <button
-          className={`mpd-cta-btn${addressFilled && shippingReady ? ' mpd-cta-btn--active' : ''}`}
-          onClick={handlePayDesktop}
-          disabled={!addressFilled || !shippingReady || paying}
-        >
-          {paying ? 'Redirigiendo...' : 'Aceptar y finalizar'}
-        </button>
-        <p className="mpd-legal">
-          Por tratarse de un producto personalizado, no realizamos cambios ni devoluciones una vez enviado a producción.
-        </p>
-      </div>
-    </div>
-  )
-
-  // ── Reorder content (full price, status=entregado) ───────────────────────
-
-  const reorderPayNow = Math.round(subtotal + shippingTotal)
-
-  const reorderContent = (
-    <div className="mpd-pagar-panel">
-      <div className="mpd-row mpd-row--white">
-        <span className="mpd-row__key">Nombre</span>
-        <span className="mpd-row__val">{order.book_name}</span>
-      </div>
-      <div className="mpd-row mpd-row--white">
-        <span className="mpd-row__key">Formato</span>
-        <span className="mpd-row__val">{sizeInfo.name} · {sizeInfo.dims}</span>
-      </div>
-      <div className="mpag-copies-section">
-        <div className="mpag-copies-top">
-          <div className="mpag-copies-left">
-            <span className="mpag-section-label">Cantidad de copias</span>
-            <div className="mpag-counter">
-              <button className="mpag-counter-btn" onClick={() => setCopies(c => Math.max(1, c - 1))} disabled={copies <= 1}>−</button>
-              <span className="mpag-counter-num">{copies}</span>
-              <button className="mpag-counter-btn" onClick={() => setCopies(c => c + 1)}>+</button>
-            </div>
-          </div>
-          <div className="mpag-copies-right">
-            <span className="mpag-unit-price">{fmt(unitPrice * discount)} <span className="mpag-cu">c/u</span></span>
-            <span className="mpag-total-label">Total: {fmt(subtotal)}</span>
-          </div>
-        </div>
-        <div className="mpag-discount-banner">A partir de 3 copias: 20% de descuento</div>
-      </div>
-      <div className="mpag-entrega-section">
-        <span className="mpag-section-label">Entrega</span>
-        <p className="mpag-section-hint">Calculá tu envío antes de comprar: elegí cómo lo recibís y, si es por correo, completá tu dirección.</p>
-        <div
-          className={`mpag-delivery-card${deliveryType === 'andreani' ? ' mpag-delivery-card--selected' : ''}`}
-          onClick={() => setDeliveryType('andreani')}
-        >
-          <div className="mpag-delivery-card__header">
-            <div className="mpag-delivery-card__left">
-              <div className={`mpag-radio${deliveryType === 'andreani' ? ' mpag-radio--selected' : ''}`} />
-              <span className="mpag-delivery-name">Envío por Andreani</span>
-            </div>
-            <span className={`mpag-delivery-price${shippingPrice !== null ? ' mpag-delivery-price--known' : ''}`}>
-              {shippingLabel}
-            </span>
-          </div>
-          <p className="mpag-delivery-desc">Todo el país y Uruguay:<br />2-7 días hábiles</p>
-          {deliveryType === 'andreani' && (
-            <div className="mpag-address-fields" onClick={e => e.stopPropagation()}>
-              <div className="mpag-field">
-                <label className="mpag-field-label">País</label>
-                <input className="mpag-field-input" placeholder="País" value={pais} onChange={e => setPais(e.target.value)} />
-              </div>
-              <div className="mpag-field-row">
-                <div className="mpag-field">
-                  <label className="mpag-field-label">Provincia</label>
-                  <input className="mpag-field-input" placeholder="Provincia" value={provincia} onChange={e => setProvincia(e.target.value)} />
-                </div>
-                <div className="mpag-field">
-                  <label className="mpag-field-label">Ciudad</label>
-                  <input className="mpag-field-input" placeholder="Ciudad" value={ciudad} onChange={e => setCiudad(e.target.value)} />
-                </div>
-              </div>
-              <div className="mpag-field">
-                <label className="mpag-field-label">Calle</label>
-                <input className="mpag-field-input" placeholder="Calle" value={calle} onChange={e => setCalle(e.target.value)} />
-              </div>
-              <div className="mpag-field-row">
-                <div className="mpag-field">
-                  <label className="mpag-field-label">Número</label>
-                  <input className="mpag-field-input" placeholder="Número" value={numero} onChange={e => setNumero(e.target.value)} />
-                </div>
-                <div className="mpag-field mpag-field--sm">
-                  <label className="mpag-field-label">Piso</label>
-                  <input className="mpag-field-input" placeholder="Piso" value={piso} onChange={e => setPiso(e.target.value)} />
-                </div>
-                <div className="mpag-field mpag-field--sm">
-                  <label className="mpag-field-label">Depto</label>
-                  <input className="mpag-field-input" placeholder="Depto" value={depto} onChange={e => setDepto(e.target.value)} />
-                </div>
-              </div>
-              <div className="mpag-field">
-                <label className="mpag-field-label">Código postal</label>
-                <input className="mpag-field-input" placeholder="Código postal" value={cp} maxLength={6}
-                  onChange={e => setCp(e.target.value.replace(/\D/g, ''))} />
-              </div>
-            </div>
-          )}
-        </div>
-        <div
-          className={`mpag-delivery-card${deliveryType === 'pickup' ? ' mpag-delivery-card--selected' : ''}`}
-          onClick={() => setDeliveryType('pickup')}
-        >
-          <div className="mpag-delivery-card__header">
-            <div className="mpag-delivery-card__left">
-              <div className={`mpag-radio${deliveryType === 'pickup' ? ' mpag-radio--selected' : ''}`} />
-              <span className="mpag-delivery-name">Retiro en fábrica</span>
-            </div>
-            <span className="mpag-delivery-price mpag-delivery-price--free">Gratis</span>
-          </div>
-          <p className="mpag-delivery-desc">Retiro por Concepción Arenal 4501, Chacarita, Bs As,<br />Lunes a Viernes 10-18 hs</p>
-        </div>
-      </div>
-      <div className="mpag-resumen-section">
-        <span className="mpag-section-label">Resumen final</span>
-        <div className="mpd-row">
-          <span className="mpd-row__key">{copies} {copies === 1 ? 'copia' : 'copias'}</span>
-          <span className="mpd-row__val">{fmt(subtotal)}</span>
-        </div>
-        <div className="mpd-row">
-          <span className="mpd-row__key">Envío</span>
-          <span className="mpd-row__val">{deliveryType === 'pickup' ? 'Gratis' : shippingLabel}</span>
-        </div>
-        <div className="mpd-row mpd-row--balance">
-          <span className="mpd-row__key">Pagás ahora</span>
-          <span className="mpd-row__val">
-            {shippingReady ? fmt(reorderPayNow) : `${fmt(subtotal)} + envío`}
-          </span>
-        </div>
-      </div>
-      <div className="mpag-cta-wrap">
-        <button
-          className={`mpd-cta-btn${addressFilled && shippingReady ? ' mpd-cta-btn--active' : ''}`}
-          onClick={handleReorderDesktop}
-          disabled={!addressFilled || !shippingReady || paying}
-        >
-          {paying ? 'Redirigiendo...' : 'Aceptar y finalizar'}
-        </button>
-        <p className="mpd-legal">
-          Por tratarse de un producto personalizado, no realizamos cambios ni devoluciones una vez enviado a producción.
-        </p>
-      </div>
-    </div>
-  )
-
-  // ── Inline confirmado content ─────────────────────────────────────────────
-
-  const confirmadoContent = (
-    <div className="mpd-confirmado-panel">
-      <div className="mpconf2-check-circle">
-        <svg width="22" height="17" viewBox="0 0 22 17" fill="none">
-          <path d="M2 8.5L8.5 15L20 2" stroke="white" strokeWidth="2.8" strokeLinecap="round" strokeLinejoin="round"/>
-        </svg>
-      </div>
-      <p className="mpconf2-title">¡Pedido confirmado!</p>
-      <p className="mpconf2-subtitle">
-        Tu libro está siendo enviado a producción.<br />
-        En 2-3 días hábiles empieza a imprimirse.
-      </p>
-      <div className="mpconf2-wpp-box">
-        Te mandamos el comprobante por WhatsApp al +54 9 11 6264 3005.<br /><br />
-        También te avisamos cuando el libro salga a distribución.
-      </div>
-    </div>
-  )
-
   // ── Approve + buy ─────────────────────────────────────────────────────────
 
   const approveAndBuyShared = (
@@ -1154,7 +780,7 @@ export default function ProyectoPage() {
         <button
           className={`mpd-cta-btn${approved && canApprove ? ' mpd-cta-btn--active' : ''}`}
           disabled={!approved || !canApprove}
-          onClick={() => router.push(`/mis-proyectos/${order.id}/pagar`)}
+          onClick={() => router.push(`/mis-proyectos?tab=listos&item=${order.id}`)}
         >
           Aceptar y comprar
         </button>
@@ -1179,7 +805,7 @@ export default function ProyectoPage() {
         <button
           className={`mpd-cta-btn${approved && canApprove ? ' mpd-cta-btn--active' : ''}`}
           disabled={!approved || !canApprove}
-          onClick={() => { if (approved && canApprove) setOpenSection('pagar') }}
+          onClick={() => { if (approved && canApprove) router.push(`/mis-proyectos?tab=listos&item=${order.id}`) }}
         >
           Aceptar y comprar
         </button>
@@ -1232,7 +858,7 @@ export default function ProyectoPage() {
             <p className="mpd-review-thanks">¡Gracias por tu reseña!</p>
           )}
           <div className="mpd-finished-actions">
-            <a href={`/mis-proyectos/${order.id}/pagar?reorder=true`} className="mpd-action-btn mpd-action-btn--outline mpd-reorder-mobile">
+            <a href={`/mis-proyectos?item=${order.id}&reorder=true`} className="mpd-action-btn mpd-action-btn--outline mpd-reorder-mobile">
               Volver a pedir el mismo diseño
             </a>
             <a href="/#productos" className="mpd-action-btn mpd-action-btn--solid">Contar otra historia</a>
@@ -1309,8 +935,8 @@ export default function ProyectoPage() {
               {order.status === 'entregado' && deliveryConfirmed && (
                 <DesktopTabBtn
                   title="Volver a pedir el mismo diseño"
-                  isActive={openSection === 'reorder'}
-                  onClick={() => toggle('reorder')}
+                  isActive={false}
+                  onClick={() => router.push(`/mis-proyectos?item=${order.id}&reorder=true`)}
                 />
               )}
             </div>
@@ -1320,20 +946,15 @@ export default function ProyectoPage() {
             <div className="mpd-desktop-right">
               {openSection && (
                 <div className="mpd-desktop-panel">
-                  {openSection !== 'pagar' && openSection !== 'confirmado' && openSection !== 'reorder' && (
-                    <div className="mpd-desktop-panel__header">
-                      <span className="mpd-desktop-panel__title">
-                        {SECTION_TITLES[openSection] ?? openSection}
-                      </span>
-                    </div>
-                  )}
+                  <div className="mpd-desktop-panel__header">
+                    <span className="mpd-desktop-panel__title">
+                      {SECTION_TITLES[openSection] ?? openSection}
+                    </span>
+                  </div>
                   {openSection === 'detalles'   && detallesContent}
                   {openSection === 'estado'     && estadoContent}
                   {openSection === 'material'   && materialContent}
                   {openSection === 'preview'    && previewContent}
-                  {openSection === 'pagar'      && pagarContent}
-                  {openSection === 'confirmado' && confirmadoContent}
-                  {openSection === 'reorder'    && reorderContent}
                 </div>
               )}
             </div>
