@@ -70,15 +70,40 @@
 .mvm__images {
   display: flex;
   height: 100%;
-  overflow: hidden;
+  overflow-x: scroll;
+  scroll-snap-type: x mandatory;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;
 }
+
+.mvm__images::-webkit-scrollbar { display: none; }
 
 .mvm__image {
   flex-shrink: 0;
   width: 100%;
   height: 100%;
   object-fit: cover;
+  scroll-snap-align: start;
 }
+
+.mvm__dots {
+  position: absolute;
+  bottom: 12px;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  gap: 6px;
+}
+
+.mvm__dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.4);
+  transition: background 0.2s;
+}
+
+.mvm__dot--active { background: white; }
 
 /* ── Content area ───────────────────────────────────────────────────────────── */
 

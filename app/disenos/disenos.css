@@ -13,6 +13,16 @@
   flex-direction: column;
   gap: 10px;
   margin-bottom: 20px;
+  padding-bottom: 14px;
+  position: sticky;
+  top: 0;
+  z-index: 50;
+  background: #FAF8F4;
+  transition: transform 0.3s ease;
+}
+
+.disenos-page__header--hidden {
+  transform: translateY(-100%);
 }
 
 .disenos-page__back {
@@ -52,10 +62,26 @@
   border: none;
   padding: 0;
   cursor: pointer;
+  opacity: 0;
+  transform: scale(0.85);
+  transition: opacity 0.6s ease-out, transform 0.6s ease-out;
+}
+
+.disenos-page__item--visible {
+  opacity: 1;
+  transform: scale(1);
 }
 
 .disenos-page__item--shadow {
   overflow: visible;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .disenos-page__item {
+    opacity: 1;
+    transform: none;
+    transition: none;
+  }
 }
 
 .disenos-page__img {
@@ -75,8 +101,9 @@
     flex-direction: row;
     align-items: center;
     justify-content: center;
-    position: relative;
+    position: sticky;
     margin-bottom: 30px;
+    padding-bottom: 20px;
   }
 
   .disenos-page__back {

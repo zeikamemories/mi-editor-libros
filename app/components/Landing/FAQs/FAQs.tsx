@@ -8,12 +8,12 @@ const FAQS = [
   {
     num: '[01]',
     q: '¿Cuánto tarda en estar listo?',
-    a: 'El libro está listo para ser retirado por fábrica en 5 días hábiles. A eso hay que sumarle el tiempo de envío, que depende de tu dirección, pero se estiman entre 2 y 7 días hábiles para la entrega.',
+    a: 'Los productos están listos en 5 días hábiles. A eso hay que sumarle el tiempo de envío, que depende de tu dirección, pero se estiman entre 2 y 7 días hábiles para la entrega.',
   },
   {
     num: '[02]',
-    q: '¿Cuántas fotos entran?',
-    a: 'Sugerimos entre 40 y 200 fotos, pero podés subir las que quieras — nosotras nos encargamos de organizarlas.',
+    q: '¿Cuántas fotos entran en los libros?',
+    a: 'Sugerimos entre 40 y 200 fotos, dependiendo de la cantidad de hojas que compres.',
   },
   {
     num: '[03]',
@@ -23,7 +23,7 @@ const FAQS = [
   {
     num: '[04]',
     q: '¿Hacen descuentos por cantidad?',
-    a: 'Sí. Si pedís tres o más copias del mismo libro, aplicamos un 25% de descuento a partir de la tercera unidad, inclusive.',
+    a: 'Sí. Si pedís tres o más copias del mismo libro o mazo de cartas, aplicamos un 25% de descuento a partir de la tercera unidad, inclusive.',
   },
   {
     num: '[05]',

@@ -2,7 +2,8 @@
 
 import { useEffect, useLayoutEffect, useRef, useState } from 'react'
 import Link from 'next/link'
-import { DESIGNS } from '../components/Landing/NuestrosDisenos/designsData'
+import { DESIGNS, type DesignItem as DesignItemData } from '../components/Landing/NuestrosDisenos/designsData'
+import { useReveal } from '../components/Landing/useReveal'
 import DesignModal from './DesignModal'
 import './disenos.css'
 
@@ -37,21 +38,75 @@ function computeVisualOrder(items: (HTMLElement | null)[]): number[] {
   return order
 }
 
+function DesignGridItem({ item, onOpen, registerRef }: {
+  item: DesignItemData
+  onOpen: () => void
+  registerRef: (el: HTMLButtonElement | null) => void
+}) {
+  const { ref, visible } = useReveal<HTMLButtonElement>()
+
+  return (
+    <button
+      type="button"
+      ref={el => { ref.current = el; registerRef(el) }}
+      className={`disenos-page__item${item.shadow ? ' disenos-page__item--shadow' : ''}${visible ? ' disenos-page__item--visible' : ''}`}
+      onClick={onOpen}
+    >
+      <img
+        src={item.src}
+        alt=""
+        width={item.width}
+        height={item.height}
+        loading="lazy"
+        decoding="async"
+        className="disenos-page__img"
+      />
+    </button>
+  )
+}
+
 export default function DisenosPage() {
   const [selected, setSelected] = useState<number | null>(null)
   const itemRefs = useRef<(HTMLButtonElement | null)[]>([])
   const [visualOrder, setVisualOrder] = useState<number[]>(() => DESIGNS.map((_, i) => i))
+  const [headerHidden, setHeaderHidden] = useState(false)
 
   useLayoutEffect(() => {
     // Next.js client-side navigation can leave the previous page's scroll position painted
     // for a frame before this runs — use useLayoutEffect (before paint) instead of useEffect.
-    // Also disable `scroll-behavior: smooth` momentarily: Safari/WebKit sometimes ignores
-    // `behavior: 'instant'` when that's set globally, animating instead of jumping.
+    // Also disable `scroll-behavior: smooth` (set globally in globals.css) momentarily: Next's
+    // own router scroll-restoration (ScrollAndMaybeFocusHandler) re-scrolls to top a tick AFTER
+    // this effect runs, and picks up `smooth` again if we restore it too early — that's what
+    // produced the "page loads scrolled down, then visibly scrolls up" glitch. Keep it forced
+    // to `auto` through the next frame so that later scroll gets caught instant too.
     const root = document.documentElement
     const prevBehavior = root.style.scrollBehavior
     root.style.scrollBehavior = 'auto'
     window.scrollTo(0, 0)
-    root.style.scrollBehavior = prevBehavior
+    const raf = requestAnimationFrame(() => {
+      window.scrollTo(0, 0)
+      root.style.scrollBehavior = prevBehavior
+    })
+    return () => cancelAnimationFrame(raf)
+  }, [])
+
+  // Header hides while scrolling down, reappears as soon as you scroll up a bit
+  // (and always shows near the top) — so "Volver" is reachable without scrolling all the way up.
+  useEffect(() => {
+    let lastY = window.scrollY
+    function onScroll() {
+      const y = window.scrollY
+      if (y < 80) {
+        setHeaderHidden(false)
+      } else if (y > lastY + 4) {
+        setHeaderHidden(true)
+      } else if (y < lastY - 4) {
+        setHeaderHidden(false)
+      }
+      lastY = y
+    }
+    window.addEventListener('scroll', onScroll, { passive: true })
+    return () => window.removeEventListener('scroll', onScroll)
   }, [])
 
   useEffect(() => {
@@ -73,30 +128,19 @@ export default function DisenosPage() {
   return (
     <main className="disenos-page">
       <div className="disenos-page__inner">
-        <div className="disenos-page__header">
+        <div className={`disenos-page__header${headerHidden ? ' disenos-page__header--hidden' : ''}`}>
           <Link href="/#disenos" className="disenos-page__back">← Volver</Link>
           <p className="disenos-page__title">Nuestros Diseños</p>
         </div>
 
         <div className="disenos-page__grid">
           {DESIGNS.map((item, i) => (
-            <button
+            <DesignGridItem
               key={i}
-              type="button"
-              ref={el => { itemRefs.current[i] = el }}
-              className={`disenos-page__item${item.shadow ? ' disenos-page__item--shadow' : ''}`}
-              onClick={() => setSelected(i)}
-            >
-              <img
-                src={item.src}
-                alt=""
-                width={item.width}
-                height={item.height}
-                loading="lazy"
-                decoding="async"
-                className="disenos-page__img"
-              />
-            </button>
+              item={item}
+              onOpen={() => setSelected(i)}
+              registerRef={el => { itemRefs.current[i] = el }}
+            />
           ))}
         </div>
       </div>

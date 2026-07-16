@@ -24,7 +24,7 @@ export default function LandingPage() {
       <hr className="landing-separator" />
       <Reveal className="reveal--fade"><Cotizacion /></Reveal>
       <hr className="landing-separator" />
-      <Reveal><NuestrosDisenos /></Reveal>
+      <Reveal className="reveal--scale"><NuestrosDisenos /></Reveal>
       <hr className="landing-separator" />
       <ComoHacerlo />
       <QuienesSomos />

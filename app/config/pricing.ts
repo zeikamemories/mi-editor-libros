@@ -89,7 +89,13 @@ export const VINO_DESIGN_EXTRA: Record<'foto_y_texto' | 'diseno_personalizado', 
   diseno_personalizado: 15000,
 }
 
-export const VINO_CANTIDADES = [1, 6] as const
+export const VINO_CANTIDADES = [1, 2, 3, 4, 5, 6] as const
+export const VINO_CANTIDAD_MAX = 6
+
+/** 20% off al pedir el máximo de 6 botellas. */
+export function vinoDiscount(cantidad: number): number {
+  return cantidad >= 6 ? 0.8 : 1
+}
 
 /**
  * Recalcula el precio total de un pedido de vino a partir de campos guardados en la orden.
@@ -101,8 +107,8 @@ export function computeVinoTotal(
   const base  = VINO_PRICE_BASE[variedad as 'tinto' | 'blanco']
   const extra = VINO_DESIGN_EXTRA[disenoTipo as 'foto_y_texto' | 'diseno_personalizado']
   if (base === undefined || extra === undefined) return null
-  if (!VINO_CANTIDADES.includes(cantidad as 1 | 6)) return null
-  return (base + extra) * cantidad
+  if (!VINO_CANTIDADES.includes(cantidad as typeof VINO_CANTIDADES[number])) return null
+  return (base + extra) * cantidad * vinoDiscount(cantidad)
 }
 
 // ─── Cartas personalizadas ─────────────────────────────────────────────────

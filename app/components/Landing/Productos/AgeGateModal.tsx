@@ -9,7 +9,7 @@ export default function AgeGateModal({ onConfirm, onDecline }: Props) {
     <div className="agv-backdrop" onClick={onDecline}>
       <div className="agv" onClick={e => e.stopPropagation()}>
         <div className="agv__header">
-          <span className="agv__label">DISCLAIMER</span>
+          <span className="agv__label">ADVERTENCIA</span>
           <button className="agv__close" onClick={onDecline} aria-label="Cerrar">×</button>
         </div>
 

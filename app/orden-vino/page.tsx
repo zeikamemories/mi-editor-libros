@@ -4,7 +4,7 @@ import Image from 'next/image'
 import { useRouter } from 'next/navigation'
 import { supabase } from '../lib/supabase'
 import type { User } from '@supabase/supabase-js'
-import { VINO_PRICE_BASE, VINO_DESIGN_EXTRA } from '../config/pricing'
+import { VINO_PRICE_BASE, VINO_DESIGN_EXTRA, VINO_CANTIDADES, vinoDiscount } from '../config/pricing'
 import '../orden/orden.css'
 
 const VARIEDAD_LABEL: Record<string, string> = {
@@ -28,7 +28,7 @@ export default function OrdenVinoPage() {
   const [user,           setUser]           = useState<User | null>(null)
   const [variedad,       setVariedad]       = useState<'tinto' | 'blanco'>('tinto')
   const [disenoTipo,     setDisenoTipo]     = useState<'foto_y_texto' | 'diseno_personalizado'>('foto_y_texto')
-  const [cantidad,       setCantidad]       = useState<1 | 6>(1)
+  const [cantidad,       setCantidad]       = useState<typeof VINO_CANTIDADES[number]>(1)
   const [disenoMultiple, setDisenoMultiple] = useState<'mismo' | 'diferente' | null>(null)
   const [labelName,      setLabelName]      = useState('')
   const [whatsapp,       setWhatsapp]       = useState('')
@@ -45,7 +45,7 @@ export default function OrdenVinoPage() {
         if (sel.productType === 'vino') {
           if (sel.variedad)                        setVariedad(sel.variedad)
           if (sel.disenoTipo)                       setDisenoTipo(sel.disenoTipo)
-          if (sel.cantidad === 1 || sel.cantidad === 6) setCantidad(sel.cantidad)
+          if (VINO_CANTIDADES.includes(sel.cantidad)) setCantidad(sel.cantidad)
           if (sel.disenoMultiple)                   setDisenoMultiple(sel.disenoMultiple)
           if (typeof sel.labelName === 'string')    setLabelName(sel.labelName)
         }
@@ -69,7 +69,7 @@ export default function OrdenVinoPage() {
   }, [router])
 
   const unitPrice  = VINO_PRICE_BASE[variedad] + VINO_DESIGN_EXTRA[disenoTipo]
-  const totalPrice = unitPrice * cantidad
+  const totalPrice = unitPrice * cantidad * vinoDiscount(cantidad)
   const payNow     = Math.round(totalPrice / 2)
 
   async function handleConfirm() {
@@ -88,7 +88,7 @@ export default function OrdenVinoPage() {
       product_type:    'vino',
       variedad,
       diseno_tipo:     disenoTipo,
-      diseno_multiple: cantidad === 6 ? disenoMultiple : null,
+      diseno_multiple: cantidad > 1 ? disenoMultiple : null,
       copies:          cantidad,
       book_name:       labelName.trim() || 'Sin título',
       price_total:     totalPrice,
@@ -147,9 +147,9 @@ export default function OrdenVinoPage() {
           <span className="orden__summary-key">CANTIDAD</span>
           <span className="orden__summary-val">{cantidad} botella{cantidad > 1 ? 's' : ''}</span>
         </div>
-        {cantidad === 6 && (
+        {cantidad > 1 && (
           <div className="orden__summary-row">
-            <span className="orden__summary-key">DISEÑO PARA LAS 6</span>
+            <span className="orden__summary-key">DISEÑO PARA LAS {cantidad}</span>
             <span className="orden__summary-val">{disenoMultiple === 'diferente' ? 'Diseño diferente' : 'Mismo diseño'}</span>
           </div>
         )}

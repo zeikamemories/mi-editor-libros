@@ -14,7 +14,7 @@
   width: 100%;
   max-width: 460px;
   background: #F0EFEB;
-  border: 1px solid var(--color-black);
+  border: 2px solid var(--color-blue);
   padding: 24px;
   display: flex;
   flex-direction: column;

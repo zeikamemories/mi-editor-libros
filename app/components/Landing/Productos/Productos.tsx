@@ -51,7 +51,10 @@ const REVEAL_DELAY: Record<string, { mobile: number; desktop: number }> = {
   mediano:  { mobile: 100, desktop: 100 },
   vertical: { mobile: 200, desktop: 300 },
   cuadrado: { mobile: 300, desktop: 400 },
-  grande:   { mobile: 400, desktop: 200 },
+  // grande está sola en su propia fila en mobile (nada con quien competir el orden), así que no
+  // necesita delay — con 400ms el scroll ya la había dejado bien visible cuando recién arrancaba
+  // la animación, y se sentía como un "pop" en vez de crecer igual que las demás.
+  grande:   { mobile: 0,   desktop: 200 },
 }
 
 export default function Productos() {
