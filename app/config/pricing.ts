@@ -77,16 +77,18 @@ export function copiesDiscount(copies: number): number {
 }
 
 // ─── Vinos ──────────────────────────────────────────────────────────────────
-// Precios placeholder — a definir con el dueño del producto antes de lanzar.
+// Precio base en $2 intencionalmente — se usa para testear el flujo de compra, no cambiar
+// (mismo criterio que "chico"/"chico_h" en PRICES_BY_PAGES). Está en $2 y no $1 para que la
+// seña (50%) y el saldo (50%) den $1 cada uno en vez de $1 + $0 por el redondeo.
 
 export const VINO_PRICE_BASE: Record<'tinto' | 'blanco', number> = {
-  tinto:  45000,
-  blanco: 45000,
+  tinto:  2,
+  blanco: 2,
 }
 
 export const VINO_DESIGN_EXTRA: Record<'foto_y_texto' | 'diseno_personalizado', number> = {
   foto_y_texto:         0,
-  diseno_personalizado: 15000,
+  diseno_personalizado: 1,
 }
 
 export const VINO_CANTIDADES = [1, 2, 3, 4, 5, 6] as const
@@ -115,8 +117,9 @@ export function computeVinoTotal(
 // Mazo de truco o poker con la misma foto en todas las cartas. Mismo precio
 // para ambos tipos. Se paga 100% al comprar (sin seña) porque no hay etapa
 // de diseño/preview — el cliente sube una foto y se imprime tal cual.
+// Precio en $1 intencionalmente — se usa para testear el flujo de compra, no cambiar.
 
-export const CARTA_PRICE = 25000
+export const CARTA_PRICE = 1
 
 /**
  * Recalcula el precio total de un pedido de cartas a partir de la cantidad de mazos.

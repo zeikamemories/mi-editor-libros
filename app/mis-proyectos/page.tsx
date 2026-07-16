@@ -4,7 +4,7 @@ import { useEffect, useRef, useState, Suspense } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { supabase } from '../lib/supabase'
 import Navbar from '../components/Landing/Navbar/Navbar'
-import { REORDER_UNIT_PRICE, copiesDiscount, CARTA_PRICE } from '../config/pricing'
+import { REORDER_UNIT_PRICE, copiesDiscount, CARTA_PRICE, computeVinoTotal } from '../config/pricing'
 import './mis-proyectos.css'
 
 interface Order {
@@ -17,6 +17,8 @@ interface Order {
   product_type: string | null
   card_type: string | null
   card_photo_url: string | null
+  variedad: string | null
+  diseno_tipo: string | null
   copies: number | null
   created_at: string
 }
@@ -111,7 +113,7 @@ function MisProyectosContent() {
       const [{ data: ordersData }, { data: projectsData }] = await Promise.all([
         supabase
           .from('orders')
-          .select('id, book_name, size, status, price_total, price_paid, product_type, card_type, card_photo_url, copies, created_at')
+          .select('id, book_name, size, status, price_total, price_paid, product_type, card_type, card_photo_url, variedad, diseno_tipo, copies, created_at')
           .eq('user_id', session.user.id)
           .order('created_at', { ascending: false }),
         supabase
@@ -174,6 +176,9 @@ function MisProyectosContent() {
   function computeRowPrice(o: Order) {
     const copies = rowCopiesFor(o)
     if (o.product_type === 'cartas') return CARTA_PRICE * copies
+    if (o.product_type === 'vino') {
+      return computeVinoTotal(o.variedad ?? '', o.diseno_tipo ?? '', copies) ?? o.price_total
+    }
     const unitPrice = REORDER_UNIT_PRICE[o.size ?? ''] ?? o.price_total
     return copies * unitPrice * copiesDiscount(copies)
   }
@@ -311,6 +316,7 @@ function MisProyectosContent() {
             const copies  = rowCopiesFor(order)
             const price   = computeRowPrice(order)
             const isCarta = order.product_type === 'cartas'
+            const isVino  = order.product_type === 'vino'
             const cardType = rowCardType[order.id] ?? order.card_type ?? 'poker'
             return (
               <div key={order.id} className={`mp-listos-row${checked ? ' mp-listos-row--selected' : ''}`}>
@@ -335,7 +341,7 @@ function MisProyectosContent() {
                 <div className="mp-listos-info">
                   <span className="mp-listos-name">{orderName(order)}</span>
                   <span className="mp-listos-format">
-                    {isCarta ? 'Mazo de cartas' : (SIZE_SHORT[order.size ?? ''] ?? order.size)}
+                    {isCarta ? 'Mazo de cartas' : isVino ? `Vino ${order.variedad ?? ''}` : (SIZE_SHORT[order.size ?? ''] ?? order.size)}
                   </span>
 
                   {isCarta && (
@@ -355,6 +361,9 @@ function MisProyectosContent() {
                     </div>
                   )}
 
+                  {isVino ? (
+                    <span className="mp-listos-format">{copies} botella{copies > 1 ? 's' : ''}</span>
+                  ) : (
                   <div className="mpag-counter mp-listos-counter">
                     <button
                       className="mpag-counter-btn"
@@ -367,6 +376,7 @@ function MisProyectosContent() {
                       onClick={() => setRowCopies(prev => ({ ...prev, [order.id]: copies + 1 }))}
                     >+</button>
                   </div>
+                  )}
                 </div>
 
                 <span className="mp-listos-price">{fmt(price)}</span>

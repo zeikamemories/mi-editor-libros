@@ -54,7 +54,7 @@ export async function POST(req: NextRequest) {
 
         const { data: order, error: orderError } = await admin
           .from('orders')
-          .select('size, price_paid, product_type, book_name')
+          .select('size, price_paid, product_type, book_name, variedad, diseno_tipo')
           .eq('id', item.orderId)
           .single()
 
@@ -73,6 +73,13 @@ export async function POST(req: NextRequest) {
           }
           amount = Math.round(total - effectivePaid)
           title  = `Cartas personalizadas Zeika (${item.cardType ?? 'poker'}) — ${order.book_name}`
+        } else if (order.product_type === 'vino') {
+          const total = computeVinoTotal(order.variedad ?? '', order.diseno_tipo ?? '', copiesNum)
+          if (total === null) {
+            return NextResponse.json({ error: 'No se pudo calcular el precio del vino' }, { status: 400 })
+          }
+          amount = Math.round(total - effectivePaid)
+          title  = `Vino personalizado Zeika — ${order.book_name}`
         } else {
           const unitPrice = REORDER_UNIT_PRICE[order.size]
           if (unitPrice === undefined) {
