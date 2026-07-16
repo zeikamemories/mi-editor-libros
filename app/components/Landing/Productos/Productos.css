@@ -97,7 +97,6 @@
 .product-card--vinos,
 .product-card--cartas {
   width: 100%;
-  max-width: 328px;
 }
 
 .product-card--vinos .product-card__img,
@@ -316,7 +315,7 @@
 
   .product-card--vinos,
   .product-card--cartas {
-    max-width: 700px;
+    max-width: 40vw;
   }
 
   /* Desktop flex layout — px-50px matches header */

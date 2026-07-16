@@ -11,7 +11,7 @@ type TeamMemberData = { name: string; photo: string; extra?: boolean; delay: num
 const TEAM: TeamMemberData[] = [
   { name: 'Victoria Suarez',      photo: '/fotos/Vicky.jpg',                delay: 0   },
   { name: 'Josefina De Vicentis', photo: '/fotos/jose.jpg',                 delay: 260 },
-  { name: 'Azucena Uranga',       photo: '/fotos/azu.jpg', extra: true,     delay: 130 },
+  { name: 'Azucena Uranga',       photo: '/fotos/azu2.jpg', extra: true,    delay: 130 },
 ]
 
 function TeamMember({ name, photo, extra, delay }: TeamMemberData) {
