@@ -48,7 +48,10 @@
 }
 
 .disenos__item--h { width: 280px; }
-.disenos__item--v { width: 150px; }
+/* 170/220 ≈ 0.77 — matches the aspect ratio most "vertical" book covers actually export at
+   (21.6/28cm), so object-fit:cover crops much less off the sides. At the old 150px width,
+   designs with text near the edges (like the New York cover) were visibly cut off. */
+.disenos__item--v { width: 170px; }
 .disenos__item--s { width: 210px; }
 
 .disenos__item--shadow {
@@ -106,7 +109,7 @@
   }
 
   .disenos__item--h { width: 440px; }
-  .disenos__item--v { width: 230px; }
+  .disenos__item--v { width: 247px; }
   .disenos__item--s { width: 320px; }
 
   .disenos__track {

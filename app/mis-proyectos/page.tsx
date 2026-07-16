@@ -34,13 +34,16 @@ const STATUS_LABEL: Record<string, string> = {
   confirmado:        'Cargar material',
   material_recibido: 'Material Cargado',
   en_diseno:         'En diseño',
-  preview_listo:     'Listo para comprar',
+  preview_listo:     'Revisar preview',
+  aprobado:          'Listo para comprar',
   en_produccion:     'En producción',
   en_camino:         'En camino',
   entregado:         'Entregado',
 }
 
-const EN_PROCESO_STATUSES  = ['pendiente_pago', 'confirmado', 'material_recibido', 'en_diseno']
+// preview_listo = el staff ya subió el preview, pero el cliente todavía no lo aprobó — sigue en
+// "en proceso". Recién pasa a "Listos para comprar" cuando el cliente aprueba (status 'aprobado').
+const EN_PROCESO_STATUSES  = ['pendiente_pago', 'confirmado', 'material_recibido', 'en_diseno', 'preview_listo']
 const REALIZADAS_STATUSES  = ['en_produccion', 'en_camino', 'entregado']
 
 type Tab = 'proceso' | 'listos' | 'realizadas'
@@ -161,7 +164,7 @@ function MisProyectosContent() {
   }
 
   const proceso    = orders.filter(o => EN_PROCESO_STATUSES.includes(o.status))
-  const listos     = orders.filter(o => o.status === 'preview_listo')
+  const listos     = orders.filter(o => o.status === 'aprobado')
   const realizadas = orders.filter(o => REALIZADAS_STATUSES.includes(o.status))
 
   function rowCopiesFor(o: Order) {
@@ -178,13 +181,21 @@ function MisProyectosContent() {
   function toggleSelect(id: string) {
     setSelected(prev => {
       const next = new Set(prev)
-      if (next.has(id)) next.delete(id)
-      else next.add(id)
+      if (next.has(id)) {
+        next.delete(id)
+      } else {
+        next.add(id)
+        // El retiro en fábrica no aplica a vinos — si se agrega uno, forzamos envío.
+        const order = orders.find(o => o.id === id)
+        if (order?.product_type === 'vino') setDeliveryType('andreani')
+      }
       return next
     })
   }
 
   const selectedOrders = listos.filter(o => selected.has(o.id))
+  // El retiro en fábrica no aplica a vinos — si hay uno seleccionado, solo se puede envío.
+  const hasVino         = selectedOrders.some(o => o.product_type === 'vino')
   const subtotalSum    = selectedOrders.reduce((sum, o) => sum + computeRowPrice(o), 0)
   const paidSum        = isReorder ? 0 : selectedOrders.reduce((sum, o) => sum + o.price_paid, 0)
   const shippingTotal  = deliveryType === 'andreani' ? (shippingPrice ?? 0) : 0
@@ -370,6 +381,7 @@ function MisProyectosContent() {
               <span className="mpag-section-label">Entrega</span>
               <p className="mpag-section-hint">
                 Un solo envío para todo lo que selecciones — si van varios productos juntos, se despachan cuando todos estén listos.
+                {hasVino && ' Los vinos solo se envían por Andreani, no hay retiro en fábrica.'}
               </p>
 
               <div
@@ -429,19 +441,21 @@ function MisProyectosContent() {
                 )}
               </div>
 
-              <div
-                className={`mpag-delivery-card${deliveryType === 'pickup' ? ' mpag-delivery-card--selected' : ''}`}
-                onClick={() => setDeliveryType('pickup')}
-              >
-                <div className="mpag-delivery-card__header">
-                  <div className="mpag-delivery-card__left">
-                    <div className={`mpag-radio${deliveryType === 'pickup' ? ' mpag-radio--selected' : ''}`} />
-                    <span className="mpag-delivery-name">Retiro en fábrica</span>
+              {!hasVino && (
+                <div
+                  className={`mpag-delivery-card${deliveryType === 'pickup' ? ' mpag-delivery-card--selected' : ''}`}
+                  onClick={() => setDeliveryType('pickup')}
+                >
+                  <div className="mpag-delivery-card__header">
+                    <div className="mpag-delivery-card__left">
+                      <div className={`mpag-radio${deliveryType === 'pickup' ? ' mpag-radio--selected' : ''}`} />
+                      <span className="mpag-delivery-name">Retiro en fábrica</span>
+                    </div>
+                    <span className="mpag-delivery-price mpag-delivery-price--free">Gratis</span>
                   </div>
-                  <span className="mpag-delivery-price mpag-delivery-price--free">Gratis</span>
+                  <p className="mpag-delivery-desc">Retiro por Concepción Arenal 4501, Chacarita, Bs As,<br />Lunes a Viernes 10-18 hs</p>
                 </div>
-                <p className="mpag-delivery-desc">Retiro por Concepción Arenal 4501, Chacarita, Bs As,<br />Lunes a Viernes 10-18 hs</p>
-              </div>
+              )}
             </div>
 
             <div className="mp-pay-bar">

@@ -68,12 +68,13 @@ export default function OrdenCartasPage() {
       copies:          1,
       price_total:     totalPrice,
       price_paid:      0,
-      status:          'preview_listo',
+      status:          'aprobado',
       status_dates: {
         confirmado:         now,
         material_recibido:  now,
         en_diseno:           now,
         preview_listo:       now,
+        aprobado:            now,
       },
     }).select().single()
 

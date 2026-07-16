@@ -55,7 +55,8 @@ const STATUS_LABEL: Record<string, string> = {
   confirmado:        'Cargar material',
   material_recibido: 'Material Cargado',
   en_diseno:         'En diseño',
-  preview_listo:     'Preview listo',
+  preview_listo:     'Revisar preview',
+  aprobado:          'Listo para comprar',
   en_produccion:     'En producción',
   en_camino:         'En camino',
   entregado:         'Entregado',
@@ -67,8 +68,9 @@ const STEP_DONE: Record<string, number> = {
   material_recibido: 1,
   en_diseno:         2,
   preview_listo:     3,
-  en_produccion:     4,
-  en_camino:         5,
+  aprobado:          4,
+  en_produccion:     5,
+  en_camino:         6,
   entregado:         7,
 }
 
@@ -77,6 +79,7 @@ const TIMELINE_STEPS = [
   { key: 'material_recibido', label: 'Material recibido'  },
   { key: 'en_diseno',         label: 'En diseño'          },
   { key: 'preview_listo',     label: 'Preview disponible' },
+  { key: 'aprobado',          label: 'Diseño aprobado'    },
   { key: 'en_produccion',     label: 'En producción'      },
   { key: 'en_camino',         label: 'En camino'          },
   { key: 'entregado',         label: 'Entregado'          },
@@ -208,6 +211,7 @@ export default function ProyectoPage() {
   const [sendingChange, setSendingChange] = useState(false)
   const [changeNote,    setChangeNote]    = useState('')
   const [approved,      setApproved]      = useState(false)
+  const [approving,     setApproving]     = useState(false)
   const [coverThumbnail, setCoverThumbnail] = useState<{ left?: string; right?: string } | null>(null)
 
   // Entregado
@@ -248,7 +252,7 @@ export default function ProyectoPage() {
       if (!openParam) {
         if (o.status === 'preview_listo') {
           setOpenSection('preview')
-        } else if (['en_camino', 'en_produccion', 'entregado'].includes(o.status)) {
+        } else if (['aprobado', 'en_camino', 'en_produccion', 'entregado'].includes(o.status)) {
           setOpenSection('estado')
         } else {
           setOpenSection('material')
@@ -436,7 +440,7 @@ export default function ProyectoPage() {
               </div>
             </div>
           </div>
-          {order.status === 'preview_listo' ? (
+          {order.status === 'aprobado' ? (
             <div className="mpd-bottom">
               <div className="mpd-cta-wrap">
                 <a
@@ -462,7 +466,7 @@ export default function ProyectoPage() {
   const allDone         = order.status === 'entregado'
   const statusDates     = order.status_dates ?? {}
   const totalPages      = (order.pages_base ?? 14) + (order.extra_pages ?? 0)
-  const canPreview      = ['preview_listo','en_produccion','en_camino','entregado'].includes(order.status)
+  const canPreview      = ['preview_listo','aprobado','en_produccion','en_camino','entregado'].includes(order.status)
   const canApprove      = order.status === 'preview_listo'
   const afterProduction = ['en_produccion','en_camino','entregado'].includes(order.status)
   const firstName          = userName.split(' ')[0]
@@ -766,6 +770,17 @@ export default function ProyectoPage() {
 
   // ── Approve + buy ─────────────────────────────────────────────────────────
 
+  async function confirmApproval() {
+    if (!order || !approved || !canApprove || approving) return
+    setApproving(true)
+    const now = new Date().toISOString()
+    await supabase.from('orders').update({
+      status:       'aprobado',
+      status_dates: { ...(order.status_dates ?? {}), aprobado: now },
+    }).eq('id', order.id)
+    router.push(`/mis-proyectos?tab=listos&item=${order.id}`)
+  }
+
   const approveAndBuyShared = (
     <>
       <button
@@ -779,10 +794,10 @@ export default function ProyectoPage() {
       <div className="mpd-cta-wrap">
         <button
           className={`mpd-cta-btn${approved && canApprove ? ' mpd-cta-btn--active' : ''}`}
-          disabled={!approved || !canApprove}
-          onClick={() => router.push(`/mis-proyectos?tab=listos&item=${order.id}`)}
+          disabled={!approved || !canApprove || approving}
+          onClick={confirmApproval}
         >
-          Aceptar y comprar
+          {approving ? 'Confirmando...' : 'Aceptar y comprar'}
         </button>
         <p className="mpd-legal">
           Por tratarse de un producto personalizado, no realizamos cambios ni devoluciones una vez enviado a producción.
@@ -804,10 +819,10 @@ export default function ProyectoPage() {
       <div className="mpd-cta-wrap">
         <button
           className={`mpd-cta-btn${approved && canApprove ? ' mpd-cta-btn--active' : ''}`}
-          disabled={!approved || !canApprove}
-          onClick={() => { if (approved && canApprove) router.push(`/mis-proyectos?tab=listos&item=${order.id}`) }}
+          disabled={!approved || !canApprove || approving}
+          onClick={confirmApproval}
         >
-          Aceptar y comprar
+          {approving ? 'Confirmando...' : 'Aceptar y comprar'}
         </button>
         <p className="mpd-legal">
           Por tratarse de un producto personalizado, no realizamos cambios ni devoluciones una vez enviado a producción.

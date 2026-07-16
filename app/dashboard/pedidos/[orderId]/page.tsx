@@ -13,6 +13,7 @@ const ALL_STATUSES = [
   { value: 'material_recibido', label: 'Material cargado'  },
   { value: 'en_diseno',         label: 'En diseño'         },
   { value: 'preview_listo',     label: 'Preview listo'     },
+  { value: 'aprobado',          label: 'Aprobado por cliente' },
   { value: 'en_produccion',     label: 'En producción'     },
   { value: 'en_camino',         label: 'En camino'         },
   { value: 'entregado',         label: 'Entregado'         },
@@ -394,7 +395,7 @@ export default function PedidoAdminPage() {
             <div className="pedido-item"><label>Total</label><span>{fmt(order.price_total)}</span></div>
             <div className="pedido-item"><label>50% pagado</label><span>{fmt(order.price_paid)}</span></div>
             <div className="pedido-item"><label>Fecha pedido</label><span>{fmtDate(order.created_at)}</span></div>
-            <div className="pedido-item"><label>Envío</label><span>{order.delivery_type === 'andreani' ? 'Andreani' : order.delivery_type === 'retiro' ? 'Retiro en fábrica' : '—'}</span></div>
+            <div className="pedido-item"><label>Envío</label><span>{order.delivery_type === 'andreani' ? 'Andreani' : order.delivery_type === 'pickup' ? 'Retiro en fábrica' : '—'}</span></div>
             {order.delivery_type === 'andreani' && order.delivery_address && (
               <div className="pedido-item pedido-item--full"><label>Dirección</label><span>{order.delivery_address}</span></div>
             )}

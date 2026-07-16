@@ -45,6 +45,7 @@ const STATUS_LABEL: Record<string, string> = {
   material_recibido: 'Material Cargado',
   en_diseno:         'En diseño',
   preview_listo:     'Preview listo',
+  aprobado:          'Aprobado por cliente',
   en_produccion:     'En producción',
   en_camino:         'En camino',
   entregado:         'Entregado',
@@ -53,7 +54,7 @@ const STATUS_LABEL: Record<string, string> = {
 const STATUS_TAB: Record<FilterTab, string[] | null> = {
   TODOS:           null,
   NUEVOS:          ['pendiente_pago', 'confirmado'],
-  'EN PROCESO':    ['material_recibido', 'en_diseno', 'preview_listo'],
+  'EN PROCESO':    ['material_recibido', 'en_diseno', 'preview_listo', 'aprobado'],
   'EN PRODUCCIÓN': ['en_produccion', 'en_camino'],
   FINALIZADOS:     ['entregado'],
 }
