@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation'
 import { supabase } from '../lib/supabase'
 import type { User } from '@supabase/supabase-js'
 import { computeCartasTotal } from '../config/pricing'
+import CardPhotoFrame, { DEFAULT_CARD_TRANSFORM, type CardTransform } from '../components/CardPhotoFrame/CardPhotoFrame'
 import '../orden/orden.css'
 
 function fmt(n: number) {
@@ -18,6 +19,7 @@ export default function OrdenCartasPage() {
   const [user,      setUser]      = useState<User | null>(null)
   const [cardType,  setCardType]  = useState<'truco' | 'poker' | null>(null)
   const [photoUrl,  setPhotoUrl]  = useState<string | null>(null)
+  const [photoTransform, setPhotoTransform] = useState<CardTransform>(DEFAULT_CARD_TRANSFORM)
   const [labelName, setLabelName] = useState('')
   const [saving,    setSaving]    = useState(false)
   const [error,     setError]     = useState('')
@@ -30,6 +32,7 @@ export default function OrdenCartasPage() {
         if (sel.productType === 'cartas') {
           if (sel.cardType === 'truco' || sel.cardType === 'poker') setCardType(sel.cardType)
           if (typeof sel.photoUrl === 'string')  setPhotoUrl(sel.photoUrl)
+          if (sel.photoTransform) setPhotoTransform(sel.photoTransform)
           if (typeof sel.labelName === 'string') setLabelName(sel.labelName)
         }
       }
@@ -63,6 +66,7 @@ export default function OrdenCartasPage() {
       user_id:         user.id,
       product_type:    'cartas',
       card_photo_url:  photoUrl,
+      card_photo_transform: photoTransform,
       card_type:       cardType,
       book_name:       labelName.trim() || 'Sin título',
       copies:          1,
@@ -146,7 +150,7 @@ export default function OrdenCartasPage() {
         <div className="orden__left-col">
           <a className="orden__back-link orden__back-link--side" href="/">←</a>
           <div className="orden__product-frame">
-            <img src={photoUrl} alt="Tu foto" className="orden__product-img" />
+            <CardPhotoFrame src={photoUrl} transform={photoTransform} className="orden__product-photoframe" />
           </div>
         </div>
 

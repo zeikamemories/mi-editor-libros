@@ -36,6 +36,29 @@
   position: relative;
   overflow: hidden;
   background: #e0dedd;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 30px;
+  box-sizing: border-box;
+}
+
+.carta-modal__frame-wrap {
+  width: 100%;
+  max-width: 345px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 14px;
+}
+
+.carta-modal__frame-hint {
+  font-family: "forma-djr-display", sans-serif;
+  font-size: 12px;
+  letter-spacing: 0.48px;
+  color: #666;
+  margin: 0;
+  text-align: center;
 }
 
 .pm__carousel {

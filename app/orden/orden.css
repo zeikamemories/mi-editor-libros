@@ -1025,6 +1025,11 @@
     display: block;
   }
 
+  .orden__product-photoframe {
+    width: 70%;
+    max-width: 350px;
+  }
+
   /* Horizontal books: fill width, center vertically */
   .orden__product-img--chico_h,
   .orden__product-img--mediano_h,

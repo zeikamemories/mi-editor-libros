@@ -35,6 +35,11 @@ const FAQS = [
     q: '¿Cómo funciona el pago?',
     a: 'Cobramos a través de Mercado Pago, así que podés pagar con tarjeta de crédito o débito, transferencia, o saldo de MP — lo que te resulte más cómodo. El pago se divide en dos: el 50% al confirmar el pedido, y el otro 50% cuando aprobás el diseño final.',
   },
+  {
+    num: '[07]',
+    q: '¿Hacen devoluciones?',
+    a: 'Por tratarse de productos personalizados no realizamos devoluciones. Si tu producto llega con un defecto de fabricación, te lo reponemos sin cargo.',
+  },
 ]
 
 export default function FAQs() {

@@ -206,6 +206,19 @@
   background: #ece9e4;
 }
 
+/* Vino: tarjeta vertical (botella) en vez de horizontal (spread de fotolibro) */
+.mp-card__thumb--vino {
+  aspect-ratio: 3 / 4;
+  padding: 0;
+}
+
+.mp-card__thumb-page--vino {
+  width: 100%;
+  height: 100%;
+  max-height: none;
+  object-fit: cover;
+}
+
 /* info section */
 .mp-card__info {
   padding: 5px 10px 6px;
@@ -1891,6 +1904,31 @@
   font-family: "forma-djr-display", sans-serif;
   font-size: 13px;
   color: #666;
+}
+
+/* ── Cartas: mockup de la foto sobre una carta ──────────────────────────── */
+
+.mpd-card-mockup {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  padding: 20px 0;
+}
+
+.mpd-card-mockup__frame-wrap {
+  width: 220px;
+  max-width: 100%;
+}
+
+.mpd-mat-row .mpd-card-mockup__frame-wrap {
+  width: 170px;
+}
+
+/* ── Vino: mockup de la etiqueta sobre la botella (retrato, más angosto) ── */
+
+.mpd-vino-mockup__frame-wrap {
+  width: 200px;
 }
 
 /* Rounds of changes */

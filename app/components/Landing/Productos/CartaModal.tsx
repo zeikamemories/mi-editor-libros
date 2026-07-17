@@ -3,9 +3,8 @@
 import { useState, useEffect, useRef } from 'react'
 import { supabase } from '../../../lib/supabase'
 import { CARTA_PRICE } from '../../../config/pricing'
+import CardPhotoFrame, { DEFAULT_CARD_TRANSFORM, type CardTransform } from '../../CardPhotoFrame/CardPhotoFrame'
 import './CartaModal.css'
-
-const PLACEHOLDER_IMAGE = '/fotos/cartas.jpg'
 
 const WHATSAPP_NUMBER = '5491133521921'
 
@@ -19,6 +18,7 @@ export default function CartaModal({ onClose }: Props) {
   const [cardType,    setCardType]    = useState<'truco' | 'poker' | null>(null)
   const [typeError,   setTypeError]   = useState(false)
   const [photoUrl,    setPhotoUrl]    = useState<string | null>(null)
+  const [photoTransform, setPhotoTransform] = useState<CardTransform>(DEFAULT_CARD_TRANSFORM)
   const [uploading,   setUploading]   = useState(false)
   const [uploadError, setUploadError] = useState<string | null>(null)
   const [photoError,  setPhotoError]  = useState(false)
@@ -62,6 +62,7 @@ export default function CartaModal({ onClose }: Props) {
       const data = await res.json()
       if (!res.ok) throw new Error(data.error ?? 'No se pudo subir la foto')
       setPhotoUrl(data.url)
+      setPhotoTransform(DEFAULT_CARD_TRANSFORM)
     } catch (err) {
       setUploadError(err instanceof Error ? err.message : 'No se pudo subir la foto')
     } finally {
@@ -92,6 +93,7 @@ export default function CartaModal({ onClose }: Props) {
       productType: 'cartas',
       cardType,
       photoUrl,
+      photoTransform,
       labelName,
     }))
     sessionStorage.setItem('zeika_back_product', 'cartas')
@@ -110,10 +112,15 @@ export default function CartaModal({ onClose }: Props) {
 
         {/* ── Left panel ── */}
         <div className="pm__left">
-          <div className="pm__carousel">
-            <div className="pm__slide">
-              <img src={photoUrl ?? PLACEHOLDER_IMAGE} alt="Cartas personalizadas" className="pm__img" />
-            </div>
+          <div className="carta-modal__frame-wrap">
+            <CardPhotoFrame
+              src={photoUrl}
+              transform={photoTransform}
+              onChange={photoUrl ? setPhotoTransform : undefined}
+            />
+            {photoUrl && (
+              <p className="carta-modal__frame-hint">Arrastrá la foto para reposicionarla</p>
+            )}
           </div>
         </div>
 

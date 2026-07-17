@@ -245,6 +245,18 @@
   grid-column: 1 / -1;
 }
 
+.pedido-carta-photo {
+  width: 160px;
+  max-width: 100%;
+  margin-bottom: 10px;
+}
+
+.pedido-vino-mockup-wrap {
+  width: 180px;
+  max-width: 100%;
+  margin-bottom: 10px;
+}
+
 .pedido-item label {
   display: block;
   font-family: "forma-djr-display", sans-serif;

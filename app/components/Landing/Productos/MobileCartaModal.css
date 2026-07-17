@@ -63,9 +63,32 @@
 
 .mvm__carousel {
   position: relative;
-  height: 380px;
+  height: 520px;
   width: 100%;
   background: #e0dedd;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  box-sizing: border-box;
+}
+
+.carta-modal__frame-wrap {
+  width: 100%;
+  max-width: 260px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+}
+
+.carta-modal__frame-hint {
+  font-family: "forma-djr-display", sans-serif;
+  font-size: 12px;
+  letter-spacing: 0.48px;
+  color: #666;
+  margin: 0;
+  text-align: center;
 }
 
 .mvm__images {

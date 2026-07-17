@@ -6,6 +6,8 @@ import Link from 'next/link'
 import { supabase } from '../../../lib/supabase'
 import { authHeaders } from '../../../lib/authFetch'
 import { isAdminEmail } from '../../../lib/adminEmails'
+import CardPhotoFrame, { type CardTransform } from '../../../components/CardPhotoFrame/CardPhotoFrame'
+import VinoMockupFrame from '../../../components/VinoMockupFrame/VinoMockupFrame'
 import './pedido.css'
 
 const ALL_STATUSES = [
@@ -61,6 +63,13 @@ interface Order {
   product_type: string | null
   card_type: string | null
   card_photo_url: string | null
+  card_photo_transform: CardTransform | null
+  variedad: string | null
+  diseno_tipo: string | null
+  copies: number | null
+  label_photo_url: string | null
+  label_text: string | null
+  vino_design_url: string | null
 }
 
 interface Note {
@@ -87,6 +96,12 @@ function orderNumber(id: string, date: string) {
   return `ZK-${new Date(date).getFullYear()}-${id.substring(0, 6).toUpperCase()}`
 }
 
+// Fuerza la descarga del archivo original (sin recortes) en vez de abrirlo en el navegador,
+// insertando el flag fl_attachment en la URL de Cloudinary.
+function cloudinaryDownloadUrl(url: string) {
+  return url.replace('/upload/', '/upload/fl_attachment/')
+}
+
 export default function PedidoAdminPage() {
   const router  = useRouter()
   const params  = useParams()
@@ -107,6 +122,9 @@ export default function PedidoAdminPage() {
   // Preview URL
   const [previewUrl,    setPreviewUrl]    = useState('')
   const [savingPreview, setSavingPreview] = useState(false)
+
+  // Diseño de vino (imagen final de la etiqueta)
+  const [uploadingVinoDesign, setUploadingVinoDesign] = useState(false)
 
   // Tracking
   const [tracking,       setTracking]       = useState('')
@@ -203,6 +221,27 @@ export default function PedidoAdminPage() {
     setOrder(prev => prev ? { ...prev, preview_url: previewUrl || null, status: newStatus, status_dates: newDates } : prev)
     setStatus(newStatus)
     setSavingPreview(false)
+  }
+
+  async function uploadVinoDesign(file: File) {
+    if (!order) return
+    setUploadingVinoDesign(true)
+    const form = new FormData()
+    form.append('file', file)
+    const res  = await fetch('/api/upload', { method: 'POST', body: form })
+    const data = await res.json()
+    if (data.url) {
+      const newStatus = 'preview_listo'
+      const newDates  = { ...(order.status_dates ?? {}), preview_listo: new Date().toISOString() }
+      await supabase.from('orders').update({
+        vino_design_url: data.url,
+        status:          newStatus,
+        status_dates:    newDates,
+      }).eq('id', order.id)
+      setOrder(prev => prev ? { ...prev, vino_design_url: data.url, status: newStatus, status_dates: newDates } : prev)
+      setStatus(newStatus)
+    }
+    setUploadingVinoDesign(false)
   }
 
   async function saveTracking() {
@@ -364,8 +403,15 @@ export default function PedidoAdminPage() {
                 {order.card_photo_url && (
                   <div className="pedido-item pedido-item--full">
                     <label>Foto</label>
-                    {/* eslint-disable-next-line @next/next/no-img-element */}
-                    <img src={order.card_photo_url} alt="" style={{ width: 120, height: 120, objectFit: 'cover' }} />
+                    <div className="pedido-carta-photo">
+                      <CardPhotoFrame src={order.card_photo_url} transform={order.card_photo_transform ?? undefined} />
+                    </div>
+                    <a
+                      className="pedido-link-btn"
+                      href={cloudinaryDownloadUrl(order.card_photo_url)}
+                    >
+                      Descargar foto original ↓
+                    </a>
                   </div>
                 )}
               </>
@@ -479,7 +525,8 @@ export default function PedidoAdminPage() {
           )}
         </div>
 
-        {/* ── Preview URL ─────────────────────────────────────────── */}
+        {/* ── Preview URL (fotolibro) ─────────────────────────────── */}
+        {order.product_type !== 'vino' && (
         <div className="pedido-card">
           <h3 className="pedido-card-title">Preview del libro</h3>
           <p className="pedido-hint">Copiá el link desde el editor (botón Compartir). Al guardarlo, el estado pasa automáticamente a "Preview listo".</p>
@@ -514,6 +561,57 @@ export default function PedidoAdminPage() {
             </a>
           )}
         </div>
+        )}
+
+        {/* ── Diseño del vino ──────────────────────────────────────── */}
+        {order.product_type === 'vino' && (
+        <div className="pedido-card">
+          <h3 className="pedido-card-title">Diseño de la etiqueta</h3>
+          <p className="pedido-hint">
+            Subí el diseño final de la etiqueta ({order.diseno_tipo === 'foto_y_texto' ? 'foto + texto que cargó el cliente' : 'según referencia y notas del cliente'}).
+            Se compone automáticamente sobre la botella para el cliente. Al subirla, el estado pasa a &quot;Preview listo&quot;.
+          </p>
+          <div className="pedido-vino-mockup-wrap">
+            <VinoMockupFrame src={order.vino_design_url} />
+          </div>
+          <div className="pedido-row">
+            <input
+              type="file"
+              accept="image/*"
+              id="vino-design-upload"
+              style={{ display: 'none' }}
+              onChange={e => { if (e.target.files?.[0]) uploadVinoDesign(e.target.files[0]); e.target.value = '' }}
+            />
+            <label htmlFor="vino-design-upload" className="pedido-save-btn" style={{ cursor: 'pointer' }}>
+              {uploadingVinoDesign ? 'Subiendo...' : order.vino_design_url ? 'Cambiar diseño' : 'Subir diseño'}
+            </label>
+          </div>
+          {order.label_photo_url && (
+            <div className="pedido-item pedido-item--full">
+              <label>Foto del cliente</label>
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img src={order.label_photo_url} alt="" className="pedido-ref-img" />
+            </div>
+          )}
+          {order.label_text && (
+            <div className="pedido-item pedido-item--full">
+              <label>Texto de la etiqueta</label>
+              <span>{order.label_text}</span>
+            </div>
+          )}
+          {clientPhone && order.vino_design_url && (
+            <a
+              className="pedido-wa-btn"
+              href={buildWaLink(`¡Hola! El diseño de la etiqueta de tu vino "${order.book_name}" está listo para que lo revises. Entrá a tu portal en Zeika para verlo. ¡Cualquier cambio nos avisás!`)}
+              target="_blank"
+              rel="noreferrer"
+            >
+              <svg width="16" height="16" viewBox="0 0 32 32" fill="none"><rect width="32" height="32" rx="8" fill="#25D366"/><path d="M16 6C10.477 6 6 10.477 6 16c0 1.89.523 3.655 1.432 5.16L6 26l4.98-1.407A9.946 9.946 0 0016 26c5.523 0 10-4.477 10-10S21.523 6 16 6zm4.38 13.13c-.24-.12-1.42-.7-1.64-.78-.22-.08-.38-.12-.54.12-.16.24-.62.78-.76.94-.14.16-.28.18-.52.06-.24-.12-1.014-.374-1.932-1.19-.714-.636-1.196-1.42-1.336-1.66-.14-.24-.015-.37.105-.49.108-.108.24-.28.36-.42.12-.14.16-.24.24-.4.08-.16.04-.3-.02-.42-.06-.12-.54-1.3-.74-1.78-.195-.468-.394-.404-.54-.412l-.46-.008c-.16 0-.42.06-.64.3-.22.24-.84.82-.84 2s.86 2.32.98 2.48c.12.16 1.692 2.582 4.1 3.62.573.248 1.02.396 1.368.506.575.183 1.098.157 1.512.095.461-.069 1.42-.58 1.62-1.14.2-.56.2-1.04.14-1.14-.06-.1-.22-.16-.46-.28z" fill="white"/></svg>
+              Avisar que el diseño está listo
+            </a>
+          )}
+        </div>
+        )}
 
         {/* ── Número de seguimiento ───────────────────────────────── */}
         <div className="pedido-card">

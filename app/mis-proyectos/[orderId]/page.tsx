@@ -4,6 +4,8 @@ import { useEffect, useRef, useState } from 'react'
 import { useRouter, useParams, useSearchParams } from 'next/navigation'
 import { supabase } from '../../lib/supabase'
 import Navbar from '../../components/Landing/Navbar/Navbar'
+import CardPhotoFrame, { type CardTransform } from '../../components/CardPhotoFrame/CardPhotoFrame'
+import VinoMockupFrame from '../../components/VinoMockupFrame/VinoMockupFrame'
 import '../mis-proyectos.css'
 
 // ── Types ────────────────────────────────────────────────────────────────────
@@ -31,6 +33,13 @@ interface Order {
   product_type: string | null
   card_type: string | null
   card_photo_url: string | null
+  card_photo_transform: CardTransform | null
+  variedad: string | null
+  diseno_tipo: string | null
+  copies: number | null
+  label_photo_url: string | null
+  label_text: string | null
+  vino_design_url: string | null
 }
 
 interface Note {
@@ -205,6 +214,11 @@ export default function ProyectoPage() {
   const refInputRef = useRef<HTMLInputElement>(null)
   const [uploadingRef, setUploadingRef] = useState(false)
 
+  // Vino material form (foto_y_texto)
+  const [labelText,         setLabelText]         = useState('')
+  const labelPhotoInputRef  = useRef<HTMLInputElement>(null)
+  const [uploadingLabelPhoto, setUploadingLabelPhoto] = useState(false)
+
   const [generatingLinks, setGeneratingLinks] = useState(false)
 
   // Preview
@@ -246,6 +260,7 @@ export default function ProyectoPage() {
       setOrder(o as Order)
       setDriveLink(o.drive_link ?? '')
       setDocsLink(o.docs_link ?? '')
+      setLabelText(o.label_text ?? '')
       setNotes((n ?? []) as Note[])
       if (p?.cover_thumbnail) setCoverThumbnail(p.cover_thumbnail)
 
@@ -275,10 +290,14 @@ export default function ProyectoPage() {
     setMaterialDone(true)
     setConfirmingMaterial(true)
     const updates: Record<string, unknown> = {
-      drive_link: driveLink,
-      docs_link:  docsLink,
       status:     'material_recibido',
       status_dates: { ...(order.status_dates ?? {}), material_recibido: new Date().toISOString() },
+    }
+    if (order.product_type === 'vino') {
+      if (order.diseno_tipo === 'foto_y_texto') updates.label_text = labelText
+    } else {
+      updates.drive_link = driveLink
+      updates.docs_link  = docsLink
     }
     await supabase.from('orders').update(updates).eq('id', order.id)
     setOrder(prev => prev ? { ...prev, ...updates } as Order : prev)
@@ -307,6 +326,20 @@ export default function ProyectoPage() {
       setOrder(prev => prev ? { ...prev, reference_images: updated } : prev)
     }
     setUploadingRef(false)
+  }
+
+  async function uploadLabelPhoto(file: File) {
+    if (!order) return
+    setUploadingLabelPhoto(true)
+    const form = new FormData()
+    form.append('file', file)
+    const res  = await fetch('/api/upload', { method: 'POST', body: form })
+    const data = await res.json()
+    if (data.url) {
+      await supabase.from('orders').update({ label_photo_url: data.url }).eq('id', order.id)
+      setOrder(prev => prev ? { ...prev, label_photo_url: data.url } : prev)
+    }
+    setUploadingLabelPhoto(false)
   }
 
   async function requestChange() {
@@ -401,66 +434,8 @@ export default function ProyectoPage() {
     <div className="mp-loading"><div className="mp-spinner" /></div>
   )
 
-  // Cartas no tiene etapa de diseño/preview — vista simplificada, sin los acordeones de fotolibro.
-  if (order.product_type === 'cartas') {
-    return (
-      <div className="mpd-root">
-        <Navbar hideLinks />
-        <div className="mp-user-strip">
-          <div className="mp-user-strip__initial">{userName[0]?.toUpperCase() ?? '?'}</div>
-          <div className="mp-user-strip__info">
-            <p className="mp-user-strip__name">{userName}</p>
-            <p className="mp-user-strip__email">{userEmail}</p>
-          </div>
-        </div>
-        <div className="mpd-body">
-          <div className="mpd-hero">
-            <a href="/mis-proyectos" className="mpd-back">‹ Mis pedidos</a>
-            <h1 className="mpd-title">{order.book_name}</h1>
-            <p className="mpd-order-num">{orderNumber(order.id, order.created_at)}</p>
-            <div className={`mpd-status-badge mpd-status-badge--${order.status}`}>
-              {STATUS_LABEL[order.status] ?? order.status}
-            </div>
-          </div>
-          <div className="mpd-preview-row">
-            <div className="mpd-preview-card">
-              <div className="mpd-preview-thumb">
-                {order.card_photo_url ? (
-                  // eslint-disable-next-line @next/next/no-img-element
-                  <img src={order.card_photo_url} alt="Tu foto" className="mpd-preview-thumb-page" />
-                ) : (
-                  <div className="mpd-preview-thumb-empty" />
-                )}
-              </div>
-              <div className="mpd-preview-card-info">
-                <div className="mpd-preview-card-name">Mazo de cartas</div>
-                <span className="mpd-preview-pending">
-                  {order.card_type ? `Tipo: ${order.card_type}` : 'Todavía no elegiste truco/poker'}
-                </span>
-              </div>
-            </div>
-          </div>
-          {order.status === 'aprobado' ? (
-            <div className="mpd-bottom">
-              <div className="mpd-cta-wrap">
-                <a
-                  className="mpd-cta-btn mpd-cta-btn--active"
-                  href={`/mis-proyectos?tab=listos&item=${order.id}`}
-                >
-                  Elegir tipo y comprar
-                </a>
-              </div>
-            </div>
-          ) : (
-            <div className="mpd-preview-approved">
-              Pedido confirmado — en producción.
-            </div>
-          )}
-        </div>
-      </div>
-    )
-  }
-
+  const isCartas         = order.product_type === 'cartas'
+  const isVino           = order.product_type === 'vino'
   const sizeInfo        = SIZE_INFO[order.size] ?? { name: order.size, dims: '' }
   const done            = STEP_DONE[order.status] ?? 0
   const allDone         = order.status === 'entregado'
@@ -478,24 +453,64 @@ export default function ProyectoPage() {
 
   const detallesContent = (
     <>
-      <div className="mpd-row">
-        <span className="mpd-row__key">Formato</span>
-        <span className="mpd-row__val">{sizeInfo.name} {sizeInfo.dims}</span>
-      </div>
-      <div className="mpd-row">
-        <span className="mpd-row__key">Páginas</span>
-        <span className="mpd-row__val">{totalPages} base</span>
-      </div>
+      {isCartas ? (
+        <>
+          <div className="mpd-row">
+            <span className="mpd-row__key">Producto</span>
+            <span className="mpd-row__val">Cartas personalizadas</span>
+          </div>
+          <div className="mpd-row">
+            <span className="mpd-row__key">Tipo de mazo</span>
+            <span className="mpd-row__val">
+              {order.card_type ? (order.card_type === 'truco' ? 'Truco' : 'Poker') : 'A elegir al comprar'}
+            </span>
+          </div>
+        </>
+      ) : isVino ? (
+        <>
+          <div className="mpd-row">
+            <span className="mpd-row__key">Producto</span>
+            <span className="mpd-row__val">Vino personalizado</span>
+          </div>
+          <div className="mpd-row">
+            <span className="mpd-row__key">Variedad</span>
+            <span className="mpd-row__val">{order.variedad === 'blanco' ? 'Blanco' : 'Tinto'}</span>
+          </div>
+          <div className="mpd-row">
+            <span className="mpd-row__key">Tipo de diseño</span>
+            <span className="mpd-row__val">
+              {order.diseno_tipo === 'diseno_personalizado' ? 'Con diseño personalizado' : 'Con foto y texto'}
+            </span>
+          </div>
+          <div className="mpd-row">
+            <span className="mpd-row__key">Cantidad</span>
+            <span className="mpd-row__val">{order.copies ?? 1} botella{(order.copies ?? 1) > 1 ? 's' : ''}</span>
+          </div>
+        </>
+      ) : (
+        <div className="mpd-row">
+          <span className="mpd-row__key">Formato</span>
+          <span className="mpd-row__val">{sizeInfo.name} {sizeInfo.dims}</span>
+        </div>
+      )}
+      {!isCartas && !isVino && (
+        <div className="mpd-row">
+          <span className="mpd-row__key">Páginas</span>
+          <span className="mpd-row__val">{totalPages} base</span>
+        </div>
+      )}
       <div className="mpd-row">
         <span className="mpd-row__key">Fecha del pedido</span>
         <span className="mpd-row__val">{fmtDate(order.created_at)}</span>
       </div>
-      <div className="mpd-row">
-        <span className="mpd-row__key">Tiempo estimado de diseño</span>
-        <span className="mpd-row__val">
-          {order.estimated_design_date ? fmtDate(order.estimated_design_date) : 'Primera propuesta en 48hs hábiles'}
-        </span>
-      </div>
+      {!isCartas && (
+        <div className="mpd-row">
+          <span className="mpd-row__key">Tiempo estimado de diseño</span>
+          <span className="mpd-row__val">
+            {order.estimated_design_date ? fmtDate(order.estimated_design_date) : 'Primera propuesta en 48hs hábiles'}
+          </span>
+        </div>
+      )}
       <div className="mpd-row">
         <span className="mpd-row__key">Pagado</span>
         <span className="mpd-row__val">{fmt(order.price_paid)}</span>
@@ -567,7 +582,127 @@ export default function ProyectoPage() {
     </>
   )
 
-  const materialContent = (
+  const materialContent = isCartas ? (
+    <div className="mpd-mat-row">
+      <div className="mpd-mat-header">
+        <span className="mpd-mat-header__label">Tu foto</span>
+      </div>
+      {order.card_photo_url ? (
+        <div className="mpd-card-mockup__frame-wrap">
+          <CardPhotoFrame src={order.card_photo_url} transform={order.card_photo_transform ?? undefined} />
+        </div>
+      ) : (
+        <p className="mpd-mat-pending-note">Todavía no subiste una foto.</p>
+      )}
+      <div className="mpd-mat-tips">
+        <span className="mpd-mat-tip">Esta es la foto que va a ir impresa en cada carta del mazo.</span>
+      </div>
+    </div>
+  ) : isVino ? (
+    <>
+      {order.diseno_tipo === 'foto_y_texto' ? (
+        <>
+          <div className="mpd-mat-row">
+            <div className="mpd-mat-header">
+              <span className="mpd-mat-header__label">Tu foto</span>
+            </div>
+            <div className="mpd-ref-upload">
+              {order.label_photo_url && (
+                <div className="mpd-ref-images-row">
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img src={order.label_photo_url} alt="" className="mpd-ref-img" />
+                </div>
+              )}
+              <div className="mpd-ref-add-wrap">
+                <button className="mpd-ref-add-btn" onClick={() => labelPhotoInputRef.current?.click()} disabled={uploadingLabelPhoto}>
+                  {uploadingLabelPhoto ? '...' : order.label_photo_url ? '↻' : '+'}
+                </button>
+                <span className="mpd-ref-upload-label">{order.label_photo_url ? 'Cambiar' : 'Subir'}</span>
+              </div>
+              <p className="mpd-ref-desc">Esta es la foto que va a ir impresa en la etiqueta de tu vino.</p>
+            </div>
+            <input
+              ref={labelPhotoInputRef} type="file" accept="image/*"
+              className="mpd-hidden-input"
+              onChange={e => { if (e.target.files?.[0]) uploadLabelPhoto(e.target.files[0]); e.target.value = '' }}
+            />
+          </div>
+          <div className="mpd-mat-row">
+            <div className="mpd-mat-header">
+              <span className="mpd-mat-header__label">Texto de la etiqueta</span>
+            </div>
+            <textarea
+              className="mpd-mat-textarea"
+              placeholder="Escribí el texto que va en la etiqueta (nombres, fecha, mensaje...)"
+              value={labelText}
+              onChange={e => setLabelText(e.target.value)}
+            />
+          </div>
+        </>
+      ) : (
+        <>
+          <div className="mpd-mat-row">
+            <div className="mpd-mat-header">
+              <span className="mpd-mat-header__label">Referencia de diseño</span>
+            </div>
+            <div className="mpd-ref-upload">
+              {(order.reference_images ?? []).length > 0 && (
+                <div className="mpd-ref-images-row">
+                  {(order.reference_images ?? []).map((url, idx) => (
+                    // eslint-disable-next-line @next/next/no-img-element
+                    <img key={idx} src={url} alt="" className="mpd-ref-img" />
+                  ))}
+                </div>
+              )}
+              {(order.reference_images ?? []).length < 6 && (
+                <div className="mpd-ref-add-wrap">
+                  <button className="mpd-ref-add-btn" onClick={() => refInputRef.current?.click()} disabled={uploadingRef}>
+                    {uploadingRef ? '...' : '+'}
+                  </button>
+                  <span className="mpd-ref-upload-label">Subir</span>
+                </div>
+              )}
+              <p className="mpd-ref-desc">
+                Subí una imagen de referencia del diseño que te gustaría para tu etiqueta.
+              </p>
+            </div>
+            <input
+              ref={refInputRef} type="file" accept="image/*"
+              className="mpd-hidden-input"
+              onChange={e => { if (e.target.files?.[0]) uploadRefImage(e.target.files[0]); e.target.value = '' }}
+            />
+          </div>
+          <div className="mpd-mat-row">
+            <div className="mpd-mat-header">
+              <span className="mpd-mat-header__label">Notas para los diseñadores</span>
+              <span className="mpd-mat-header__opt">(Opcional)</span>
+            </div>
+            <textarea
+              className="mpd-mat-textarea"
+              placeholder="Contanos cualquier detalle que quieras que tengamos en cuenta..."
+              value={noteText}
+              onChange={e => setNoteText(e.target.value)}
+            />
+          </div>
+        </>
+      )}
+      {(() => {
+        const confirmed = materialDone || !['pendiente_pago', 'confirmado'].includes(order.status)
+        return (
+          <div className="mpd-mat-save-wrap">
+            <button
+              className={`mpd-accept-check mpd-accept-check--material${confirmed ? ' mpd-accept-check--unavailable' : ''}`}
+              onClick={!confirmed && !confirmingMaterial ? confirmMaterial : undefined}
+              disabled={confirmed || confirmingMaterial}
+            >
+              <div className={`mpd-check-circle${confirmed ? ' mpd-check-circle--checked' : ''}`} />
+              <span>Material cargado</span>
+            </button>
+          </div>
+        )
+      })()}
+    </>
+  ) : (
     <>
       <div className="mpd-mat-row">
         <div className="mpd-mat-header">
@@ -677,6 +812,30 @@ export default function ProyectoPage() {
     </div>
   ) : (
     <>
+      {isCartas ? (
+        <div className="mpd-card-mockup">
+          {order.card_photo_url && (
+            <div className="mpd-card-mockup__frame-wrap">
+              <CardPhotoFrame src={order.card_photo_url} transform={order.card_photo_transform ?? undefined} />
+            </div>
+          )}
+          <p className="mpd-preview-pending">
+            Mockup de referencia — así queda tu foto impresa en cada carta del mazo
+            {order.card_type ? ` de ${order.card_type}` : ''}.
+          </p>
+        </div>
+      ) : isVino ? (
+        <div className="mpd-card-mockup">
+          <div className="mpd-card-mockup__frame-wrap mpd-vino-mockup__frame-wrap">
+            <VinoMockupFrame src={order.vino_design_url} />
+          </div>
+          <p className="mpd-preview-pending">
+            {order.vino_design_url
+              ? 'Así queda el diseño de tu etiqueta sobre la botella.'
+              : 'Todavía estamos preparando el diseño de tu etiqueta.'}
+          </p>
+        </div>
+      ) : (
       <div className="mpd-preview-row">
         <div className="mpd-preview-card">
           <div className="mpd-preview-thumb">
@@ -714,6 +873,7 @@ export default function ProyectoPage() {
           </div>
         </div>
       </div>
+      )}
 
       {canApprove && (
         <>
@@ -781,7 +941,21 @@ export default function ProyectoPage() {
     router.push(`/mis-proyectos?tab=listos&item=${order.id}`)
   }
 
-  const approveAndBuyShared = (
+  const cartasBuyContent = (
+    <div className="mpd-cta-wrap">
+      <a
+        className="mpd-cta-btn mpd-cta-btn--active"
+        href={`/mis-proyectos?tab=listos&item=${order.id}`}
+      >
+        Elegir tipo y comprar
+      </a>
+      <p className="mpd-legal">
+        Por tratarse de un producto personalizado, no realizamos cambios ni devoluciones una vez enviado a producción.
+      </p>
+    </div>
+  )
+
+  const approveAndBuyShared = isCartas ? cartasBuyContent : (
     <>
       <button
         className={`mpd-accept-check${!canApprove ? ' mpd-accept-check--unavailable' : ''}`}
@@ -807,6 +981,7 @@ export default function ProyectoPage() {
   )
 
   const approveAndBuyDesktop = !afterProduction && order.status !== 'entregado' ? (
+    isCartas ? cartasBuyContent :
     <>
       <button
         className={`mpd-accept-check${!canApprove ? ' mpd-accept-check--unavailable' : ''}`}
@@ -992,7 +1167,7 @@ export default function ProyectoPage() {
       {order && (
         <a
           className="mpd-wa-fab"
-          href={`https://wa.me/5491133521921?text=${encodeURIComponent(`Hola! Te escribo por mi fotolibro *${order.book_name}* (pedido #${orderId.slice(0, 8).toUpperCase()})`)}`}
+          href={`https://wa.me/5491133521921?text=${encodeURIComponent(`Hola! Te escribo por mi ${isCartas ? 'mazo de cartas' : isVino ? 'vino' : 'fotolibro'} *${order.book_name}* (pedido #${orderId.slice(0, 8).toUpperCase()})`)}`}
           target="_blank" rel="noopener noreferrer"
           aria-label="Contactar por WhatsApp"
         >

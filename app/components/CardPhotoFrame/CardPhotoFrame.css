@@ -1,0 +1,84 @@
+.card-photo-frame {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+}
+
+.card-photo-frame__mockup {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 1024 / 1536;
+}
+
+.card-photo-frame__mockup-bg {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+  pointer-events: none;
+  user-select: none;
+}
+
+/* Coordenadas de la carta en blanco ("tu foto") dentro de /fotos/CartaMockupVertical.jpg,
+   como fracción del ancho/alto total de la imagen (1024x1536). Achicado un poco para adentro
+   respecto del borde real de la carta, así siempre se ve el borde/sombra de la foto del
+   mockup y no tapa parte del fondo — que la foto del cliente quede más chica que la carta
+   rompe el efecto de realismo. */
+.card-photo-frame__viewport {
+  position: absolute;
+  left: 16.4%;
+  top: 18.6%;
+  width: 67.6%;
+  height: 28.8%;
+  overflow: hidden;
+  border-radius: 3%;
+  touch-action: none;
+  user-select: none;
+}
+
+.card-photo-frame__img {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transform-origin: center center;
+  pointer-events: none;
+}
+
+.card-photo-frame__controls {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  max-width: 220px;
+}
+
+.card-photo-frame__btn {
+  flex-shrink: 0;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  border: 1px solid var(--color-border);
+  background: white;
+  font-size: 16px;
+  line-height: 1;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--color-black);
+}
+
+.card-photo-frame__btn:hover {
+  background: #f0f0ef;
+}
+
+.card-photo-frame__zoom {
+  flex: 1;
+  accent-color: var(--color-blue);
+}

@@ -4,7 +4,7 @@ import { useEffect, useRef, useState, Suspense } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { supabase } from '../lib/supabase'
 import Navbar from '../components/Landing/Navbar/Navbar'
-import { REORDER_UNIT_PRICE, copiesDiscount, CARTA_PRICE, computeVinoTotal } from '../config/pricing'
+import { REORDER_UNIT_PRICE, copiesDiscount, CARTA_PRICE, computeVinoTotal, VINO_CANTIDAD_MAX } from '../config/pricing'
 import './mis-proyectos.css'
 
 interface Order {
@@ -20,6 +20,7 @@ interface Order {
   variedad: string | null
   diseno_tipo: string | null
   copies: number | null
+  vino_design_url: string | null
   created_at: string
 }
 
@@ -113,7 +114,7 @@ function MisProyectosContent() {
       const [{ data: ordersData }, { data: projectsData }] = await Promise.all([
         supabase
           .from('orders')
-          .select('id, book_name, size, status, price_total, price_paid, product_type, card_type, card_photo_url, variedad, diseno_tipo, copies, created_at')
+          .select('id, book_name, size, status, price_total, price_paid, product_type, card_type, card_photo_url, variedad, diseno_tipo, copies, vino_design_url, created_at')
           .eq('user_id', session.user.id)
           .order('created_at', { ascending: false }),
         supabase
@@ -250,8 +251,9 @@ function MisProyectosContent() {
     return (
       <div className="mp-grid">
         {list.map(order => {
-          const thumb = projectMap[order.id]
-          const photo = order.product_type === 'cartas' ? order.card_photo_url : null
+          const thumb  = projectMap[order.id]
+          const isVino = order.product_type === 'vino'
+          const photo  = order.product_type === 'cartas' ? order.card_photo_url : isVino ? order.vino_design_url : null
           return (
             <a
               key={order.id}
@@ -259,10 +261,10 @@ function MisProyectosContent() {
               className={`mp-card${order.status === 'entregado' ? ' mp-card--delivered' : ''}`}
             >
               <div className="mp-card__thumb-wrap">
-                <div className="mp-card__thumb">
+                <div className={`mp-card__thumb${isVino ? ' mp-card__thumb--vino' : ''}`}>
                   {photo ? (
                     // eslint-disable-next-line @next/next/no-img-element
-                    <img src={photo} alt="" className="mp-card__thumb-page" />
+                    <img src={photo} alt="" className={`mp-card__thumb-page${isVino ? ' mp-card__thumb-page--vino' : ''}`} />
                   ) : thumb ? (
                     <>
                       {thumb.left && (
@@ -286,7 +288,9 @@ function MisProyectosContent() {
                 <span className="mp-card__name">{orderName(order)}</span>
                 <div className="mp-card__info-bottom">
                   <span className="mp-card__format">
-                    {order.product_type === 'cartas' ? 'Cartas personalizadas' : (SIZE_SHORT[order.size ?? ''] ?? order.size)}
+                    {order.product_type === 'cartas' ? 'Cartas personalizadas'
+                      : isVino ? `Vino ${order.variedad === 'blanco' ? 'Blanco' : 'Tinto'}`
+                      : (SIZE_SHORT[order.size ?? ''] ?? order.size)}
                   </span>
                   <span className="mp-card__price-pill">{fmt(order.price_total)}</span>
                 </div>
@@ -362,7 +366,19 @@ function MisProyectosContent() {
                   )}
 
                   {isVino ? (
-                    <span className="mp-listos-format">{copies} botella{copies > 1 ? 's' : ''}</span>
+                    <div className="mpag-counter mp-listos-counter">
+                      <button
+                        className="mpag-counter-btn"
+                        onClick={() => setRowCopies(prev => ({ ...prev, [order.id]: Math.max(1, copies - 1) }))}
+                        disabled={copies <= 1}
+                      >−</button>
+                      <span className="mpag-counter-num">{copies} botella{copies > 1 ? 's' : ''}</span>
+                      <button
+                        className="mpag-counter-btn"
+                        onClick={() => setRowCopies(prev => ({ ...prev, [order.id]: Math.min(VINO_CANTIDAD_MAX, copies + 1) }))}
+                        disabled={copies >= VINO_CANTIDAD_MAX}
+                      >+</button>
+                    </div>
                   ) : (
                   <div className="mpag-counter mp-listos-counter">
                     <button

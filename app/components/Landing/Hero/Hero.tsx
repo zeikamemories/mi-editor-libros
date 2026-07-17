@@ -9,6 +9,8 @@ export default function Hero() {
         muted
         loop
         playsInline
+        preload="auto"
+        poster="/fotos/hero-poster-mobile.jpg"
       >
         <source src="/videos/Hero-Mobile.mp4" type="video/mp4" />
       </video>
@@ -19,6 +21,8 @@ export default function Hero() {
         muted
         loop
         playsInline
+        preload="auto"
+        poster="/fotos/hero-poster-desktop.jpg"
       >
         <source src="/videos/Animacion-Hero.mp4" type="video/mp4" />
       </video>

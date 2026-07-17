@@ -94,9 +94,9 @@ export const VINO_DESIGN_EXTRA: Record<'foto_y_texto' | 'diseno_personalizado', 
 export const VINO_CANTIDADES = [1, 2, 3, 4, 5, 6] as const
 export const VINO_CANTIDAD_MAX = 6
 
-/** 20% off al pedir el máximo de 6 botellas. */
+/** 25% off al pedir el máximo de 6 botellas. */
 export function vinoDiscount(cantidad: number): number {
-  return cantidad >= 6 ? 0.8 : 1
+  return cantidad >= 6 ? 0.75 : 1
 }
 
 /**
