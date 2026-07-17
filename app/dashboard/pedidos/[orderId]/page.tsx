@@ -77,6 +77,7 @@ interface Note {
   content: string
   type: string
   created_at: string
+  resolved: boolean
 }
 
 interface PreviewAnnotation {
@@ -85,6 +86,19 @@ interface PreviewAnnotation {
   page_number: number
   content: string
   created_at: string
+  resolved: boolean
+}
+
+// Comentarios del cliente en el preview se guardan como JSON {text,x,y} (posición
+// del pin sobre la hoja) — acá solo nos interesa el texto para mostrarlo en el dashboard.
+function parseCommentText(content: string): string {
+  try {
+    if (content.startsWith('{')) {
+      const p = JSON.parse(content)
+      if (typeof p.text === 'string') return p.text
+    }
+  } catch {}
+  return content
 }
 
 function fmt(n: number) { return '$' + n.toLocaleString('es-AR') }
@@ -164,7 +178,7 @@ export default function PedidoAdminPage() {
 
       Promise.all([
         supabase.from('orders').select('*').eq('id', orderId).single(),
-        supabase.from('order_notes').select('id, content, type, created_at').eq('order_id', orderId).order('created_at'),
+        supabase.from('order_notes').select('id, content, type, created_at, resolved').eq('order_id', orderId).order('created_at'),
         supabase.from('projects').select('id, book_size, cover_thumbnail, created_at').eq('order_id', orderId).maybeSingle(),
       ]).then(([{ data: o }, { data: n }, { data: p }]) => {
         if (!o) { router.replace('/dashboard'); return }
@@ -194,7 +208,7 @@ export default function PedidoAdminPage() {
           setProject(p as Project)
           supabase
             .from('preview_annotations')
-            .select('id, type, page_number, content, created_at')
+            .select('id, type, page_number, content, created_at, resolved')
             .eq('project_id', (p as Project).id)
             .order('created_at')
             .then(({ data: ann }) => setPreviewAnnotations((ann ?? []) as PreviewAnnotation[]))
@@ -307,6 +321,34 @@ export default function PedidoAdminPage() {
     if (data) setNotes(prev => [...prev, data as Note])
     setAdminNote('')
     setSendingNote(false)
+  }
+
+  async function toggleNoteResolved(id: string, resolved: boolean) {
+    setNotes(prev => prev.map(n => n.id === id ? { ...n, resolved } : n))
+    await supabase.from('order_notes').update({ resolved }).eq('id', id)
+  }
+
+  async function toggleAnnotationResolved(id: string, resolved: boolean) {
+    setPreviewAnnotations(prev => prev.map(a => a.id === id ? { ...a, resolved } : a))
+    await supabase.from('preview_annotations').update({ resolved }).eq('id', id)
+  }
+
+  async function deleteDrawing(id: string) {
+    if (!window.confirm('¿Eliminar este dibujo del cliente?')) return
+    setPreviewAnnotations(prev => prev.filter(a => a.id !== id))
+    await supabase.from('preview_annotations').delete().eq('id', id)
+  }
+
+  async function deleteComment(id: string) {
+    if (!window.confirm('¿Eliminar este comentario del cliente?')) return
+    setPreviewAnnotations(prev => prev.filter(a => a.id !== id))
+    await supabase.from('preview_annotations').delete().eq('id', id)
+  }
+
+  async function deleteChangeRequest(id: string) {
+    if (!window.confirm('¿Eliminar este pedido de cambio?')) return
+    setNotes(prev => prev.filter(n => n.id !== id))
+    await supabase.from('order_notes').delete().eq('id', id)
   }
 
   async function saveDetails() {
@@ -741,27 +783,82 @@ export default function PedidoAdminPage() {
         {/* ── Anotaciones + pedidos de cambio ─────────────────────── */}
         {(() => {
           const comments = previewAnnotations.filter(a => a.type === 'comment')
-          return (comments.length > 0 || changeRequests.length > 0) && (
+          const drawings = previewAnnotations.filter(a => a.type === 'drawing')
+          const pendingCount = comments.filter(a => !a.resolved).length
+            + changeRequests.filter(n => !n.resolved).length
+          return (comments.length > 0 || changeRequests.length > 0 || drawings.length > 0) && (
           <div className="pedido-card pedido-aside-card">
             <h3 className="pedido-card-title">
               Anotaciones del cliente
-              <span className="pedido-badge">{comments.length + changeRequests.length}</span>
+              <span className="pedido-badge">{pendingCount}</span>
             </h3>
             {comments.map(a => (
-              <div key={a.id} className="pedido-note pedido-note--change">
+              <div key={a.id} className="pedido-note pedido-note--change" style={{ opacity: a.resolved ? 0.5 : 1 }}>
                 <span className="pedido-note-date">
                   Comentario · Hoja {a.page_number + 1} · {fmtDate(a.created_at)}
                 </span>
-                <p className="pedido-note-content">{a.content}</p>
+                <p className="pedido-note-content" style={{ textDecoration: a.resolved ? 'line-through' : 'none' }}>
+                  {parseCommentText(a.content)}
+                </p>
+                <div style={{ display: 'flex', gap: '6px', marginTop: '6px' }}>
+                  <button
+                    className="pedido-save-btn"
+                    onClick={() => toggleAnnotationResolved(a.id, !a.resolved)}
+                  >
+                    {a.resolved ? '↺ Reabrir' : '✓ Marcar completado'}
+                  </button>
+                  <button className="pedido-save-btn" onClick={() => deleteComment(a.id)}>
+                    🗑 Eliminar
+                  </button>
+                </div>
               </div>
             ))}
             {changeRequests.length > 0 && comments.length > 0 && (
               <hr className="pedido-divider" />
             )}
             {changeRequests.map(n => (
-              <div key={n.id} className="pedido-note pedido-note--change">
+              <div key={n.id} className="pedido-note pedido-note--change" style={{ opacity: n.resolved ? 0.5 : 1 }}>
                 <span className="pedido-note-date">Pedido de cambio · {fmtDate(n.created_at)}</span>
-                <p className="pedido-note-content">{n.content}</p>
+                <p className="pedido-note-content" style={{ textDecoration: n.resolved ? 'line-through' : 'none' }}>
+                  {n.content}
+                </p>
+                <div style={{ display: 'flex', gap: '6px', marginTop: '6px' }}>
+                  <button
+                    className="pedido-save-btn"
+                    onClick={() => toggleNoteResolved(n.id, !n.resolved)}
+                  >
+                    {n.resolved ? '↺ Reabrir' : '✓ Marcar completado'}
+                  </button>
+                  <button className="pedido-save-btn" onClick={() => deleteChangeRequest(n.id)}>
+                    🗑 Eliminar
+                  </button>
+                </div>
+              </div>
+            ))}
+            {drawings.length > 0 && (comments.length > 0 || changeRequests.length > 0) && (
+              <hr className="pedido-divider" />
+            )}
+            {drawings.map(d => (
+              <div key={d.id} className="pedido-note pedido-note--change">
+                <span className="pedido-note-date">Dibujo · Hoja {d.page_number + 1} · {fmtDate(d.created_at)}</span>
+                {d.content.trimStart().startsWith('<svg') ? (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img
+                    src={'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(d.content)}
+                    alt=""
+                    style={{ width: '100%', maxWidth: '160px', background: '#f0efeb', border: '1px solid #e0dfda', borderRadius: '4px' }}
+                  />
+                ) : (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img src={d.content} alt="" style={{ width: '100%', maxWidth: '160px', borderRadius: '4px' }} />
+                )}
+                <button
+                  className="pedido-save-btn"
+                  onClick={() => deleteDrawing(d.id)}
+                  style={{ marginTop: '6px' }}
+                >
+                  🗑 Eliminar dibujo
+                </button>
               </div>
             ))}
           </div>

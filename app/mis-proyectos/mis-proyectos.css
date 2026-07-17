@@ -1716,6 +1716,34 @@
   border: 1px solid #7b7a78;
 }
 
+.mpd-ref-img-wrap {
+  position: relative;
+}
+
+.mpd-ref-img-remove {
+  position: absolute;
+  top: -7px;
+  right: -7px;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: var(--color-black);
+  color: white;
+  border: none;
+  cursor: pointer;
+  font-size: 14px;
+  line-height: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+}
+
+.mpd-ref-img-remove:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+
 .mpd-ref-add-wrap {
   display: flex;
   flex-direction: column;

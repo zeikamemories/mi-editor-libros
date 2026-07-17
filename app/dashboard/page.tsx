@@ -71,6 +71,7 @@ function fmt(n: number) {
 export default function DashboardPage() {
   const router = useRouter()
   const [activeTab, setActiveTab]   = useState<FilterTab>('TODOS')
+  const [designerFilter, setDesignerFilter] = useState<Designer | 'all'>('all')
   const [orders, setOrders]         = useState<OrderRow[]>([])
   const [loading, setLoading]       = useState(true)
   const [viewMode, setViewMode]     = useState<'list' | 'grid'>('list')
@@ -210,7 +211,9 @@ export default function DashboardPage() {
 
   const filtered = orders.filter(o => {
     const allowed = STATUS_TAB[activeTab]
-    return allowed === null || allowed.includes(o.status)
+    if (allowed !== null && !allowed.includes(o.status)) return false
+    if (designerFilter !== 'all' && o.designer !== designerFilter) return false
+    return true
   })
 
   return (
@@ -223,10 +226,30 @@ export default function DashboardPage() {
         <nav className="dash-nav-section">
           <p className="dash-nav-label">Libros</p>
           <ul>
-            <li><Link href="/dashboard" className="dash-nav-link dash-nav-link--active">TODOS</Link></li>
-            <li><Link href="/dashboard" className="dash-nav-link dash-nav-link--maika">MAIKA</Link></li>
-            <li><Link href="/dashboard" className="dash-nav-link dash-nav-link--vicky">VICKY</Link></li>
-            <li><Link href="/dashboard" className="dash-nav-link dash-nav-link--jose">JOSE</Link></li>
+            <li>
+              <button
+                className={`dash-nav-link ${designerFilter === 'all' ? 'dash-nav-link--active' : ''}`}
+                onClick={() => setDesignerFilter('all')}
+              >TODOS</button>
+            </li>
+            <li>
+              <button
+                className={`dash-nav-link dash-nav-link--maika ${designerFilter === 'maika' ? 'dash-nav-link--active' : ''}`}
+                onClick={() => setDesignerFilter('maika')}
+              >MAIKA</button>
+            </li>
+            <li>
+              <button
+                className={`dash-nav-link dash-nav-link--vicky ${designerFilter === 'vicky' ? 'dash-nav-link--active' : ''}`}
+                onClick={() => setDesignerFilter('vicky')}
+              >VICKY</button>
+            </li>
+            <li>
+              <button
+                className={`dash-nav-link dash-nav-link--jose ${designerFilter === 'jose' ? 'dash-nav-link--active' : ''}`}
+                onClick={() => setDesignerFilter('jose')}
+              >JOSE</button>
+            </li>
           </ul>
         </nav>
         <nav className="dash-nav-section">

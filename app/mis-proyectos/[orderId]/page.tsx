@@ -214,6 +214,10 @@ export default function ProyectoPage() {
   const refInputRef = useRef<HTMLInputElement>(null)
   const [uploadingRef, setUploadingRef] = useState(false)
 
+  // Cartas material (foto del cliente)
+  const cardPhotoInputRef = useRef<HTMLInputElement>(null)
+  const [uploadingCardPhoto, setUploadingCardPhoto] = useState(false)
+
   // Vino material form (foto_y_texto)
   const [labelText,         setLabelText]         = useState('')
   const labelPhotoInputRef  = useRef<HTMLInputElement>(null)
@@ -326,6 +330,30 @@ export default function ProyectoPage() {
       setOrder(prev => prev ? { ...prev, reference_images: updated } : prev)
     }
     setUploadingRef(false)
+  }
+
+  async function uploadCardPhoto(file: File) {
+    if (!order) return
+    setUploadingCardPhoto(true)
+    const form = new FormData()
+    form.append('file', file)
+    form.append('folder', 'zeika/cartas')
+    const res  = await fetch('/api/upload', { method: 'POST', body: form })
+    const data = await res.json()
+    if (data.url) {
+      // Nueva foto, transform anterior ya no aplica — vuelve al centrado por defecto.
+      await supabase.from('orders').update({ card_photo_url: data.url, card_photo_transform: null }).eq('id', order.id)
+      setOrder(prev => prev ? { ...prev, card_photo_url: data.url, card_photo_transform: null } : prev)
+    }
+    setUploadingCardPhoto(false)
+  }
+
+  async function deleteCardPhoto() {
+    if (!order || !window.confirm('¿Eliminar esta foto?')) return
+    setUploadingCardPhoto(true)
+    await supabase.from('orders').update({ card_photo_url: null, card_photo_transform: null }).eq('id', order.id)
+    setOrder(prev => prev ? { ...prev, card_photo_url: null, card_photo_transform: null } : prev)
+    setUploadingCardPhoto(false)
   }
 
   async function uploadLabelPhoto(file: File) {
@@ -587,16 +615,40 @@ export default function ProyectoPage() {
       <div className="mpd-mat-header">
         <span className="mpd-mat-header__label">Tu foto</span>
       </div>
-      {order.card_photo_url ? (
-        <div className="mpd-card-mockup__frame-wrap">
-          <CardPhotoFrame src={order.card_photo_url} transform={order.card_photo_transform ?? undefined} />
+      <div className="mpd-ref-upload">
+        {order.card_photo_url ? (
+          <div className="mpd-ref-images-row">
+            <div className="mpd-ref-img-wrap">
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img src={order.card_photo_url} alt="" className="mpd-ref-img" />
+              <button
+                className="mpd-ref-img-remove"
+                onClick={deleteCardPhoto}
+                disabled={uploadingCardPhoto}
+                title="Eliminar foto"
+              >×</button>
+            </div>
+          </div>
+        ) : (
+          <p className="mpd-mat-pending-note">Todavía no subiste una foto.</p>
+        )}
+        <div className="mpd-ref-add-wrap">
+          <button
+            className="mpd-ref-add-btn"
+            onClick={() => cardPhotoInputRef.current?.click()}
+            disabled={uploadingCardPhoto}
+          >
+            {uploadingCardPhoto ? '...' : order.card_photo_url ? '↻' : '+'}
+          </button>
+          <span className="mpd-ref-upload-label">{order.card_photo_url ? 'Cambiar' : 'Subir'}</span>
         </div>
-      ) : (
-        <p className="mpd-mat-pending-note">Todavía no subiste una foto.</p>
-      )}
-      <div className="mpd-mat-tips">
-        <span className="mpd-mat-tip">Esta es la foto que va a ir impresa en cada carta del mazo.</span>
+        <p className="mpd-ref-desc">Esta es la foto que va a ir impresa en cada carta del mazo.</p>
       </div>
+      <input
+        ref={cardPhotoInputRef} type="file" accept="image/*"
+        className="mpd-hidden-input"
+        onChange={e => { if (e.target.files?.[0]) uploadCardPhoto(e.target.files[0]); e.target.value = '' }}
+      />
     </div>
   ) : isVino ? (
     <>

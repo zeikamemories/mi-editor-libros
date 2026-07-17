@@ -245,13 +245,11 @@
     color: #191919;
     text-decoration: none;
     letter-spacing: 0.04em;
-    transition: opacity 0.2s;
+    transition: color 0.2s;
   }
 
   .navbar__link:hover {
-    text-decoration: underline;
-    text-decoration-color: var(--color-blue);
-    text-underline-offset: 4px;
+    color: var(--color-blue);
   }
 
   .navbar__hamburger { display: none; }

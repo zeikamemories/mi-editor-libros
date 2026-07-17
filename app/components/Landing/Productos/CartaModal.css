@@ -51,6 +51,13 @@
   height: 100%;
 }
 
+/* The mockup photo shows the card sitting on a table with visible background around
+   it — zoom in so the card fills the panel instead of leaving that background as a
+   margin on the sides. */
+.carta-modal__photoframe .card-photo-frame__mockup {
+  transform: scale(1.2);
+}
+
 .carta-modal__frame-hint {
   position: absolute;
   top: 14px;
