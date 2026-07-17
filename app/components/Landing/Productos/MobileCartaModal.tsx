@@ -119,6 +119,7 @@ export default function MobileCartaModal({ onClose }: Props) {
               src={photoUrl}
               transform={photoTransform}
               onChange={photoUrl ? setPhotoTransform : undefined}
+              className="carta-modal__photoframe"
             />
             {photoUrl && (
               <p className="carta-modal__frame-hint">Arrastrá la foto para reposicionarla</p>

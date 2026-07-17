@@ -114,6 +114,7 @@ export default function PedidoAdminPage() {
   const [loading,  setLoading]  = useState(true)
   const [creatingProject, setCreatingProject] = useState(false)
   const [clientPhone,     setClientPhone]     = useState('')
+  const [clientEmail,     setClientEmail]     = useState('')
 
   // Status editing
   const [status,       setStatus]       = useState('')
@@ -177,11 +178,17 @@ export default function PedidoAdminPage() {
         setEditName(ord.book_name)
         setEditTotal(String(ord.price_total))
         setEditPaid(String(ord.price_paid))
-        setEditPhone('')
         setNotes((n ?? []) as Note[])
         if (o?.user_id) {
           supabase.from('profiles').select('whatsapp').eq('id', (o as Order).user_id).single()
-            .then(({ data: prof }) => { if (prof?.whatsapp) setClientPhone(prof.whatsapp) })
+            .then(({ data: prof }) => {
+              if (prof?.whatsapp) { setClientPhone(prof.whatsapp); setEditPhone(prof.whatsapp) }
+            })
+          authHeaders().then(headers =>
+            fetch(`/api/admin/user-info?userId=${(o as Order).user_id}`, { headers })
+              .then(res => res.json())
+              .then(data => { if (data?.email) setClientEmail(data.email) })
+          )
         }
         if (p) {
           setProject(p as Project)
@@ -418,7 +425,7 @@ export default function PedidoAdminPage() {
             ) : (
               <>
                 <div className="pedido-item"><label>Tamaño</label><span>{SIZE_NAMES[order.size] ?? order.size}</span></div>
-                <div className="pedido-item"><label>Páginas</label><span>{totalPages}</span></div>
+                <div className="pedido-item"><label>Hojas</label><span>{totalPages}</span></div>
                 <div className="pedido-item"><label>Textos extra</label><span>{order.extra_text ? 'Sí' : 'No'}</span></div>
                 {!order.extra_text && (
                   <div className="pedido-item pedido-item--full">
@@ -501,6 +508,10 @@ export default function PedidoAdminPage() {
             <button className="pedido-save-btn" onClick={saveDetails} disabled={savingDetails} style={{ alignSelf: 'flex-end', flexShrink: 0 }}>
               {savingDetails ? '...' : 'Guardar'}
             </button>
+          </div>
+          <div style={{ marginTop: '8px' }}>
+            <label className="pedido-hint">Email</label>
+            <p style={{ margin: '2px 0 0' }}>{clientEmail || '—'}</p>
           </div>
 
           <hr className="pedido-divider" />
@@ -739,7 +750,7 @@ export default function PedidoAdminPage() {
             {comments.map(a => (
               <div key={a.id} className="pedido-note pedido-note--change">
                 <span className="pedido-note-date">
-                  Comentario · Página {a.page_number + 1} · {fmtDate(a.created_at)}
+                  Comentario · Hoja {a.page_number + 1} · {fmtDate(a.created_at)}
                 </span>
                 <p className="pedido-note-content">{a.content}</p>
               </div>

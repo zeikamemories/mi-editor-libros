@@ -127,9 +127,9 @@ function AddPagesModal({
     <div className="add-pages-overlay" onClick={onClose}>
       <div className="add-pages-modal" onClick={e => e.stopPropagation()}>
         <button className="add-pages-close" onClick={onClose} aria-label="Cerrar">×</button>
-        <h2 className="add-pages-title">Páginas del libro</h2>
+        <h2 className="add-pages-title">Hojas del libro</h2>
         <div className="add-pages-current">
-          Actualmente: <strong>{currentPages} páginas</strong> · {currentPages * 2} carillas
+          Actualmente: <strong>{currentPages} hojas</strong> · {currentPages * 2} carillas
         </div>
         <div className="add-pages-opts">
           {opts.map(o => (
@@ -139,14 +139,14 @@ function AddPagesModal({
               onClick={() => setSelected(o.pages)}
             >
               <span className="add-pages-opt-num">{o.pages}</span>
-              <span className="add-pages-opt-label">páginas</span>
+              <span className="add-pages-opt-label">hojas</span>
               <span className="add-pages-opt-sub">{o.carillas} carillas</span>
             </button>
           ))}
         </div>
         {isReducing && (
           <p className="add-pages-warning">
-            Reducir páginas eliminará los spreads del final del libro.
+            Reducir hojas eliminará los spreads del final del libro.
           </p>
         )}
         <button
@@ -154,10 +154,10 @@ function AddPagesModal({
           onClick={() => onConfirm(selected)}
           disabled={selected === currentPages}
         >
-          {selected === currentPages ? 'Sin cambios' : `Aplicar ${selected} páginas`}
+          {selected === currentPages ? 'Sin cambios' : `Aplicar ${selected} hojas`}
         </button>
         <button className="add-pages-add-one" onClick={onAddOne}>
-          + Agregar 1 página (2 carillas)
+          + Agregar 1 hoja (2 carillas)
         </button>
       </div>
     </div>
@@ -216,20 +216,27 @@ async function detectFocalY(src: string, _naturalW: number, naturalH: number): P
 function AutoCreateConfirmModal({
   emptyPages, photos, onConfirm, onClose,
 }: { emptyPages: number; photos: number; onConfirm: () => void; onClose: () => void }) {
+  const MAX_PER_PAGE = 5
   const shortage = emptyPages - photos
+  const overflow = photos - emptyPages * MAX_PER_PAGE
   return (
     <div className="add-pages-overlay" onClick={onClose}>
       <div className="add-pages-modal" onClick={e => e.stopPropagation()}>
         <button className="add-pages-close" onClick={onClose} aria-label="Cerrar">×</button>
         <h2 className="add-pages-title">Armar libro automáticamente</h2>
         <p className="add-pages-current">
-          Se van a distribuir <strong>{photos} fotos</strong> en <strong>{emptyPages} páginas vacías</strong>.
+          Se van a distribuir <strong>{photos} fotos</strong> en <strong>{emptyPages} hojas vacías</strong>.
           <br /><br />
-          Las páginas que ya tienen fotos no se van a tocar.
+          Las hojas que ya tienen fotos no se van a tocar.
         </p>
         {shortage > 0 && (
           <p className="add-pages-warning">
-            Las fotos no alcanzan para todas las páginas — {shortage} {shortage === 1 ? 'página quedará vacía' : 'páginas quedarán vacías'}, distribuidas a lo largo del libro.
+            Las fotos no alcanzan para todas las hojas — {shortage} {shortage === 1 ? 'hoja quedará vacía' : 'hojas quedarán vacías'}, distribuidas a lo largo del libro.
+          </p>
+        )}
+        {overflow > 0 && (
+          <p className="add-pages-warning">
+            Cada hoja admite hasta {MAX_PER_PAGE} fotos — {overflow} {overflow === 1 ? 'foto no va a entrar' : 'fotos no van a entrar'} y van a quedar sin usar en el panel.
           </p>
         )}
         <button className="add-pages-confirm" onClick={onConfirm}>
@@ -1115,10 +1122,26 @@ export default function EditorPage() {
     const landscape3Ids = ['layout_3_10', 'layout_3_15']
 
     // Varied per-page photo-count distribution — mostly 3, with some 4s and occasional
-    // single-photo pages — instead of the old rigid/uniform spread (which barely varied:
-    // almost every page ended up as 3, a few as 2). Weighted random pick per page, then a
-    // correction pass nudges counts up/down so the total still matches exactly `total` photos.
+    // single-photo pages. Layouts only go up to 5 photos/page, so `usable` caps the total
+    // at `pages * 5` (any surplus beyond that literally can't fit on this many pages).
+    // The top-up/trim passes below are deterministic (not guard-limited random walks):
+    // by construction there's always a page with spare capacity while diff>0, and always
+    // a page above the floor while diff<0, so they're guaranteed to reach diff===0 and
+    // never strand photos or leave a page empty when there was room for it.
     const pageCounts: number[] = (() => {
+      const MAX_PER_PAGE = 5
+      const usable = Math.min(total, pages * MAX_PER_PAGE)
+      const order = Array.from({ length: pages }, (_, idx) => idx).sort(() => Math.random() - 0.5)
+
+      if (usable < pages) {
+        // Genuine shortage: not enough photos for every page. Give one photo each to
+        // `usable` randomly-chosen pages; the rest stay empty (surfaced by the confirm
+        // modal's shortage warning before this ever runs).
+        const counts = Array(pages).fill(0)
+        for (let i = 0; i < usable; i++) counts[order[i]] = 1
+        return counts
+      }
+
       const WEIGHTS: Array<[number, number]> = [[1, 0.12], [2, 0.10], [3, 0.58], [4, 0.20]]
       const pick = () => {
         let r = Math.random()
@@ -1126,25 +1149,19 @@ export default function EditorPage() {
         return 3
       }
       const counts = Array.from({ length: pages }, pick)
-      let diff = total - counts.reduce((a, b) => a + b, 0)
-      const order = Array.from({ length: pages }, (_, idx) => idx).sort(() => Math.random() - 0.5)
+      let diff = usable - counts.reduce((a, b) => a + b, 0)
 
-      // Bring every page to at least 1 photo (or add more) — never leave a page empty just
-      // to balance the total when there are enough photos to cover every available page.
-      let guard = 0
-      while (diff !== 0 && guard < pages * 20) {
-        const idx = order[guard % pages]
-        if (diff > 0 && counts[idx] < 5)      { counts[idx]++; diff-- }
-        else if (diff < 0 && counts[idx] > 1) { counts[idx]--; diff++ }
-        guard++
+      let oi = 0
+      while (diff > 0) {
+        const idx = order[oi % pages]
+        if (counts[idx] < MAX_PER_PAGE) { counts[idx]++; diff-- }
+        oi++
       }
-      // Genuine shortage (fewer photos than available pages): only now allow some pages
-      // to end up empty, spread across random pages rather than always the last ones.
-      guard = 0
-      while (diff < 0 && guard < pages * 2) {
-        const idx = order[guard % pages]
-        if (counts[idx] > 0) { counts[idx]--; diff++ }
-        guard++
+      oi = 0
+      while (diff < 0) {
+        const idx = order[oi % pages]
+        if (counts[idx] > 1) { counts[idx]--; diff++ }
+        oi++
       }
       return counts
     })()

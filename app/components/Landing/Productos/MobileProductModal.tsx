@@ -190,7 +190,7 @@ export default function MobileProductModal({ product, onClose }: Props) {
 
           {/* Page options */}
           <div className="mpm__section">
-            <p className="mpm__section-label">CANTIDAD DE PÁGINAS</p>
+            <p className="mpm__section-label">CANTIDAD DE HOJAS</p>
             <div className="mpm__cards">
               {pageOptions.map((opt, i) => (
                 <button
@@ -198,7 +198,7 @@ export default function MobileProductModal({ product, onClose }: Props) {
                   className={`mpm__card${pageIdx === i ? ' mpm__card--selected' : ''}`}
                   onClick={() => setPageIdx(i)}
                 >
-                  <span className="mpm__card-top">{opt.pages} páginas</span>
+                  <span className="mpm__card-top">{opt.pages} hojas</span>
                   <span className="mpm__card-bot">{opt.photos}</span>
                 </button>
               ))}

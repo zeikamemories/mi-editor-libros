@@ -495,7 +495,7 @@ export default function ProyectoPage() {
       )}
       {!isCartas && !isVino && (
         <div className="mpd-row">
-          <span className="mpd-row__key">Páginas</span>
+          <span className="mpd-row__key">Hojas</span>
           <span className="mpd-row__val">{totalPages} base</span>
         </div>
       )}
@@ -895,7 +895,7 @@ export default function ProyectoPage() {
           </div>
           <div className="mpd-change-note-block">
             <p className="mpd-change-note-hint">
-              Dentro del preview podés comentar y dibujar directamente sobre las páginas. Si querés agregar algo más, escribilo acá.
+              Dentro del preview podés comentar y dibujar directamente sobre las hojas. Si querés agregar algo más, escribilo acá.
             </p>
             <p className="mpd-change-note-hint mpd-change-note-hint--em">
               Cuando estés lista, presioná <strong>Enviar cambios</strong> para que el equipo reciba todo junto.

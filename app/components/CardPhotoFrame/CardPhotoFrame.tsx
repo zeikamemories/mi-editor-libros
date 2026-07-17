@@ -86,24 +86,24 @@ export default function CardPhotoFrame({ src, transform = DEFAULT_CARD_TRANSFORM
             />
           )}
         </div>
-      </div>
 
-      {interactive && src && (
-        <div className="card-photo-frame__controls">
-          <button type="button" className="card-photo-frame__btn" onClick={rotate} aria-label="Rotar foto">⟳</button>
-          <input
-            type="range"
-            min={1}
-            max={3}
-            step={0.05}
-            value={transform.scale}
-            onChange={e => onChange!({ ...transform, scale: Number(e.target.value) })}
-            className="card-photo-frame__zoom"
-            aria-label="Zoom"
-          />
-          <button type="button" className="card-photo-frame__btn" onClick={reset} aria-label="Restablecer posición">↺</button>
-        </div>
-      )}
+        {interactive && src && (
+          <div className="card-photo-frame__controls">
+            <button type="button" className="card-photo-frame__btn" onClick={rotate} aria-label="Rotar foto">⟳</button>
+            <input
+              type="range"
+              min={1}
+              max={3}
+              step={0.05}
+              value={transform.scale}
+              onChange={e => onChange!({ ...transform, scale: Number(e.target.value) })}
+              className="card-photo-frame__zoom"
+              aria-label="Zoom"
+            />
+            <button type="button" className="card-photo-frame__btn" onClick={reset} aria-label="Restablecer posición">↺</button>
+          </div>
+        )}
+      </div>
     </div>
   )
 }

@@ -184,7 +184,7 @@ export default function ProductModal({ product, onClose }: Props) {
 
             {/* Page options */}
             <div className="pm__section">
-              <p className="pm__section-label">CANTIDAD DE PÁGINAS</p>
+              <p className="pm__section-label">CANTIDAD DE HOJAS</p>
               <div className="pm__cards">
                 {pageOptions.map((opt, i) => (
                   <button
@@ -192,7 +192,7 @@ export default function ProductModal({ product, onClose }: Props) {
                     className={`pm__card${pageIdx === i ? ' pm__card--selected' : ''}`}
                     onClick={() => setPageIdx(i)}
                   >
-                    <span className="pm__card-top">{opt.pages} páginas</span>
+                    <span className="pm__card-top">{opt.pages} hojas</span>
                     <span className="pm__card-bot">{opt.photos}</span>
                   </button>
                 ))}

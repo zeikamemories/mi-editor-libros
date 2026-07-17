@@ -63,7 +63,7 @@ const layout_1_2: Layout = {
 
 const layout_1_3: Layout = {
   id: 'layout_1_3',
-  nombre: 'Página completa',
+  nombre: 'Hoja completa',
   photoCount: 1,
   orientation: 'any',
   frames: [

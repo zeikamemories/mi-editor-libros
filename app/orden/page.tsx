@@ -24,14 +24,14 @@ const PRODUCT_IMAGES: Record<string, string> = {
 }
 
 const PAGE_OPTIONS_SMALL = [
-  { label: '20-100 fotos · 20 páginas',  pages: 20 },
-  { label: '101-180 fotos · 30 páginas', pages: 30 },
-  { label: '180-240 fotos · 40 páginas', pages: 40 },
+  { label: '20-100 fotos · 20 hojas',  pages: 20 },
+  { label: '101-180 fotos · 30 hojas', pages: 30 },
+  { label: '180-240 fotos · 40 hojas', pages: 40 },
 ]
 const PAGE_OPTIONS_LARGE = [
-  { label: '20-160 fotos · 20 páginas',  pages: 20 },
-  { label: '161-240 fotos · 30 páginas', pages: 30 },
-  { label: '241-350 fotos · 40 páginas', pages: 40 },
+  { label: '20-160 fotos · 20 hojas',  pages: 20 },
+  { label: '161-240 fotos · 30 hojas', pages: 30 },
+  { label: '241-350 fotos · 40 hojas', pages: 40 },
 ]
 
 
@@ -170,8 +170,8 @@ export default function OrdenPage() {
           <span className="orden__summary-val">{selectedSize.name} {selectedSize.dims}</span>
         </div>
         <div className="orden__summary-row">
-          <span className="orden__summary-key">PÁGINAS</span>
-          <span className="orden__summary-val">{selectedPage.pages} páginas</span>
+          <span className="orden__summary-key">HOJAS</span>
+          <span className="orden__summary-val">{selectedPage.pages} hojas</span>
         </div>
         <div className="orden__summary-row">
           <span className="orden__summary-key">TEXTOS</span>

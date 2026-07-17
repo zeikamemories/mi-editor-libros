@@ -205,7 +205,7 @@ function Step2({ selectedBook, details, onChange }: Step2Props) {
             <DesignerSelect value={details.disenadora} onChange={(v) => onChange('disenadora', v)} />
           </div>
           <div className="nuevo-field">
-            <label className="nuevo-label">PÁGINAS</label>
+            <label className="nuevo-label">HOJAS</label>
             <select
               className="nuevo-select"
               value={details.paginas}
