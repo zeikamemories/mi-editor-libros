@@ -1,7 +1,6 @@
 'use client'
 import { useEffect, useState, Suspense } from 'react'
 import { useSearchParams } from 'next/navigation'
-import { supabase } from '../../lib/supabase'
 import Navbar from '../../components/Landing/Navbar/Navbar'
 import './confirmado.css'
 
@@ -29,6 +28,7 @@ function ConfirmadoContent() {
   const params       = useSearchParams()
   const orderId      = params.get('order_id') || (typeof window !== 'undefined' ? sessionStorage.getItem('zeika_pending_order_id') : null)
   const status       = params.get('status')
+  const paymentId    = params.get('payment_id') || params.get('collection_id')
   const reorderFrom  = params.get('reorderFrom')
   const [done,       setDone]       = useState(false)
   const [isReorder,  setIsReorder]  = useState(false)
@@ -37,116 +37,22 @@ function ConfirmadoContent() {
   useEffect(() => {
     if (!orderId) { setDone(true); return }
 
-    if (status === 'failure') {
-      supabase.from('orders').select('product_type').eq('id', orderId).single()
-        .then(({ data }) => { setIsVino(data?.product_type === 'vino'); setDone(true) })
-      return
-    }
-
+    // El estado del pedido (confirmado / en diseño / etc.) solo lo escribe el servidor,
+    // después de verificar el pago contra la API real de MercadoPago — acá el browser
+    // nunca actualiza `orders` directamente (ver app/api/confirm-payment/route.ts).
     async function confirm() {
-      const newStatus = status === 'pending' ? 'pendiente_pago' : 'confirmado'
-      const now       = new Date().toISOString()
-
-      const [{ data: orderData }, { data: { user } }] = await Promise.all([
-        supabase.from('orders').select('book_name, size, extra_text, pages_base, extra_pages, product_type').eq('id', orderId!).single(),
-        supabase.auth.getUser(),
-        supabase.from('orders').update({
-          status:       newStatus,
-          status_dates: { confirmado: now },
-        }).eq('id', orderId!),
-      ])
-
-      if (orderData?.product_type === 'vino') {
-        // Los vinos no tienen proyecto/carpeta de Drive — el diseño se coordina por WhatsApp.
-        setIsVino(true)
-        setDone(true)
-        return
-      }
-
-      if (orderData) {
-        const { data: existing } = await supabase
-          .from('projects').select('id').eq('order_id', orderId!).maybeSingle()
-
-        if (!existing) {
-          if (reorderFrom) {
-            // Copy design from original project
-            const { data: srcProject } = await supabase
-              .from('projects')
-              .select('spreads, photos, total_spreads, cover_thumbnail')
-              .eq('order_id', reorderFrom)
-              .maybeSingle()
-
-            await supabase.from('projects').insert({
-              name:             orderData.book_name ?? 'Sin título',
-              book_size:        orderData.size ?? 'vertical',
-              total_spreads:    srcProject?.total_spreads ?? 13,
-              photos:           srcProject?.photos        ?? [],
-              spreads:          srcProject?.spreads       ?? {},
-              cover_thumbnail:  srcProject?.cover_thumbnail ?? null,
-              order_id:         orderId,
-            })
-
-            // Skip material phase — design already exists
-            await supabase.from('orders').update({
-              status:       'material_recibido',
-              status_dates: { confirmado: now, material_recibido: now },
-            }).eq('id', orderId!)
-
-            setIsReorder(true)
-          } else {
-            const folderName = `Zeika - ${orderData.book_name ?? 'Sin título'} - ${orderId!.slice(0, 8).toUpperCase()}`
-            const bookName   = orderData.book_name ?? 'Sin título'
-            const clientEmail = user?.email ?? null
-
-            // Create Drive folder first, then Doc inside it
-            const driveRes  = await fetch('/api/create-drive-folder', {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({ folderName, clientEmail }),
-            })
-            const driveData = driveRes.ok ? await driveRes.json() : {}
-            const driveLink = driveData.folderUrl ?? null
-            const folderId  = driveData.folderId  ?? null
-
-            const docsRes  = await fetch('/api/create-docs', {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({
-                bookName,
-                clientEmail,
-                extraText: orderData.extra_text ?? false,
-                folderId,
-              }),
-            })
-            const docsLink = docsRes.ok ? (await docsRes.json()).docsUrl ?? null : null
-
-            const SIZE_MAP: Record<string, string> = {
-              chico_h: 'chico', mediano_h: 'mediano', grande_h: 'grande',
-              vertical: 'vertical', cuadrado: 'cuadrado',
-            }
-            const bookSizeId = SIZE_MAP[orderData.size ?? ''] ?? 'vertical'
-            const totalPages = (orderData.pages_base ?? 20) + (orderData.extra_pages ?? 0)
-            await Promise.all([
-              supabase.from('projects').insert({
-                name:          bookName,
-                book_size:     bookSizeId,
-                total_spreads: totalPages - 1,
-                photos:        [],
-                spreads:       {},
-                order_id:      orderId,
-              }),
-              supabase.from('orders').update({
-                ...(driveLink ? { drive_link: driveLink } : {}),
-                ...(docsLink  ? { docs_link:  docsLink  } : {}),
-              }).eq('id', orderId!),
-            ])
-          }
-        }
-      }
+      const res = await fetch('/api/confirm-payment', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ orderId, status, paymentId, reorderFrom }),
+      })
+      const data = await res.json().catch(() => ({}))
+      setIsVino(Boolean(data.isVino))
+      setIsReorder(Boolean(data.isReorder))
       setDone(true)
     }
     confirm()
-  }, [orderId, status, reorderFrom])
+  }, [orderId, status, paymentId, reorderFrom])
 
   const isFailure = status === 'failure'
   const isPending = status === 'pending'

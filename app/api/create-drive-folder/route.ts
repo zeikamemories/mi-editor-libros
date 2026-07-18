@@ -1,19 +1,18 @@
 import { google } from 'googleapis'
 import { NextRequest, NextResponse } from 'next/server'
-
-const ZEIKA_EMAIL = 'zeika.memories@gmail.com'
-
-function getServiceAccountAuth() {
-  const credentials = JSON.parse(process.env.GOOGLE_SERVICE_ACCOUNT_JSON!)
-  return new google.auth.GoogleAuth({
-    credentials,
-    scopes: ['https://www.googleapis.com/auth/drive'],
-  })
-}
+import { getServiceAccountAuth, ZEIKA_EMAIL } from '../../lib/googleWorkspace'
+import { getSessionEmail } from '../../lib/sessionUser'
 
 export async function POST(req: NextRequest) {
   try {
-    const { folderName, clientEmail } = await req.json()
+    const { folderName } = await req.json()
+    if (!folderName || typeof folderName !== 'string') {
+      return NextResponse.json({ error: 'Falta folderName' }, { status: 400 })
+    }
+    // Nunca confiar en un `clientEmail` del body — se deriva de la sesión autenticada, si hay,
+    // para que esto no se pueda usar para mandarle una notificación de Drive con contenido
+    // arbitrario (folderName) a un tercero.
+    const clientEmail = await getSessionEmail(req)
 
     const auth  = getServiceAccountAuth()
     const drive = google.drive({ version: 'v3', auth })

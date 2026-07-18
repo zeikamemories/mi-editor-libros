@@ -2,8 +2,6 @@
 
 import { useEffect, useState, Suspense } from 'react'
 import { useSearchParams, useRouter } from 'next/navigation'
-import { supabase } from '../../lib/supabase'
-import { REORDER_UNIT_PRICE, copiesDiscount, computeCartasTotal } from '../../config/pricing'
 import Navbar from '../../components/Landing/Navbar/Navbar'
 import '../mis-proyectos.css'
 
@@ -28,6 +26,7 @@ function ConfirmadoContent() {
   const searchParams = useSearchParams()
   const router        = useRouter()
   const status        = searchParams.get('status')
+  const paymentId     = searchParams.get('payment_id') || searchParams.get('collection_id')
   const orderIds      = (searchParams.get('order_ids') ?? '').split(',').filter(Boolean)
 
   const [orders, setOrders] = useState<Order[]>([])
@@ -36,29 +35,20 @@ function ConfirmadoContent() {
   useEffect(() => {
     if (status === 'failure' || orderIds.length === 0) { setDone(true); return }
 
-    Promise.all(orderIds.map(async id => {
-      const { data } = await supabase.from('orders').select('*').eq('id', id).single()
-      if (!data) return null
-
-      const nowIso   = new Date().toISOString()
-      const newDates = { ...(data.status_dates ?? {}), en_produccion: nowIso }
-
-      const secondPaid = data.product_type === 'cartas'
-        ? Math.round((computeCartasTotal(data.copies ?? 1) ?? 0) - 0)
-        : Math.round((data.copies ?? 1) * (REORDER_UNIT_PRICE[data.size] ?? data.price_total) * copiesDiscount(data.copies ?? 1) - data.price_paid)
-
-      await supabase.from('orders').update({
-        status:            'en_produccion',
-        second_price_paid: secondPaid,
-        status_dates:      newDates,
-      }).eq('id', id)
-
-      return data as Order
-    })).then(results => {
-      setOrders(results.filter((o): o is Order => o !== null))
-      setDone(true)
+    // El estado de estos pedidos solo lo escribe el servidor, después de verificar el pago
+    // contra la API real de MercadoPago — ver app/api/confirm-payment/route.ts.
+    fetch('/api/confirm-payment', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ orderIds, paymentId }),
     })
-  }, [status, orderIds.join(',')])
+      .then(res => res.json())
+      .then(data => {
+        setOrders((data.orders ?? []) as Order[])
+        setDone(true)
+      })
+      .catch(() => setDone(true))
+  }, [status, paymentId, orderIds.join(',')])
 
   if (!done) return <div className="mp-loading"><div className="mp-spinner" /></div>
 

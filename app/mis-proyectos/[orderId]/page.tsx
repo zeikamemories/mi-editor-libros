@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { useRouter, useParams, useSearchParams } from 'next/navigation'
 import { supabase } from '../../lib/supabase'
+import { authHeaders } from '../../lib/authFetch'
 import Navbar from '../../components/Landing/Navbar/Navbar'
 import CardPhotoFrame, { type CardTransform } from '../../components/CardPhotoFrame/CardPhotoFrame'
 import VinoMockupFrame from '../../components/VinoMockupFrame/VinoMockupFrame'
@@ -428,10 +429,11 @@ export default function ProyectoPage() {
     if (!order || generatingLinks) return
     setGeneratingLinks(true)
     const folderName  = `Zeika - ${order.book_name} - ${order.id.slice(0, 8).toUpperCase()}`
+    const auth        = await authHeaders()
     const driveRes    = await fetch('/api/create-drive-folder', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ folderName, clientEmail: userEmail }),
+      headers: { 'Content-Type': 'application/json', ...auth },
+      body: JSON.stringify({ folderName }),
     })
     const driveData   = driveRes.ok ? await driveRes.json() : {}
     const newDriveLink = driveData.folderUrl ?? null
@@ -439,8 +441,8 @@ export default function ProyectoPage() {
 
     const docsRes     = await fetch('/api/create-docs', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ bookName: order.book_name, clientEmail: userEmail, extraText: order.extra_text, folderId }),
+      headers: { 'Content-Type': 'application/json', ...auth },
+      body: JSON.stringify({ bookName: order.book_name, extraText: order.extra_text, folderId }),
     })
     const newDocsLink = docsRes.ok ? (await docsRes.json()).docsUrl ?? null : null
 
