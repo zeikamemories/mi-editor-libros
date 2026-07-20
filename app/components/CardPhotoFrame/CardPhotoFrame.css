@@ -1,13 +1,23 @@
 .card-photo-frame {
   position: relative;
-  display: block;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   width: 100%;
   height: 100%;
+  overflow: hidden;
 }
 
+/* Aspect ratio is locked to the mockup image (1024x1536) so the photo viewport below
+   always lines up with the blank card in the photo. To fill panels with a different
+   ratio without breaking that alignment, the box is allowed to grow past 100% on
+   whichever axis is needed (min-width/min-height) and the excess is cropped by the
+   parent's overflow:hidden — never by stretching width/height independently. */
 .card-photo-frame__mockup {
   position: relative;
-  width: 100%;
+  flex-shrink: 0;
+  min-width: 100%;
+  min-height: 100%;
   aspect-ratio: 1024 / 1536;
 }
 

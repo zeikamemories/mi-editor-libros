@@ -164,6 +164,9 @@ export default function MobileCartaModal({ onClose }: Props) {
             <p className="mpm__section-note">
               Subí una foto y armamos un mazo entero con esa misma foto en todas las cartas.
             </p>
+            <p className="mpm__section-note mpm__section-note--muted">
+              * La vista previa es aproximada — nosotras ajustamos la posición final antes de imprimir.
+            </p>
             <input
               ref={fileInputRef}
               id="mobile-carta-photo-input"

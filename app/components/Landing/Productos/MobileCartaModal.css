@@ -67,6 +67,7 @@
   width: 100%;
   background: #e0dedd;
   box-sizing: border-box;
+  overflow: hidden;
 }
 
 .carta-modal__frame-wrap {
@@ -75,17 +76,11 @@
   height: 100%;
 }
 
-.carta-modal__photoframe.card-photo-frame,
-.carta-modal__photoframe .card-photo-frame__mockup {
-  width: 100%;
-  height: 100%;
-}
-
 /* The mockup photo shows the card sitting on a table with visible background around
    it — zoom in so the card fills the panel instead of leaving that background as a
    margin on the sides. */
 .carta-modal__photoframe .card-photo-frame__mockup {
-  transform: scale(1.3);
+  transform: scale(1.05);
 }
 
 .carta-modal__frame-hint {
@@ -199,6 +194,12 @@
   color: #666;
   margin: 0;
   line-height: 1.5;
+}
+
+.mpm__section-note--muted {
+  font-size: 12px;
+  font-style: italic;
+  color: #999;
 }
 
 .mpm__cards {

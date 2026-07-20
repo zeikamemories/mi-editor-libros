@@ -929,7 +929,7 @@ export default function ProyectoPage() {
       </div>
       )}
 
-      {canApprove && (
+      {canApprove && !isCartas && (
         <>
           <div className="mpd-rounds-row">
             <div className="mpd-rounds-header">
