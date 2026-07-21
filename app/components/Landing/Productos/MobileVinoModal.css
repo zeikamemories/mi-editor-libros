@@ -86,6 +86,29 @@
   scroll-snap-align: start;
 }
 
+.mvm__arrow {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.85);
+  border: none;
+  font-size: 18px;
+  line-height: 1;
+  color: var(--color-black);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 2;
+  padding: 0;
+}
+
+.mvm__arrow--prev { left: 12px; }
+.mvm__arrow--next { right: 12px; }
+
 .mvm__dots {
   position: absolute;
   bottom: 12px;
@@ -93,6 +116,7 @@
   transform: translateX(-50%);
   display: flex;
   gap: 6px;
+  z-index: 2;
 }
 
 .mvm__dot {
@@ -100,6 +124,9 @@
   height: 8px;
   border-radius: 50%;
   background: rgba(255, 255, 255, 0.4);
+  border: none;
+  padding: 0;
+  cursor: pointer;
   transition: background 0.2s;
 }
 

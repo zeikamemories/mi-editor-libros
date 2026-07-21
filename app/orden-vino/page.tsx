@@ -195,12 +195,12 @@ export default function OrdenVinoPage() {
         <div className="orden__left-col">
           <a className="orden__back-link orden__back-link--side" href="/">←</a>
           <div className="orden__product-frame">
-            <img src="/fotos/vinos.jpg" alt={`Vino ${VINO_INFO.nombre} personalizado`} className="orden__product-img" />
+            <img src="/fotos/VinosLanding.jpg" alt="Vino personalizado" className="orden__product-img" />
           </div>
         </div>
 
         <div className="orden__right-col">
-          <h1 className="orden__title">Mi Vino {VINO_INFO.nombre} personalizado</h1>
+          <h1 className="orden__title">Mi vino personalizado</h1>
           <p className="orden__subtitle-blue">
             Una vez abonado, coordinamos por WhatsApp el diseño de tu etiqueta.
           </p>
@@ -219,7 +219,7 @@ export default function OrdenVinoPage() {
       <div className="orden__scroll">
         <div className="orden__content orden__content--summary">
           <a className="orden__back-link" href="/">←</a>
-          <h1 className="orden__title">Mi Vino {VINO_INFO.nombre} personalizado</h1>
+          <h1 className="orden__title">Mi vino personalizado</h1>
           <p className="orden__subtitle-blue">
             Una vez abonado, coordinamos por WhatsApp el diseño de tu etiqueta.
           </p>
@@ -233,7 +233,7 @@ export default function OrdenVinoPage() {
           disabled={saving}
           onClick={handleConfirm}
         >
-          {saving ? 'Guardando...' : `PAGAR ${fmt(payNow)}`}
+          {saving ? 'Guardando...' : `PAGAR SEÑA (50%) · ${fmt(payNow)}`}
         </button>
       </div>
     </div>

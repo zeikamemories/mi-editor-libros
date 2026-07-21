@@ -274,7 +274,7 @@ export default function OrdenPage() {
           disabled={saving}
           onClick={handleConfirm}
         >
-          {saving ? 'Guardando...' : `PAGAR ${fmt(payNow)}`}
+          {saving ? 'Guardando...' : `PAGAR SEÑA (50%) · ${fmt(payNow)}`}
         </button>
       </div>
     </div>

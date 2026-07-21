@@ -103,19 +103,6 @@
   pointer-events: none;
 }
 
-.mvm__images {
-  display: flex;
-  height: 100%;
-  overflow: hidden;
-}
-
-.mvm__image {
-  flex-shrink: 0;
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-}
-
 /* ── Content area ───────────────────────────────────────────────────────────── */
 
 .mpm__content {

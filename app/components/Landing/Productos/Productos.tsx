@@ -22,9 +22,10 @@ function fmtPrice(n: number) {
 
 const VINO_PRODUCT: ProductData = {
   sizeId:     'vinos',
-  name:       `Vino ${VINO_INFO.nombre} Personalizado`,
+  name:       'Vino Personalizado',
   price:      `Desde ${fmtPrice(VINO_PRICE_BASE)}`,
   dimensions: `${VINO_INFO.linea} ${VINO_INFO.varietal} · ${VINO_INFO.volumen}`,
+  image:      '/fotos/VinosLanding.jpg',
 }
 
 const CARTA_PRODUCT: ProductData = {

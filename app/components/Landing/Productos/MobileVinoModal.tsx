@@ -5,12 +5,12 @@ import { supabase } from '../../../lib/supabase'
 import { VINO_PRICE_BASE, VINO_DESIGN_EXTRA, VINO_CANTIDADES, VINO_INFO, vinoDiscount } from '../../../config/pricing'
 import './MobileVinoModal.css'
 
-const IMAGE = '/fotos/vinos.jpg'
+const IMAGE = '/fotos/VinosLanding.jpg'
 
 // Placeholders — reemplazar por fotos reales del vino Las Perdices cuando estén listas.
 const VINO_IMAGES: Record<string, string[]> = {
   'foto_y_texto':          ['/fotos/VinoTexto4.jpg', '/fotos/VinoTexto.jpg', '/fotos/VinoTexto2.jpg', '/fotos/VinoTexto3.jpg'],
-  'diseno_personalizado':  ['/fotos/VinoDiseno3.jpg', '/fotos/VinoDiseno.jpg', '/fotos/VinoDiseno2.jpg', '/fotos/VinoDiseno4.jpg'],
+  'diseno_personalizado':  ['/fotos/VinoDiseno3.jpg', '/fotos/VinoDiseno.jpg', '/fotos/VinoDiseno2.jpg', '/fotos/VinoDiseno4.jpg', '/fotos/VinoDiseno5.jpg'],
 }
 
 const WHATSAPP_NUMBER = '5491133521921'
@@ -49,6 +49,13 @@ export default function MobileVinoModal({ onClose }: Props) {
     el.addEventListener('scroll', onScroll, { passive: true })
     return () => el.removeEventListener('scroll', onScroll)
   }, [])
+
+  function goToSlide(i: number) {
+    const el = imagesScrollRef.current
+    if (!el) return
+    const index = (i + images.length) % images.length
+    el.scrollTo({ left: index * el.clientWidth, behavior: 'smooth' })
+  }
 
   // La foto se actualiza según el tipo de diseño elegido; si cambia, volvemos a la
   // primera foto de ese set.
@@ -112,11 +119,20 @@ export default function MobileVinoModal({ onClose }: Props) {
             ))}
           </div>
           {images.length > 1 && (
-            <div className="mvm__dots">
-              {images.map((_, i) => (
-                <span key={i} className={`mvm__dot${i === activeSlide ? ' mvm__dot--active' : ''}`} />
-              ))}
-            </div>
+            <>
+              <button className="mvm__arrow mvm__arrow--prev" onClick={() => goToSlide(activeSlide - 1)} aria-label="Anterior">&#8249;</button>
+              <button className="mvm__arrow mvm__arrow--next" onClick={() => goToSlide(activeSlide + 1)} aria-label="Siguiente">&#8250;</button>
+              <div className="mvm__dots">
+                {images.map((_, i) => (
+                  <button
+                    key={i}
+                    className={`mvm__dot${i === activeSlide ? ' mvm__dot--active' : ''}`}
+                    onClick={() => goToSlide(i)}
+                    aria-label={`Imagen ${i + 1}`}
+                  />
+                ))}
+              </div>
+            </>
           )}
         </div>
 
@@ -125,11 +141,11 @@ export default function MobileVinoModal({ onClose }: Props) {
 
           {/* Name + price */}
           <div className="mpm__header-row">
-            <h2 className="mpm__name">Vino {VINO_INFO.nombre}</h2>
+            <h2 className="mpm__name">Vino Personalizado</h2>
             <span className="mpm__price">{fmt(totalPrice)}</span>
           </div>
 
-          <span className="mpm__dims">{VINO_INFO.linea} {VINO_INFO.varietal} · {VINO_INFO.volumen}</span>
+          <span className="mpm__dims">{VINO_INFO.nombre} {VINO_INFO.linea} {VINO_INFO.varietal} 750ml</span>
 
           {/* Tipo de diseño */}
           <div className="mpm__section">

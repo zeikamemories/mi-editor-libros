@@ -10,11 +10,12 @@ export type ProductData = {
   mobileLabel?: string
   price:       string
   dimensions:  string
+  image?:      string
 }
 
 type Props = ProductData & { onOpen?: () => void; mobileDelay?: number; desktopDelay?: number }
 
-export default function ProductCard({ sizeId, name, mobileLabel, price, dimensions, onOpen, mobileDelay = 0, desktopDelay = 0 }: Props) {
+export default function ProductCard({ sizeId, name, mobileLabel, price, dimensions, image, onOpen, mobileDelay = 0, desktopDelay = 0 }: Props) {
   const [hovered, setHovered] = useState(false)
   const { ref, visible } = useReveal<HTMLElement>()
 
@@ -30,7 +31,7 @@ export default function ProductCard({ sizeId, name, mobileLabel, price, dimensio
       <div className="product-card__img-wrap" onClick={onOpen} style={{ cursor: onOpen ? 'pointer' : 'default' }}>
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img
-          src={`/fotos/${sizeId}.jpg`}
+          src={image ?? `/fotos/${sizeId}.jpg`}
           alt={name}
           className="product-card__img"
         />

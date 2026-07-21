@@ -10,14 +10,14 @@ const STEPS: Step[] = [
   {
     number: '01',
     title:  'Elegir formato',
-    body:   'Elegís el producto y la opción que más te guste.',
+    body:   'Elegís el producto, la opción que más te guste y abonás el 50% para arrancar.',
     Icon:   Pencil,
     bg:     '#e8f3ff',
   },
   {
     number: '02',
     title:  'Cargar el material',
-    body:   'Subís tus fotos y nos compartis detalles que necesitamos para el diseño.',
+    body:   'Se crea tu proyecto: ahí subís tus fotos y nos contás los detalles para el diseño.',
     Icon:   UploadCloud,
     bg:     '#d6e7fb',
     large:  true,
@@ -33,14 +33,14 @@ const STEPS: Step[] = [
   {
     number: '04',
     title:  'Previsualizarlo',
-    body:   'Te enviamos una previsualización para revisar cada detalle antes de imprimir.',
+    body:   'Te cargamos la previsualización en tu proyecto para que revises cada detalle antes de imprimir.',
     img:    '/icons/step4.svg',
     bg:     '#83b9fb',
   },
   {
     number: '05',
     title:  'Disfrutalo!',
-    body:   'Te lo enviamos a cualquier parte de Argentina a través de Andreani.',
+    body:   'Abonás el restante y te lo enviamos a cualquier parte de Argentina a través de Andreani.',
     img:    '/icons/step5.svg',
     bg:     '#528ed6',
   },
