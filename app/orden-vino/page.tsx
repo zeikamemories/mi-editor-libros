@@ -4,13 +4,8 @@ import Image from 'next/image'
 import { useRouter } from 'next/navigation'
 import { supabase } from '../lib/supabase'
 import type { User } from '@supabase/supabase-js'
-import { VINO_PRICE_BASE, VINO_DESIGN_EXTRA, VINO_CANTIDADES, vinoDiscount } from '../config/pricing'
+import { VINO_PRICE_BASE, VINO_DESIGN_EXTRA, VINO_CANTIDADES, VINO_INFO, vinoDiscount } from '../config/pricing'
 import '../orden/orden.css'
-
-const VARIEDAD_LABEL: Record<string, string> = {
-  tinto:  'Tinto',
-  blanco: 'Blanco',
-}
 
 const DISENO_LABEL: Record<string, string> = {
   foto_y_texto:         'Con foto y texto',
@@ -26,7 +21,6 @@ export default function OrdenVinoPage() {
 
   const [loading,        setLoading]        = useState(true)
   const [user,           setUser]           = useState<User | null>(null)
-  const [variedad,       setVariedad]       = useState<'tinto' | 'blanco'>('tinto')
   const [disenoTipo,     setDisenoTipo]     = useState<'foto_y_texto' | 'diseno_personalizado'>('foto_y_texto')
   const [cantidad,       setCantidad]       = useState<typeof VINO_CANTIDADES[number]>(1)
   const [disenoMultiple, setDisenoMultiple] = useState<'mismo' | 'diferente' | null>(null)
@@ -43,7 +37,6 @@ export default function OrdenVinoPage() {
       if (raw) {
         const sel = JSON.parse(raw)
         if (sel.productType === 'vino') {
-          if (sel.variedad)                        setVariedad(sel.variedad)
           if (sel.disenoTipo)                       setDisenoTipo(sel.disenoTipo)
           if (VINO_CANTIDADES.includes(sel.cantidad)) setCantidad(sel.cantidad)
           if (sel.disenoMultiple)                   setDisenoMultiple(sel.disenoMultiple)
@@ -68,7 +61,7 @@ export default function OrdenVinoPage() {
     return () => subscription.unsubscribe()
   }, [router])
 
-  const unitPrice  = VINO_PRICE_BASE[variedad] + VINO_DESIGN_EXTRA[disenoTipo]
+  const unitPrice  = VINO_PRICE_BASE + VINO_DESIGN_EXTRA[disenoTipo]
   const totalPrice = unitPrice * cantidad * vinoDiscount(cantidad)
   const payNow     = Math.round(totalPrice / 2)
 
@@ -86,7 +79,6 @@ export default function OrdenVinoPage() {
     const { data: order, error: orderError } = await supabase.from('orders').insert({
       user_id:         user.id,
       product_type:    'vino',
-      variedad,
       diseno_tipo:     disenoTipo,
       diseno_multiple: cantidad > 1 ? disenoMultiple : null,
       copies:          cantidad,
@@ -136,8 +128,8 @@ export default function OrdenVinoPage() {
     <>
       <div className="orden__summary">
         <div className="orden__summary-row">
-          <span className="orden__summary-key">VARIEDAD</span>
-          <span className="orden__summary-val">{VARIEDAD_LABEL[variedad]}</span>
+          <span className="orden__summary-key">VINO</span>
+          <span className="orden__summary-val">{VINO_INFO.nombre} — {VINO_INFO.linea} {VINO_INFO.varietal}</span>
         </div>
         <div className="orden__summary-row">
           <span className="orden__summary-key">TIPO DE DISEÑO</span>
@@ -203,12 +195,12 @@ export default function OrdenVinoPage() {
         <div className="orden__left-col">
           <a className="orden__back-link orden__back-link--side" href="/">←</a>
           <div className="orden__product-frame">
-            <img src="/fotos/vinos.jpg" alt="Vino Personalizado" className="orden__product-img" />
+            <img src="/fotos/vinos.jpg" alt={`Vino ${VINO_INFO.nombre} personalizado`} className="orden__product-img" />
           </div>
         </div>
 
         <div className="orden__right-col">
-          <h1 className="orden__title">Mi vino personalizado</h1>
+          <h1 className="orden__title">Mi Vino {VINO_INFO.nombre} personalizado</h1>
           <p className="orden__subtitle-blue">
             Una vez abonado, coordinamos por WhatsApp el diseño de tu etiqueta.
           </p>
@@ -227,7 +219,7 @@ export default function OrdenVinoPage() {
       <div className="orden__scroll">
         <div className="orden__content orden__content--summary">
           <a className="orden__back-link" href="/">←</a>
-          <h1 className="orden__title">Mi vino personalizado</h1>
+          <h1 className="orden__title">Mi Vino {VINO_INFO.nombre} personalizado</h1>
           <p className="orden__subtitle-blue">
             Una vez abonado, coordinamos por WhatsApp el diseño de tu etiqueta.
           </p>

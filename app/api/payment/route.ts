@@ -54,7 +54,7 @@ export async function POST(req: NextRequest) {
 
         const { data: order, error: orderError } = await admin
           .from('orders')
-          .select('size, price_paid, product_type, book_name, variedad, diseno_tipo')
+          .select('size, price_paid, product_type, book_name, diseno_tipo')
           .eq('id', item.orderId)
           .single()
 
@@ -74,7 +74,7 @@ export async function POST(req: NextRequest) {
           amount = Math.round(total - effectivePaid)
           title  = `Cartas personalizadas Zeika (${item.cardType ?? 'poker'}) — ${order.book_name}`
         } else if (order.product_type === 'vino') {
-          const total = computeVinoTotal(order.variedad ?? '', order.diseno_tipo ?? '', copiesNum)
+          const total = computeVinoTotal(order.diseno_tipo ?? '', copiesNum)
           if (total === null) {
             return NextResponse.json({ error: 'No se pudo calcular el precio del vino' }, { status: 400 })
           }
@@ -147,7 +147,7 @@ export async function POST(req: NextRequest) {
 
     const { data: order, error: orderError } = await admin
       .from('orders')
-      .select('size, pages_base, extra_text, price_paid, status, product_type, variedad, diseno_tipo, copies')
+      .select('size, pages_base, extra_text, price_paid, status, product_type, diseno_tipo, copies')
       .eq('id', orderId)
       .single()
 
@@ -160,7 +160,7 @@ export async function POST(req: NextRequest) {
 
     if (isVino) {
       // Primer pago de un vino (recién creado en /orden-vino): 50% del precio recalculado acá.
-      const total = computeVinoTotal(order.variedad, order.diseno_tipo, order.copies ?? 1)
+      const total = computeVinoTotal(order.diseno_tipo, order.copies ?? 1)
       if (total === null) {
         return NextResponse.json({ error: 'No se pudo calcular el precio del pedido' }, { status: 400 })
       }

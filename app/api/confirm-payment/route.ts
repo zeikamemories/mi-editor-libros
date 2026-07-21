@@ -57,7 +57,7 @@ export async function POST(req: NextRequest) {
         const secondPaid = data.product_type === 'cartas'
           ? Math.round(computeCartasTotal(data.copies ?? 1) ?? 0)
           : data.product_type === 'vino'
-            ? Math.round((computeVinoTotal(data.variedad, data.diseno_tipo, data.copies ?? 1) ?? 0) - data.price_paid)
+            ? Math.round((computeVinoTotal(data.diseno_tipo, data.copies ?? 1) ?? 0) - data.price_paid)
             : Math.round((data.copies ?? 1) * (REORDER_UNIT_PRICE[data.size] ?? data.price_total) * copiesDiscount(data.copies ?? 1) - data.price_paid)
 
         await admin.from('orders').update({

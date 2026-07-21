@@ -4,7 +4,7 @@ import { useEffect, useRef, useState, Suspense } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { supabase } from '../lib/supabase'
 import Navbar from '../components/Landing/Navbar/Navbar'
-import { REORDER_UNIT_PRICE, copiesDiscount, CARTA_PRICE, computeVinoTotal, VINO_CANTIDAD_MAX } from '../config/pricing'
+import { REORDER_UNIT_PRICE, copiesDiscount, CARTA_PRICE, computeVinoTotal, VINO_CANTIDAD_MAX, VINO_INFO } from '../config/pricing'
 import './mis-proyectos.css'
 
 interface Order {
@@ -17,7 +17,6 @@ interface Order {
   product_type: string | null
   card_type: string | null
   card_photo_url: string | null
-  variedad: string | null
   diseno_tipo: string | null
   copies: number | null
   vino_design_url: string | null
@@ -114,7 +113,7 @@ function MisProyectosContent() {
       const [{ data: ordersData }, { data: projectsData }] = await Promise.all([
         supabase
           .from('orders')
-          .select('id, book_name, size, status, price_total, price_paid, product_type, card_type, card_photo_url, variedad, diseno_tipo, copies, vino_design_url, created_at')
+          .select('id, book_name, size, status, price_total, price_paid, product_type, card_type, card_photo_url, diseno_tipo, copies, vino_design_url, created_at')
           .eq('user_id', session.user.id)
           .order('created_at', { ascending: false }),
         supabase
@@ -178,7 +177,7 @@ function MisProyectosContent() {
     const copies = rowCopiesFor(o)
     if (o.product_type === 'cartas') return CARTA_PRICE * copies
     if (o.product_type === 'vino') {
-      return computeVinoTotal(o.variedad ?? '', o.diseno_tipo ?? '', copies) ?? o.price_total
+      return computeVinoTotal(o.diseno_tipo ?? '', copies) ?? o.price_total
     }
     const unitPrice = REORDER_UNIT_PRICE[o.size ?? ''] ?? o.price_total
     return copies * unitPrice * copiesDiscount(copies)
@@ -289,7 +288,7 @@ function MisProyectosContent() {
                 <div className="mp-card__info-bottom">
                   <span className="mp-card__format">
                     {order.product_type === 'cartas' ? 'Cartas personalizadas'
-                      : isVino ? `Vino ${order.variedad === 'blanco' ? 'Blanco' : 'Tinto'}`
+                      : isVino ? `Vino ${VINO_INFO.nombre}`
                       : (SIZE_SHORT[order.size ?? ''] ?? order.size)}
                   </span>
                   <span className="mp-card__price-pill">{fmt(order.price_total)}</span>
@@ -345,7 +344,7 @@ function MisProyectosContent() {
                 <div className="mp-listos-info">
                   <span className="mp-listos-name">{orderName(order)}</span>
                   <span className="mp-listos-format">
-                    {isCarta ? 'Mazo de cartas' : isVino ? `Vino ${order.variedad ?? ''}` : (SIZE_SHORT[order.size ?? ''] ?? order.size)}
+                    {isCarta ? 'Mazo de cartas' : isVino ? `Vino ${VINO_INFO.nombre}` : (SIZE_SHORT[order.size ?? ''] ?? order.size)}
                   </span>
 
                   {isCarta && (

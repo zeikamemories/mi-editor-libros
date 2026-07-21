@@ -64,7 +64,6 @@ interface Order {
   card_type: string | null
   card_photo_url: string | null
   card_photo_transform: CardTransform | null
-  variedad: string | null
   diseno_tipo: string | null
   copies: number | null
   label_photo_url: string | null

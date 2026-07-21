@@ -2,17 +2,15 @@
 
 import { useState, useEffect, useRef } from 'react'
 import { supabase } from '../../../lib/supabase'
-import { VINO_PRICE_BASE, VINO_DESIGN_EXTRA, VINO_CANTIDADES, vinoDiscount } from '../../../config/pricing'
+import { VINO_PRICE_BASE, VINO_DESIGN_EXTRA, VINO_CANTIDADES, VINO_INFO, vinoDiscount } from '../../../config/pricing'
 import './VinoModal.css'
 
 const IMAGE = '/fotos/vinos.jpg'
 
-// Placeholders — reemplazar por fotos reales de cada combinación cuando estén listas.
+// Placeholders — reemplazar por fotos reales del vino Las Perdices cuando estén listas.
 const VINO_IMAGES: Record<string, string[]> = {
-  'tinto_foto_y_texto':          ['/fotos/vinos.jpg'],
-  'tinto_diseno_personalizado':  ['/fotos/vinos.jpg', '/fotos/grande.jpg', '/fotos/grande2.jpg'],
-  'blanco_foto_y_texto':         ['/fotos/mediano.jpg'],
-  'blanco_diseno_personalizado': ['/fotos/cuadrado.jpg', '/fotos/cuadrado2.jpg'],
+  'foto_y_texto':          ['/fotos/VinoTexto4.jpg', '/fotos/VinoTexto.jpg', '/fotos/VinoTexto2.jpg', '/fotos/VinoTexto3.jpg'],
+  'diseno_personalizado':  ['/fotos/VinoDiseno3.jpg', '/fotos/VinoDiseno.jpg', '/fotos/VinoDiseno2.jpg', '/fotos/VinoDiseno4.jpg'],
 }
 
 const WHATSAPP_NUMBER = '5491133521921'
@@ -24,7 +22,6 @@ function fmt(n: number) {
 type Props = { onClose: () => void }
 
 export default function VinoModal({ onClose }: Props) {
-  const [variedad,       setVariedad]       = useState<'tinto' | 'blanco'>('tinto')
   const [disenoTipo,     setDisenoTipo]     = useState<'foto_y_texto' | 'diseno_personalizado'>('foto_y_texto')
   const [cantidad,       setCantidad]       = useState<typeof VINO_CANTIDADES[number]>(1)
   const [disenoMultiple, setDisenoMultiple] = useState<'mismo' | 'diferente'>('mismo')
@@ -39,16 +36,16 @@ export default function VinoModal({ onClose }: Props) {
 
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
-  const unitPrice  = VINO_PRICE_BASE[variedad] + VINO_DESIGN_EXTRA[disenoTipo]
+  const unitPrice  = VINO_PRICE_BASE + VINO_DESIGN_EXTRA[disenoTipo]
   const discount   = vinoDiscount(cantidad)
   const totalPrice = unitPrice * cantidad * discount
-  const images     = VINO_IMAGES[`${variedad}_${disenoTipo}`] ?? [IMAGE]
+  const images     = VINO_IMAGES[disenoTipo] ?? [IMAGE]
 
-  // La foto se actualiza según variedad + tipo de diseño elegidos; si cambia la combinación,
-  // arrancamos de vuelta en la primera foto de ese set.
+  // La foto se actualiza según el tipo de diseño elegido; si cambia, arrancamos de vuelta
+  // en la primera foto de ese set.
   useEffect(() => {
     setSlide(0)
-  }, [variedad, disenoTipo])
+  }, [disenoTipo])
 
   function prevSlide() { setSlide(s => (s - 1 + images.length) % images.length) }
   function nextSlide() { setSlide(s => (s + 1) % images.length) }
@@ -132,31 +129,12 @@ export default function VinoModal({ onClose }: Props) {
 
             {/* Title + price */}
             <div className="pm__header-row">
-              <h2 className="pm__name">Vino Personalizado</h2>
+              <h2 className="pm__name">Vino {VINO_INFO.nombre}</h2>
               <span className="pm__price-header">{fmt(totalPrice)}</span>
             </div>
 
             <div className="pm__dims-row">
-              <span className="pm__dims">750 ml</span>
-            </div>
-
-            {/* Variedad */}
-            <div className="pm__section">
-              <p className="pm__section-label">VARIEDAD</p>
-              <div className="pm__cards pm__cards--2">
-                <button
-                  className={`pm__card${variedad === 'tinto' ? ' pm__card--selected' : ''}`}
-                  onClick={() => setVariedad('tinto')}
-                >
-                  <span className="pm__card-top">Tinto</span>
-                </button>
-                <button
-                  className={`pm__card${variedad === 'blanco' ? ' pm__card--selected' : ''}`}
-                  onClick={() => setVariedad('blanco')}
-                >
-                  <span className="pm__card-top">Blanco</span>
-                </button>
-              </div>
+              <span className="pm__dims">{VINO_INFO.linea} {VINO_INFO.varietal} · {VINO_INFO.volumen}</span>
             </div>
 
             {/* Tipo de diseño */}
@@ -246,7 +224,8 @@ export default function VinoModal({ onClose }: Props) {
             <div className="pm__details">
               <p className="pm__details-label">Detalles del producto:</p>
               <ul className="pm__details-list">
-                <li>Botella de vino {variedad} de 750ml con etiqueta personalizada.</li>
+                <li>Bodega: {VINO_INFO.bodega} — {VINO_INFO.linea} {VINO_INFO.varietal}, {VINO_INFO.origen}.</li>
+                <li>Botella de {VINO_INFO.volumen} con etiqueta personalizada.</li>
                 <li className="pm__cp-row">
                   <span>El envío no está incluído en el precio. Calculá tu envío aprox:</span>
                   <input
@@ -283,7 +262,6 @@ export default function VinoModal({ onClose }: Props) {
               }
               sessionStorage.setItem('zeika_product_selection', JSON.stringify({
                 productType:  'vino',
-                variedad,
                 disenoTipo,
                 cantidad,
                 disenoMultiple: cantidad > 1 ? disenoMultiple : null,

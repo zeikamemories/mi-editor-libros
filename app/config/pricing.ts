@@ -81,9 +81,15 @@ export function copiesDiscount(copies: number): number {
 // (mismo criterio que "chico"/"chico_h" en PRICES_BY_PAGES). Está en $2 y no $1 para que la
 // seña (50%) y el saldo (50%) den $1 cada uno en vez de $1 + $0 por el redondeo.
 
-export const VINO_PRICE_BASE: Record<'tinto' | 'blanco', number> = {
-  tinto:  2,
-  blanco: 2,
+export const VINO_PRICE_BASE = 2
+
+export const VINO_INFO = {
+  nombre:   'Las Perdices',
+  bodega:   'Viña Las Perdices',
+  linea:    'Reserva',
+  varietal: 'Pinot Noir',
+  origen:   'Mendoza, Argentina',
+  volumen:  '750 ml',
 }
 
 export const VINO_DESIGN_EXTRA: Record<'foto_y_texto' | 'diseno_personalizado', number> = {
@@ -103,14 +109,11 @@ export function vinoDiscount(cantidad: number): number {
  * Recalcula el precio total de un pedido de vino a partir de campos guardados en la orden.
  * Usado server-side para no confiar en el monto que manda el navegador.
  */
-export function computeVinoTotal(
-  variedad: string, disenoTipo: string, cantidad: number,
-): number | null {
-  const base  = VINO_PRICE_BASE[variedad as 'tinto' | 'blanco']
+export function computeVinoTotal(disenoTipo: string, cantidad: number): number | null {
   const extra = VINO_DESIGN_EXTRA[disenoTipo as 'foto_y_texto' | 'diseno_personalizado']
-  if (base === undefined || extra === undefined) return null
+  if (extra === undefined) return null
   if (!VINO_CANTIDADES.includes(cantidad as typeof VINO_CANTIDADES[number])) return null
-  return (base + extra) * cantidad * vinoDiscount(cantidad)
+  return (VINO_PRICE_BASE + extra) * cantidad * vinoDiscount(cantidad)
 }
 
 // ─── Cartas personalizadas ─────────────────────────────────────────────────

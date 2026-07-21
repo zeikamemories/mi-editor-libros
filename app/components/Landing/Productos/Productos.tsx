@@ -11,7 +11,7 @@ import MobileVinoModal from './MobileVinoModal'
 import CartaModal from './CartaModal'
 import MobileCartaModal from './MobileCartaModal'
 import AgeGateModal from './AgeGateModal'
-import { PRICES_BY_PAGES, VINO_PRICE_BASE, CARTA_PRICE } from '../../../config/pricing'
+import { PRICES_BY_PAGES, VINO_PRICE_BASE, VINO_INFO, CARTA_PRICE } from '../../../config/pricing'
 import './Productos.css'
 
 const AGE_CONFIRMED_KEY = 'zeika_age_confirmed'
@@ -20,12 +20,11 @@ function fmtPrice(n: number) {
   return '$' + n.toLocaleString('es-AR')
 }
 
-// Precio "desde" = el de la base de 20 páginas (fuente única: app/config/pricing.ts)
 const VINO_PRODUCT: ProductData = {
   sizeId:     'vinos',
-  name:       'Vinos Personalizados',
-  price:      `Desde ${fmtPrice(VINO_PRICE_BASE.tinto)}`,
-  dimensions: '750 ml',
+  name:       `Vino ${VINO_INFO.nombre} Personalizado`,
+  price:      `Desde ${fmtPrice(VINO_PRICE_BASE)}`,
+  dimensions: `${VINO_INFO.linea} ${VINO_INFO.varietal} · ${VINO_INFO.volumen}`,
 }
 
 const CARTA_PRODUCT: ProductData = {

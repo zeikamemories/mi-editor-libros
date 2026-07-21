@@ -7,6 +7,7 @@ import { authHeaders } from '../../lib/authFetch'
 import Navbar from '../../components/Landing/Navbar/Navbar'
 import CardPhotoFrame, { type CardTransform } from '../../components/CardPhotoFrame/CardPhotoFrame'
 import VinoMockupFrame from '../../components/VinoMockupFrame/VinoMockupFrame'
+import { VINO_INFO } from '../../config/pricing'
 import '../mis-proyectos.css'
 
 // ── Types ────────────────────────────────────────────────────────────────────
@@ -35,7 +36,6 @@ interface Order {
   card_type: string | null
   card_photo_url: string | null
   card_photo_transform: CardTransform | null
-  variedad: string | null
   diseno_tipo: string | null
   copies: number | null
   label_photo_url: string | null
@@ -500,11 +500,11 @@ export default function ProyectoPage() {
         <>
           <div className="mpd-row">
             <span className="mpd-row__key">Producto</span>
-            <span className="mpd-row__val">Vino personalizado</span>
+            <span className="mpd-row__val">Vino {VINO_INFO.nombre}</span>
           </div>
           <div className="mpd-row">
-            <span className="mpd-row__key">Variedad</span>
-            <span className="mpd-row__val">{order.variedad === 'blanco' ? 'Blanco' : 'Tinto'}</span>
+            <span className="mpd-row__key">Varietal</span>
+            <span className="mpd-row__val">{VINO_INFO.linea} {VINO_INFO.varietal}</span>
           </div>
           <div className="mpd-row">
             <span className="mpd-row__key">Tipo de diseño</span>

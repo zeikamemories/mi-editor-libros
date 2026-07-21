@@ -2,17 +2,15 @@
 
 import { useState, useEffect, useRef } from 'react'
 import { supabase } from '../../../lib/supabase'
-import { VINO_PRICE_BASE, VINO_DESIGN_EXTRA, VINO_CANTIDADES, vinoDiscount } from '../../../config/pricing'
+import { VINO_PRICE_BASE, VINO_DESIGN_EXTRA, VINO_CANTIDADES, VINO_INFO, vinoDiscount } from '../../../config/pricing'
 import './MobileVinoModal.css'
 
 const IMAGE = '/fotos/vinos.jpg'
 
-// Placeholders — reemplazar por fotos reales de cada combinación cuando estén listas.
+// Placeholders — reemplazar por fotos reales del vino Las Perdices cuando estén listas.
 const VINO_IMAGES: Record<string, string[]> = {
-  'tinto_foto_y_texto':          ['/fotos/vinos.jpg'],
-  'tinto_diseno_personalizado':  ['/fotos/vinos.jpg', '/fotos/grande.jpg', '/fotos/grande2.jpg'],
-  'blanco_foto_y_texto':         ['/fotos/mediano.jpg'],
-  'blanco_diseno_personalizado': ['/fotos/cuadrado.jpg', '/fotos/cuadrado2.jpg'],
+  'foto_y_texto':          ['/fotos/VinoTexto4.jpg', '/fotos/VinoTexto.jpg', '/fotos/VinoTexto2.jpg', '/fotos/VinoTexto3.jpg'],
+  'diseno_personalizado':  ['/fotos/VinoDiseno3.jpg', '/fotos/VinoDiseno.jpg', '/fotos/VinoDiseno2.jpg', '/fotos/VinoDiseno4.jpg'],
 }
 
 const WHATSAPP_NUMBER = '5491133521921'
@@ -24,7 +22,6 @@ function fmt(n: number) {
 type Props = { onClose: () => void }
 
 export default function MobileVinoModal({ onClose }: Props) {
-  const [variedad,       setVariedad]       = useState<'tinto' | 'blanco'>('tinto')
   const [disenoTipo,     setDisenoTipo]     = useState<'foto_y_texto' | 'diseno_personalizado'>('foto_y_texto')
   const [cantidad,       setCantidad]       = useState<typeof VINO_CANTIDADES[number]>(1)
   const [disenoMultiple, setDisenoMultiple] = useState<'mismo' | 'diferente'>('mismo')
@@ -40,10 +37,10 @@ export default function MobileVinoModal({ onClose }: Props) {
 
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
-  const unitPrice  = VINO_PRICE_BASE[variedad] + VINO_DESIGN_EXTRA[disenoTipo]
+  const unitPrice  = VINO_PRICE_BASE + VINO_DESIGN_EXTRA[disenoTipo]
   const discount   = vinoDiscount(cantidad)
   const totalPrice = unitPrice * cantidad * discount
-  const images     = VINO_IMAGES[`${variedad}_${disenoTipo}`] ?? [IMAGE]
+  const images     = VINO_IMAGES[disenoTipo] ?? [IMAGE]
 
   useEffect(() => {
     const el = imagesScrollRef.current
@@ -53,12 +50,12 @@ export default function MobileVinoModal({ onClose }: Props) {
     return () => el.removeEventListener('scroll', onScroll)
   }, [])
 
-  // La foto se actualiza según variedad + tipo de diseño elegidos; si cambia la combinación,
-  // volvemos a la primera foto de ese set.
+  // La foto se actualiza según el tipo de diseño elegido; si cambia, volvemos a la
+  // primera foto de ese set.
   useEffect(() => {
     setActiveSlide(0)
     imagesScrollRef.current?.scrollTo({ left: 0 })
-  }, [variedad, disenoTipo])
+  }, [disenoTipo])
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => { if (e.key === 'Escape') onClose() }
@@ -128,30 +125,11 @@ export default function MobileVinoModal({ onClose }: Props) {
 
           {/* Name + price */}
           <div className="mpm__header-row">
-            <h2 className="mpm__name">Vino Personalizado</h2>
+            <h2 className="mpm__name">Vino {VINO_INFO.nombre}</h2>
             <span className="mpm__price">{fmt(totalPrice)}</span>
           </div>
 
-          <span className="mpm__dims">750 ml</span>
-
-          {/* Variedad */}
-          <div className="mpm__section">
-            <p className="mpm__section-label">VARIEDAD</p>
-            <div className="mpm__cards mpm__cards--2">
-              <button
-                className={`mpm__card${variedad === 'tinto' ? ' mpm__card--selected' : ''}`}
-                onClick={() => setVariedad('tinto')}
-              >
-                <span className="mpm__card-top">Tinto</span>
-              </button>
-              <button
-                className={`mpm__card${variedad === 'blanco' ? ' mpm__card--selected' : ''}`}
-                onClick={() => setVariedad('blanco')}
-              >
-                <span className="mpm__card-top">Blanco</span>
-              </button>
-            </div>
-          </div>
+          <span className="mpm__dims">{VINO_INFO.linea} {VINO_INFO.varietal} · {VINO_INFO.volumen}</span>
 
           {/* Tipo de diseño */}
           <div className="mpm__section">
@@ -240,7 +218,8 @@ export default function MobileVinoModal({ onClose }: Props) {
           <div className="mpm__details">
             <p className="mpm__details-label">DETALLES DEL PRODUCTO</p>
             <ul className="mpm__details-list">
-              <li>Botella de vino {variedad} de 750ml con etiqueta personalizada.</li>
+              <li>Bodega: {VINO_INFO.bodega} — {VINO_INFO.linea} {VINO_INFO.varietal}, {VINO_INFO.origen}.</li>
+              <li>Botella de {VINO_INFO.volumen} con etiqueta personalizada.</li>
               <li>
                 El envío no está incluído en el precio. Calculá tu envío aprox:
                 <div className="mpm__cp-row">
@@ -280,7 +259,6 @@ export default function MobileVinoModal({ onClose }: Props) {
             }
             sessionStorage.setItem('zeika_product_selection', JSON.stringify({
               productType:  'vino',
-              variedad,
               disenoTipo,
               cantidad,
               disenoMultiple: cantidad > 1 ? disenoMultiple : null,
