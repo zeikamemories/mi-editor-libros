@@ -15,6 +15,7 @@
     "fabric": "^7.2.0",
     "face-api.js": "^0.22.2",
     "googleapis": "^173.0.0",
+    "heic2any": "^0.0.4",
     "jquery": "^4.0.0",
     "jspdf": "^4.2.1",
     "jszip": "^3.10.1",
