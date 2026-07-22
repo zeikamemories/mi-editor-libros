@@ -7,14 +7,18 @@ import type { ProductData } from './ProductCard'
 import { PRICES_BY_PAGES, TEXT_EXTRA_BY_SIZE, PAGE_OPTIONS_SMALL, PAGE_OPTIONS_LARGE, LARGE_SIZES } from '../../../config/pricing'
 import './ProductModal.css'
 
-const SHARED_DESK = ['/fotos/foto2-desk.jpg', '/fotos/foto3-desk.jpg', '/fotos/foto4-desk.jpg', '/fotos/foto5-desk.jpg']
+const CHICO_DESK   =['/fotos/chico2.jpg', '/fotos/Foto2Ch-desk.jpg', '/fotos/Foto3Ch-Desk.jpg', '/fotos/Foto4Ch-Desk.jpg', '/fotos/Foto5Ch-Desk.jpg']
+const MEDIANO_DESK = ['/fotos/mediano2.jpg', '/fotos/Foto2Med-Desk.jpg', '/fotos/Foto3Med-Desk.jpg', '/fotos/Foto4Med-Desk.jpg', '/fotos/Foto5Med-Desk.jpg']
+const GRANDE_DESK  = ['/fotos/grande2.jpg', '/fotos/Foto2Grand-Desk.jpg', '/fotos/Foto3Grand-Desk.jpg', '/fotos/Foto4Grand-Desk.jpg', '/fotos/Foto5Grand-Desk.jpg']
+const CUADRADO_DESK = ['/fotos/cuadrado2.jpg', '/fotos/Foto2Cuad-Desk.jpg', '/fotos/Foto3Cuad-Desk.jpg']
+const VERTICAL_DESK = ['/fotos/vertical2.jpg', '/fotos/Foto2Vert-Desk.jpg', '/fotos/Foto3Vert-Desk.jpg', '/fotos/Foto4Vert-Desk.jpg', '/fotos/Foto5Vert-Desk.jpg']
 
 const IMAGES: Record<string, string[]> = {
-  chico:    ['/fotos/chico2.jpg',    ...SHARED_DESK],
-  mediano:  ['/fotos/mediano2.jpg',  ...SHARED_DESK],
-  grande:   ['/fotos/grande2.jpg',   ...SHARED_DESK],
-  vertical: ['/fotos/vertical2.jpg', ...SHARED_DESK],
-  cuadrado: ['/fotos/cuadrado2.jpg', ...SHARED_DESK],
+  chico:    CHICO_DESK,
+  mediano:  MEDIANO_DESK,
+  grande:   GRANDE_DESK,
+  vertical: VERTICAL_DESK,
+  cuadrado: CUADRADO_DESK,
 }
 
 function fmt(n: number) {

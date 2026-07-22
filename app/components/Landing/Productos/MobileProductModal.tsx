@@ -7,14 +7,18 @@ import { HandToggleButton, HandOverlay } from './HandCompare'
 import { PRICES_BY_PAGES, TEXT_EXTRA_BY_SIZE, PAGE_OPTIONS_SMALL, PAGE_OPTIONS_LARGE } from '../../../config/pricing'
 import './MobileProductModal.css'
 
-const SHARED_MOBILE = ['/fotos/foto2-mobile.jpg', '/fotos/foto3-mobile.jpg', '/fotos/foto4-mobile.jpg', '/fotos/foto5-mobile.jpg']
+const CHICO_MOBILE   =['/fotos/chico-mobile.jpg', '/fotos/Foto2Ch-mobile.jpg', '/fotos/Foto3Ch-Mobile.jpg', '/fotos/Foto4Ch-Mobile.jpg', '/fotos/Foto5Ch-Mobile.jpg']
+const MEDIANO_MOBILE = ['/fotos/mediano-mobile.jpg', '/fotos/Foto2Med-Mobile.jpg', '/fotos/Foto3Med-Mobile.jpg', '/fotos/Foto4Med-Mobile.jpg', '/fotos/Foto5Med-Mobile.jpg']
+const GRANDE_MOBILE  = ['/fotos/grande-mobile.jpg', '/fotos/Foto2Grand-Mobile.jpg', '/fotos/Foto3Grand-Mobile.jpg', '/fotos/Foto4Grand-Mobile.jpg', '/fotos/Foto5Grand-Mobile.jpg']
+const CUADRADO_MOBILE = ['/fotos/cuadrado-mobile.jpg', '/fotos/Foto2Cuad-Mobile.jpg', '/fotos/Foto3Cuad-Mobile.jpg']
+const VERTICAL_MOBILE = ['/fotos/vertical-mobile.jpg', '/fotos/Foto2Vert-Mobile.jpg', '/fotos/Foto3Vert-Mobile.jpg', '/fotos/Foto4Vert-Mobile.jpg', '/fotos/Foto5Vert-Mobile.jpg']
 
 const IMAGES: Record<string, string[]> = {
-  chico:    ['/fotos/chico-mobile.jpg',    ...SHARED_MOBILE],
-  mediano:  ['/fotos/mediano-mobile.jpg',  ...SHARED_MOBILE],
-  grande:   ['/fotos/grande-mobile.jpg',   ...SHARED_MOBILE],
-  vertical: ['/fotos/vertical-mobile.jpg', ...SHARED_MOBILE],
-  cuadrado: ['/fotos/cuadrado-mobile.jpg', ...SHARED_MOBILE],
+  chico:    CHICO_MOBILE,
+  mediano:  MEDIANO_MOBILE,
+  grande:   GRANDE_MOBILE,
+  vertical: VERTICAL_MOBILE,
+  cuadrado: CUADRADO_MOBILE,
 }
 
 const BOOK_DIMS: Record<string, [number, number]> = {

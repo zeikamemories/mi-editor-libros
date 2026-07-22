@@ -1654,6 +1654,29 @@ const layout_7_1: Layout = {
   })(),
 }
 
+// ─── 8 FOTOS (landscape) ───────────────────────────────────────────────────
+// Medidas tomadas del diseño de Figma (frame 1704×1200, node 2291:8172): franja
+// ancha arriba a la izquierda + foto grande arriba a la derecha, columna alta +
+// foto chica abajo a la izquierda, foto ancha en el medio, columna angosta
+// partida en dos a la derecha.
+
+const layout_8_l1: Layout = {
+  id: 'layout_8_l1',
+  nombre: 'Mosaico asimétrico',
+  photoCount: 8,
+  orientation: 'landscape',
+  frames: [
+    { x: 0.06,   y: 0.06,   w: 0.4052, h: 0.2443 },
+    { x: 0.4859, y: 0.06,   w: 0.4541, h: 0.4652 },
+    { x: 0.06,   y: 0.3278, w: 0.2168, h: 0.3791 },
+    { x: 0.2933, y: 0.3278, w: 0.172,  h: 0.1974 },
+    { x: 0.2933, y: 0.5522, w: 0.4394, h: 0.3878 },
+    { x: 0.7497, y: 0.5522, w: 0.1903, h: 0.1965 },
+    { x: 0.06,   y: 0.7278, w: 0.2168, h: 0.2122 },
+    { x: 0.7497, y: 0.7713, w: 0.1903, h: 0.1687 },
+  ],
+}
+
 // ─── 8 FOTOS (square) ──────────────────────────────────────────────────────
 
 const layout_8_s1: Layout = {
@@ -1679,6 +1702,30 @@ const layout_8_s1: Layout = {
       { x: cx(2, 3), y: y2, w: fw(3), h: botH },
     ]
   })(),
+}
+
+// ─── 9 FOTOS (landscape) ───────────────────────────────────────────────────
+// Medidas tomadas del diseño de Figma (frame 1704×1200, node 2291:8151): dos
+// columnas parejas + foto ancha arriba a la izquierda, foto ancha + columna
+// alta arriba a la derecha, columna angosta partida en dos a la derecha, dos
+// columnas parejas abajo a la izquierda.
+
+const layout_9_l1: Layout = {
+  id: 'layout_9_l1',
+  nombre: 'Mosaico asimétrico',
+  photoCount: 9,
+  orientation: 'landscape',
+  frames: [
+    { x: 0.06,   y: 0.06,   w: 0.2168, h: 0.2443 },
+    { x: 0.2933, y: 0.06,   w: 0.2168, h: 0.2443 },
+    { x: 0.5312, y: 0.06,   w: 0.4088, h: 0.393  },
+    { x: 0.06,   y: 0.3278, w: 0.45,   h: 0.3365 },
+    { x: 0.5312, y: 0.4765, w: 0.2003, h: 0.4635 },
+    { x: 0.7497, y: 0.4765, w: 0.1903, h: 0.2722 },
+    { x: 0.06,   y: 0.6896, w: 0.2168, h: 0.2504 },
+    { x: 0.2933, y: 0.6896, w: 0.2168, h: 0.2504 },
+    { x: 0.7497, y: 0.7713, w: 0.1903, h: 0.1687 },
+  ],
 }
 
 const layout_9_s1: Layout = {
@@ -1728,7 +1775,10 @@ export const LAYOUTS: Layout[] = [
   layout_6_s1, layout_6_s2, layout_6_s3, layout_6_s4, layout_6_s5,
   // 7 fotos
   layout_7_1,
-  layout_8_s1, layout_9_s1,
+  // 8 fotos
+  layout_8_l1, layout_8_s1,
+  // 9 fotos
+  layout_9_l1, layout_9_s1,
 ];
 
 export function getLayoutsByCantidad(cantidad: number): Layout[] {
