@@ -828,7 +828,7 @@ const layout_5_3: Layout = {
   photoCount: 5,
   orientation: 'landscape',
   frames: (() => {
-    const mV      = 0.08
+    const mV      = M
     const topW    = fw(2)
     const available = 1 - mV * 2 - G
     const topH    = available * 0.45
@@ -895,7 +895,7 @@ const layout_5_6: Layout = {
   orientation: 'landscape',
   // Mirror of layout_5_3: 3 top + 2 bottom with margins
   frames: (() => {
-    const mV      = 0.08
+    const mV      = M
     const available = 1 - mV * 2 - G
     const topH = available * 0.55
     const botH = available * 0.45
@@ -1385,7 +1385,7 @@ const layout_6_p3: Layout = {
   photoCount: 6,
   orientation: 'portrait',
   frames: (() => {
-    const mV     = 0.08
+    const mV     = M
     const avail  = 1 - M * 2 - G
     const leftW  = avail * 0.45
     const rightW = avail * 0.55
@@ -1469,7 +1469,7 @@ const layout_6_l4: Layout = {
   photoCount: 6,
   orientation: 'landscape',
   frames: (() => {
-    const mV     = 0.08
+    const mV     = M
     const avail  = 1 - M * 2 - G
     const leftW  = avail * 0.60
     const rightW = avail * 0.40
@@ -1605,6 +1605,55 @@ const layout_6_s5: Layout = {
   })(),
 }
 
+// ─── 7 FOTOS (landscape) ───────────────────────────────────────────────────
+// Medidas tomadas 1:1 del diseño de Figma (frame 1704×1200, node 2291:8133):
+// fila de arriba 3 columnas (las dos primeras iguales, la tercera más ancha,
+// 400/400/630px) y fila de abajo un mosaico que reusa el ancho de la primera
+// columna (400px) + una columna ancha (713px) + una columna angosta (323px)
+// partida en dos celdas apiladas.
+
+const layout_7_1: Layout = {
+  id: 'layout_7_1',
+  nombre: 'Tres arriba, mosaico abajo',
+  photoCount: 7,
+  orientation: 'landscape',
+  frames: (() => {
+    const mV = M
+    const availV = 1 - mV * 2 - G
+    const topH = availV * (524 / 979)   // 524/455px en Figma
+    const botH = availV * (455 / 979)
+
+    const availW = 1 - M * 2 - G * 2
+    const colA = availW / (2 + 630 / 400)   // dos columnas iguales + una 1.575x más ancha
+    const colC = availW - colA * 2
+    const xA = M
+    const xB = xA + colA + G
+    const xC = xB + colA + G
+
+    const restW  = 1 - M * 2 - colA - G   // ancho libre tras la columna izquierda de abajo
+    const bcTotal = restW - G
+    const colB2 = bcTotal * (713 / (713 + 323))
+    const colC2 = bcTotal - colB2
+    const xB2 = xB
+    const xC2 = xB2 + colB2 + G
+
+    const yTop = mV
+    const yBot = mV + topH + G
+    const cellH = (botH - GAP_V) / 2
+    const yCell2 = yBot + cellH + GAP_V
+
+    return [
+      { x: xA,  y: yTop,   w: colA,  h: topH },
+      { x: xB,  y: yTop,   w: colA,  h: topH },
+      { x: xC,  y: yTop,   w: colC,  h: topH },
+      { x: xA,  y: yBot,   w: colA,  h: botH },
+      { x: xB2, y: yBot,   w: colB2, h: botH },
+      { x: xC2, y: yBot,   w: colC2, h: cellH },
+      { x: xC2, y: yCell2, w: colC2, h: cellH },
+    ]
+  })(),
+}
+
 // ─── 8 FOTOS (square) ──────────────────────────────────────────────────────
 
 const layout_8_s1: Layout = {
@@ -1677,6 +1726,8 @@ export const LAYOUTS: Layout[] = [
   layout_6_p1, layout_6_p2, layout_6_p3, layout_6_p4, layout_6_p5,
   layout_6_l2, layout_6_l4, layout_6_l5,
   layout_6_s1, layout_6_s2, layout_6_s3, layout_6_s4, layout_6_s5,
+  // 7 fotos
+  layout_7_1,
   layout_8_s1, layout_9_s1,
 ];
 

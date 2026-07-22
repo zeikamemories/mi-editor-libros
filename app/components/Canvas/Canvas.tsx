@@ -2148,7 +2148,78 @@ export default function Canvas({
           lineHeight: number; charSpacing: number; angle: number
           scaleX: number; scaleY: number
         }
-    const clipboard = { current: null as ClipboardEntry | null }
+    const clipboard = { current: null as ClipboardEntry[] | null }
+
+    // Extracts a ClipboardEntry from a single underlying object (used for both a lone
+    // selection and each member of a multi-selection — getActiveObjects() returns the
+    // underlying objects in both cases, unlike getActiveObject() which returns an
+    // ActiveSelection wrapper for multi-selects).
+    function objectToClipboardEntry(obj: fabric.FabricObject): ClipboardEntry | null {
+      const d = (obj as unknown as fabric.FabricObject & { data?: Record<string, unknown> }).data
+
+      if (d?.type === 'photo' && obj instanceof fabric.FabricImage) {
+        return {
+          kind:       'photo',
+          src:        obj.getSrc(),
+          frameX:     d.frameX     as number,
+          frameY:     d.frameY     as number,
+          frameW:     d.frameW     as number,
+          frameH:     d.frameH     as number,
+          naturalW:   d.naturalW   as number,
+          naturalH:   d.naturalH   as number,
+          coverScale: (d.coverScale as number) ?? (obj.scaleX ?? 1),
+          editScale:  (d.editScale  as number) ?? 1,
+          cropX:      obj.cropX ?? 0,
+          cropY:      obj.cropY ?? 0,
+        }
+      } else if (d?.type === 'freePhoto' && obj instanceof fabric.FabricImage) {
+        // getBoundingRect() resolves to absolute canvas coordinates even when obj is part of
+        // a multi-selection — obj.left/top would instead be relative to the selection's own
+        // bounding box in that case (Fabric reparents them while grouped), which silently
+        // produced garbage (even negative) positions when copying more than one object at once.
+        const rect = obj.getBoundingRect()
+        return {
+          kind:     'freePhoto',
+          src:      obj.getSrc(),
+          left:     rect.left + rect.width  / 2,
+          top:      rect.top  + rect.height / 2,
+          scaleX:   obj.scaleX  ?? 1,
+          scaleY:   obj.scaleY  ?? 1,
+          naturalW: d.naturalW  as number,
+          naturalH: d.naturalH  as number,
+        }
+      } else if (d?.type === 'frame' && obj instanceof fabric.Rect) {
+        const rect = obj.getBoundingRect()
+        return {
+          kind:   'frame',
+          frameX: rect.left,
+          frameY: rect.top,
+          frameW: rect.width,
+          frameH: rect.height,
+        }
+      } else if (obj instanceof fabric.Textbox) {
+        const rect = obj.getBoundingRect()
+        return {
+          kind:        'text',
+          text:        obj.text        ?? '',
+          left:        rect.left,
+          top:         rect.top,
+          width:       obj.width       ?? 200,
+          fontSize:    obj.fontSize    ?? 24,
+          fontFamily:  obj.fontFamily  ?? 'amandine',
+          fill:        (obj.fill as string) ?? '#191919',
+          fontWeight:  (obj.fontWeight as string) ?? 'normal',
+          underline:   obj.underline   ?? false,
+          textAlign:   obj.textAlign   ?? 'left',
+          lineHeight:  obj.lineHeight  ?? 1.16,
+          charSpacing: obj.charSpacing ?? 0,
+          angle:       obj.angle       ?? 0,
+          scaleX:      obj.scaleX      ?? 1,
+          scaleY:      obj.scaleY      ?? 1,
+        }
+      }
+      return null
+    }
 
     const handleKeyDown = async (e: KeyboardEvent) => {
       // ── Escape: exit image edit mode ─────────────────────────────────────
@@ -2169,65 +2240,16 @@ export default function Canvas({
         if (activeCanvas.getActiveObject() instanceof fabric.Textbox &&
             (activeCanvas.getActiveObject() as unknown as fabric.Textbox).isEditing) return
         e.preventDefault()
-        const obj = activeCanvas.getActiveObject()
-        if (!obj) return
+        // getActiveObjects() returns the underlying objects for both a single selection
+        // and a shift-click multi-selection (getActiveObject() would return the whole
+        // selection as one opaque ActiveSelection in the multi-select case).
+        const objs = activeCanvas.getActiveObjects()
+        if (objs.length === 0) return
 
-        const d = (obj as unknown as fabric.FabricObject & { data?: Record<string, unknown> }).data
-
-        if (d?.type === 'photo' && obj instanceof fabric.FabricImage) {
-          clipboard.current = {
-            kind:       'photo',
-            src:        obj.getSrc(),
-            frameX:     d.frameX     as number,
-            frameY:     d.frameY     as number,
-            frameW:     d.frameW     as number,
-            frameH:     d.frameH     as number,
-            naturalW:   d.naturalW   as number,
-            naturalH:   d.naturalH   as number,
-            coverScale: (d.coverScale as number) ?? (obj.scaleX ?? 1),
-            editScale:  (d.editScale  as number) ?? 1,
-            cropX:      obj.cropX ?? 0,
-            cropY:      obj.cropY ?? 0,
-          }
-        } else if (d?.type === 'freePhoto' && obj instanceof fabric.FabricImage) {
-          clipboard.current = {
-            kind:     'freePhoto',
-            src:      obj.getSrc(),
-            left:     obj.left    ?? 0,
-            top:      obj.top     ?? 0,
-            scaleX:   obj.scaleX  ?? 1,
-            scaleY:   obj.scaleY  ?? 1,
-            naturalW: d.naturalW  as number,
-            naturalH: d.naturalH  as number,
-          }
-        } else if (d?.type === 'frame' && obj instanceof fabric.Rect) {
-          clipboard.current = {
-            kind:   'frame',
-            frameX: obj.left   ?? 0,
-            frameY: obj.top    ?? 0,
-            frameW: obj.width  ?? 0,
-            frameH: obj.height ?? 0,
-          }
-        } else if (obj instanceof fabric.Textbox) {
-          clipboard.current = {
-            kind:        'text',
-            text:        obj.text        ?? '',
-            left:        obj.left        ?? 0,
-            top:         obj.top         ?? 0,
-            width:       obj.width       ?? 200,
-            fontSize:    obj.fontSize    ?? 24,
-            fontFamily:  obj.fontFamily  ?? 'amandine',
-            fill:        (obj.fill as string) ?? '#191919',
-            fontWeight:  (obj.fontWeight as string) ?? 'normal',
-            underline:   obj.underline   ?? false,
-            textAlign:   obj.textAlign   ?? 'left',
-            lineHeight:  obj.lineHeight  ?? 1.16,
-            charSpacing: obj.charSpacing ?? 0,
-            angle:       obj.angle       ?? 0,
-            scaleX:      obj.scaleX      ?? 1,
-            scaleY:      obj.scaleY      ?? 1,
-          }
-        }
+        const entries = objs
+          .map(objectToClipboardEntry)
+          .filter((entry): entry is ClipboardEntry => entry !== null)
+        clipboard.current = entries.length > 0 ? entries : null
         return
       }
 
@@ -2235,102 +2257,113 @@ export default function Canvas({
       if ((e.ctrlKey || e.metaKey) && e.key === 'v') {
         if (!clipboard.current) return
         e.preventDefault()
-        const cb = clipboard.current
         const OFF = 20
+        const pasted: fabric.FabricObject[] = []
 
-        if (cb.kind === 'photo') {
-          const img = await fabric.FabricImage.fromURL(cb.src, { crossOrigin: 'anonymous' })
-          const fx       = cb.frameX + OFF
-          const fy       = cb.frameY + OFF
-          const scaleXY  = cb.coverScale * cb.editScale
-          const virtW    = cb.frameW / scaleXY
-          const virtH    = cb.frameH / scaleXY
-          img.set({
-            originX:           'center',
-            originY:           'center',
-            left:              fx + cb.frameW / 2,
-            top:               fy + cb.frameH / 2,
-            scaleX:            scaleXY,
-            scaleY:            scaleXY,
-            width:             virtW,
-            height:            virtH,
-            cropX:             cb.cropX,
-            cropY:             cb.cropY,
-            selectable:        true,
-            evented:           true,
-            borderColor:       '#528ED6',
-            borderScaleFactor: 2,
-          })
-          img.clipPath = new fabric.Rect({
-            originX: 'left', originY: 'top',
-            left: fx, top: fy, width: cb.frameW, height: cb.frameH,
-            absolutePositioned: true,
-          })
-          img.setControlsVisibility({ mt: true, mb: true, ml: true, mr: true, tl: true, tr: true, bl: true, br: true, mtr: true })
-          ;(img as unknown as fabric.FabricObject & { data: Record<string, unknown> }).data = {
-            type: 'photo', frameX: fx, frameY: fy, frameW: cb.frameW, frameH: cb.frameH,
-            naturalW: cb.naturalW, naturalH: cb.naturalH,
-            coverScale: cb.coverScale, editScale: cb.editScale,
+        for (const cb of clipboard.current) {
+          if (cb.kind === 'photo') {
+            const img = await fabric.FabricImage.fromURL(cb.src, { crossOrigin: 'anonymous' })
+            const fx       = cb.frameX + OFF
+            const fy       = cb.frameY + OFF
+            const scaleXY  = cb.coverScale * cb.editScale
+            const virtW    = cb.frameW / scaleXY
+            const virtH    = cb.frameH / scaleXY
+            img.set({
+              originX:           'center',
+              originY:           'center',
+              left:              fx + cb.frameW / 2,
+              top:               fy + cb.frameH / 2,
+              scaleX:            scaleXY,
+              scaleY:            scaleXY,
+              width:             virtW,
+              height:            virtH,
+              cropX:             cb.cropX,
+              cropY:             cb.cropY,
+              selectable:        true,
+              evented:           true,
+              borderColor:       '#528ED6',
+              borderScaleFactor: 2,
+            })
+            img.clipPath = new fabric.Rect({
+              originX: 'left', originY: 'top',
+              left: fx, top: fy, width: cb.frameW, height: cb.frameH,
+              absolutePositioned: true,
+            })
+            img.setControlsVisibility({ mt: true, mb: true, ml: true, mr: true, tl: true, tr: true, bl: true, br: true, mtr: true })
+            ;(img as unknown as fabric.FabricObject & { data: Record<string, unknown> }).data = {
+              type: 'photo', frameX: fx, frameY: fy, frameW: cb.frameW, frameH: cb.frameH,
+              naturalW: cb.naturalW, naturalH: cb.naturalH,
+              coverScale: cb.coverScale, editScale: cb.editScale,
+            }
+            activeCanvas.add(img)
+            pasted.push(img)
+
+          } else if (cb.kind === 'freePhoto') {
+            const img = await fabric.FabricImage.fromURL(cb.src, { crossOrigin: 'anonymous' })
+            img.set({
+              originX:           'center',
+              originY:           'center',
+              left:              cb.left + OFF,
+              top:               cb.top  + OFF,
+              scaleX:            cb.scaleX,
+              scaleY:            cb.scaleY,
+              selectable:        true,
+              evented:           true,
+              borderColor:       '#528ED6',
+              borderScaleFactor: 2,
+              lockUniScaling:    true,
+            })
+            img.setControlsVisibility({ mt: false, mb: false, ml: false, mr: false })
+            ;(img as unknown as fabric.FabricObject & { data: Record<string, unknown> }).data = {
+              type: 'freePhoto', naturalW: cb.naturalW, naturalH: cb.naturalH,
+            }
+            activeCanvas.add(img)
+            pasted.push(img)
+
+          } else if (cb.kind === 'frame') {
+            restoreEmptyFrame(activeCanvas, {
+              frameX: cb.frameX + OFF,
+              frameY: cb.frameY + OFF,
+              frameW: cb.frameW,
+              frameH: cb.frameH,
+            })
+            const added = activeCanvas.getObjects().at(-1)
+            if (added) pasted.push(added)
+
+          } else if (cb.kind === 'text') {
+            const textbox = new fabric.Textbox(cb.text, {
+              left:            cb.left   + OFF,
+              top:             cb.top    + OFF,
+              originX:         'left',
+              originY:         'top',
+              width:           cb.width,
+              fontFamily:      cb.fontFamily,
+              fontSize:        cb.fontSize,
+              fill:            cb.fill,
+              fontWeight:      cb.fontWeight,
+              underline:       cb.underline,
+              textAlign:       cb.textAlign as fabric.Textbox['textAlign'],
+              lineHeight:      cb.lineHeight,
+              charSpacing:     cb.charSpacing,
+              angle:           cb.angle,
+              scaleX:          cb.scaleX,
+              scaleY:          cb.scaleY,
+              splitByGrapheme: false,
+            }) as unknown as fabric.Textbox & { data: { type: string; boxH?: number } }
+            const boxH = (textbox as unknown as { height?: number }).height ?? 0
+            textbox.data = { type: 'text', boxH }
+            activeCanvas.add(textbox)
+            pasted.push(textbox)
           }
-          activeCanvas.add(img)
-          activeCanvas.setActiveObject(img)
+        }
 
-        } else if (cb.kind === 'freePhoto') {
-          const img = await fabric.FabricImage.fromURL(cb.src, { crossOrigin: 'anonymous' })
-          img.set({
-            originX:           'center',
-            originY:           'center',
-            left:              cb.left + OFF,
-            top:               cb.top  + OFF,
-            scaleX:            cb.scaleX,
-            scaleY:            cb.scaleY,
-            selectable:        true,
-            evented:           true,
-            borderColor:       '#528ED6',
-            borderScaleFactor: 2,
-            lockUniScaling:    true,
-          })
-          img.setControlsVisibility({ mt: false, mb: false, ml: false, mr: false })
-          ;(img as unknown as fabric.FabricObject & { data: Record<string, unknown> }).data = {
-            type: 'freePhoto', naturalW: cb.naturalW, naturalH: cb.naturalH,
-          }
-          activeCanvas.add(img)
-          activeCanvas.setActiveObject(img)
-
-        } else if (cb.kind === 'frame') {
-          restoreEmptyFrame(activeCanvas, {
-            frameX: cb.frameX + OFF,
-            frameY: cb.frameY + OFF,
-            frameW: cb.frameW,
-            frameH: cb.frameH,
-          })
-          const added = activeCanvas.getObjects().at(-1)
-          if (added) activeCanvas.setActiveObject(added)
-
-        } else if (cb.kind === 'text') {
-          const textbox = new fabric.Textbox(cb.text, {
-            left:            cb.left   + OFF,
-            top:             cb.top    + OFF,
-            originX:         'left',
-            originY:         'top',
-            width:           cb.width,
-            fontFamily:      cb.fontFamily,
-            fontSize:        cb.fontSize,
-            fill:            cb.fill,
-            fontWeight:      cb.fontWeight,
-            underline:       cb.underline,
-            textAlign:       cb.textAlign as fabric.Textbox['textAlign'],
-            lineHeight:      cb.lineHeight,
-            charSpacing:     cb.charSpacing,
-            angle:           cb.angle,
-            scaleX:          cb.scaleX,
-            scaleY:          cb.scaleY,
-            splitByGrapheme: false,
-          }) as unknown as fabric.Textbox & { data: { type: string; boxH?: number } }
-          const boxH = (textbox as unknown as { height?: number }).height ?? 0
-          textbox.data = { type: 'text', boxH }
-          activeCanvas.add(textbox)
-          activeCanvas.setActiveObject(textbox)
+        // Select everything just pasted as one group — mirrors what was copied,
+        // and lets the user immediately drag the whole pasted selection together.
+        if (pasted.length === 1) {
+          activeCanvas.setActiveObject(pasted[0])
+        } else if (pasted.length > 1) {
+          const selection = new fabric.ActiveSelection(pasted, { canvas: activeCanvas })
+          activeCanvas.setActiveObject(selection)
         }
 
         activeCanvas.renderAll()
