@@ -627,9 +627,7 @@
 .dash-col-designer-td:hover .dash-designer-dot { opacity: 0.7; }
 
 .dash-designer-popup {
-  position: absolute;
-  bottom: calc(100% + 6px);
-  left: 0;
+  position: fixed;
   background: #fff;
   border: 1px solid #c0bfbc;
   box-shadow: 0 4px 16px rgba(0,0,0,0.12);

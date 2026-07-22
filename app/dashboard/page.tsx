@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect, useState } from 'react'
+import { createPortal } from 'react-dom'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { Trash2, List, LayoutGrid } from 'lucide-react'
@@ -84,9 +85,10 @@ export default function DashboardPage() {
   const [deleting, setDeleting]           = useState(false)
   const [pendingDelete, setPendingDelete] = useState<{ ids: string[]; message: string } | null>(null)
   const [designerPopup, setDesignerPopup] = useState<string | null>(null)
+  const [designerPopupPos, setDesignerPopupPos] = useState<{ left: number; top?: number; bottom?: number } | null>(null)
   useEffect(() => {
     if (!designerPopup) return
-    const close = () => setDesignerPopup(null)
+    const close = () => { setDesignerPopup(null); setDesignerPopupPos(null) }
     window.addEventListener('click', close)
     return () => window.removeEventListener('click', close)
   }, [designerPopup])
@@ -199,6 +201,22 @@ export default function DashboardPage() {
     await supabase.from('orders').update({ designer: value }).eq('id', id)
     setOrders(prev => prev.map(o => o.id === id ? { ...o, designer: value } : o))
     setDesignerPopup(null)
+    setDesignerPopupPos(null)
+  }
+
+  function toggleDesignerPopup(orderId: string, cell: HTMLElement) {
+    if (designerPopup === orderId) {
+      setDesignerPopup(null)
+      setDesignerPopupPos(null)
+      return
+    }
+    const rect = cell.getBoundingClientRect()
+    const POPUP_HEIGHT_ESTIMATE = 160
+    const openUp = rect.bottom + POPUP_HEIGHT_ESTIMATE > window.innerHeight && rect.top > POPUP_HEIGHT_ESTIMATE
+    setDesignerPopupPos(openUp
+      ? { left: rect.left, bottom: window.innerHeight - rect.top + 6 }
+      : { left: rect.left, top: rect.bottom + 6 })
+    setDesignerPopup(orderId)
   }
 
   function exitEditMode() {
@@ -416,10 +434,13 @@ export default function DashboardPage() {
                     onClick={editMode ? () => toggleSelect(order.id) : undefined}
                     style={editMode ? { cursor: 'pointer' } : undefined}
                   >
-                    <td className="dash-col-designer-td" onClick={e => { e.stopPropagation(); setDesignerPopup(designerPopup === order.id ? null : order.id) }}>
+                    <td
+                      className="dash-col-designer-td"
+                      onClick={e => { e.stopPropagation(); toggleDesignerPopup(order.id, e.currentTarget) }}
+                    >
                       <div className="dash-designer-dot" style={{ background: order.designer ? DESIGNER_COLORS[order.designer] : '#ddd' }} />
-                      {designerPopup === order.id && (
-                        <div className="dash-designer-popup" onClick={e => e.stopPropagation()}>
+                      {designerPopup === order.id && designerPopupPos && createPortal(
+                        <div className="dash-designer-popup" style={designerPopupPos} onClick={e => e.stopPropagation()}>
                           {(['maika', 'vicky', 'jose'] as Designer[]).map(d => (
                             <button key={d} className="dash-designer-option" onClick={() => selectDesigner(order.id, d)}>
                               <span className="dash-designer-option-dot" style={{ background: DESIGNER_COLORS[d!] }} />
@@ -430,7 +451,8 @@ export default function DashboardPage() {
                             <span className="dash-designer-option-dot" style={{ background: '#ddd' }} />
                             ninguna
                           </button>
-                        </div>
+                        </div>,
+                        document.body
                       )}
                     </td>
                     {editMode && (
