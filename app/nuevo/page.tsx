@@ -365,15 +365,19 @@ function NuevoContent() {
     })
     const uploaded: Photo[] = []
     const failed: string[] = []
+    let firstReason = ''
     arr.forEach((file, i) => {
       const r = results[i]
       if (r.status === 'fulfilled') uploaded.push(r.value)
-      else failed.push(file.name)
+      else {
+        failed.push(file.name)
+        if (!firstReason) firstReason = r.reason instanceof Error ? r.reason.message : String(r.reason)
+      }
     })
     setPhotos((prev) => [...prev, ...uploaded])
     setUploadingCount(0)
     if (failed.length > 0) {
-      alert(`No se pudieron subir ${failed.length} foto(s): ${failed.join(', ')}`)
+      alert(`No se pudieron subir ${failed.length} foto(s): ${failed.join(', ')}\n\nMotivo: ${firstReason}`)
     }
   }, [])
 
