@@ -6,6 +6,7 @@ import { useRouter, useSearchParams } from 'next/navigation'
 import { Monitor } from 'lucide-react'
 import { supabase } from '../lib/supabase'
 import { compressImage } from '../lib/imageCompress'
+import { mapWithConcurrency } from '../lib/concurrency'
 import { PRICES_BY_PAGES } from '../config/pricing'
 import Navbar from '../components/Landing/Navbar/Navbar'
 import './nuevo.css'
@@ -354,11 +355,14 @@ function NuevoContent() {
   const handleUpload = useCallback(async (files: FileList) => {
     const arr = Array.from(files)
     setUploadingCount(arr.length)
-    const results = await Promise.allSettled(arr.map(async (file) => {
+    // A few at a time — converting many HEIC photos in parallel (each one a WASM
+    // decode) can exhaust the browser's memory and make individual ones fail,
+    // especially the heavier files (Live Photos, high-res shots).
+    const results = await mapWithConcurrency(arr, 3, async (file) => {
       const photo = await uploadFile(file)
       setUploadingCount((c) => Math.max(0, c - 1))
       return photo
-    }))
+    })
     const uploaded: Photo[] = []
     const failed: string[] = []
     arr.forEach((file, i) => {

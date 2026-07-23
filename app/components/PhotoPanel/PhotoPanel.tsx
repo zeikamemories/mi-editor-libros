@@ -4,6 +4,7 @@ import { useRef, useCallback, useState, useEffect } from 'react'
 import { CirclePlus, ListFilter, Check, Trash2 } from 'lucide-react'
 import { useLang } from '../../context/LanguageContext'
 import { compressImage } from '../../lib/imageCompress'
+import { mapWithConcurrency } from '../../lib/concurrency'
 import './PhotoPanel.css'
 
 export type Photo = {
@@ -82,40 +83,41 @@ export default function PhotoPanel({
         return next
       })
 
-      const results = await Promise.allSettled(
-        placeholders.map(async ({ tempId, file }) => {
-          const compressed = await compressImage(file)
-          const form = new FormData()
-          form.append('file', compressed)
+      // A few at a time — converting many HEIC photos in parallel (each one a WASM
+      // decode) can exhaust the browser's memory and make individual ones fail,
+      // especially the heavier files (Live Photos, high-res shots).
+      const results = await mapWithConcurrency(placeholders, 3, async ({ tempId, file }) => {
+        const compressed = await compressImage(file)
+        const form = new FormData()
+        form.append('file', compressed)
 
-          const res  = await fetch('/api/upload', { method: 'POST', body: form })
-          const data = await res.json() as {
-            url?:     string
-            publicId?: string
-            width?:   number
-            height?:  number
-            error?:   string
-          }
+        const res  = await fetch('/api/upload', { method: 'POST', body: form })
+        const data = await res.json() as {
+          url?:     string
+          publicId?: string
+          width?:   number
+          height?:  number
+          error?:   string
+        }
 
-          setUploadingIds((prev) => {
-            const next = new Set(prev)
-            next.delete(tempId)
-            return next
-          })
+        setUploadingIds((prev) => {
+          const next = new Set(prev)
+          next.delete(tempId)
+          return next
+        })
 
-          if (!res.ok || !data.url) {
-            throw new Error(data.error ?? `Error subiendo ${file.name}`)
-          }
+        if (!res.ok || !data.url) {
+          throw new Error(data.error ?? `Error subiendo ${file.name}`)
+        }
 
-          return {
-            id:     tempId,
-            src:    data.url,
-            name:   file.name,
-            width:  data.width  ?? 0,
-            height: data.height ?? 0,
-          } satisfies Photo
-        }),
-      )
+        return {
+          id:     tempId,
+          src:    data.url,
+          name:   file.name,
+          width:  data.width  ?? 0,
+          height: data.height ?? 0,
+        } satisfies Photo
+      })
 
       const uploaded: Photo[] = []
       for (const r of results) {
