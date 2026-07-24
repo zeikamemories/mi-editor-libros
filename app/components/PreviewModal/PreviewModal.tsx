@@ -6,7 +6,7 @@ import {
   ChevronLeft, ChevronRight,
   ChevronsLeft, ChevronsRight,
 } from 'lucide-react'
-import { exportPageAsJpg } from '../Canvas/fabricHelpers'
+import { exportPageAsJpg, preloadPageFonts } from '../Canvas/fabricHelpers'
 import type { PageData } from '../Canvas/fabricHelpers'
 import { mapWithConcurrency } from '../../lib/concurrency'
 import { useLang } from '../../context/LanguageContext'
@@ -243,6 +243,18 @@ export default function PreviewModal({
       }
 
       tasks.push(jpgTask(s0?.left ?? EMPTY_PAGE, s0?.right ? { data: s0.right, fromSide: 'right' } : undefined))
+
+      // Wait for every text font used in the book to finish loading before
+      // rasterizing — a canvas export takes a font snapshot at draw time, so
+      // rendering ahead of the webfont finishing (common on a first-ever open)
+      // would permanently bake the fallback font into the JPG.
+      const allPages: PageData[] = []
+      for (let s = 0; s < totalSpreads; s++) {
+        const data = spreadsData[s]
+        if (data?.left)  allPages.push(data.left)
+        if (data?.right) allPages.push(data.right)
+      }
+      await preloadPageFonts(allPages)
 
       if (cancelled) return
       setRenderProgress({ done: 0, total: tasks.length })

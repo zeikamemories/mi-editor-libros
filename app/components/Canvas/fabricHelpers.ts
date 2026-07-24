@@ -1120,6 +1120,32 @@ export async function exportPageAsJpg(
   return dataUrl
 }
 
+// ─── 7c. preloadPageFonts ───────────────────────────────────────────────────
+// Canvas text is rasterized once, synchronously — unlike DOM text it does NOT
+// re-render when a webfont finishes loading afterward. On a client's first-ever
+// preview open, the Typekit/local text fonts may still be downloading, so we
+// explicitly wait for every font used by any text object before exporting —
+// otherwise that first export permanently bakes in the browser's fallback font.
+export async function preloadPageFonts(pages: PageData[]): Promise<void> {
+  const families = new Set<string>()
+  for (const page of pages) {
+    for (const entry of page.objects ?? []) {
+      if (entry.kind === 'text' && entry.fontFamily) families.add(entry.fontFamily)
+    }
+    for (const entry of page.texts ?? []) {
+      if (entry.fontFamily) families.add(entry.fontFamily)
+    }
+  }
+  if (families.size === 0) return
+
+  await Promise.all(
+    Array.from(families).map((family) =>
+      document.fonts.load(`400 32px "${family}"`).catch(() => {}),
+    ),
+  )
+  await document.fonts.ready
+}
+
 // ─── 7. deserializePage ─────────────────────────────────────────────────────
 
 export async function deserializePage(
