@@ -8,6 +8,7 @@ import {
 } from 'lucide-react'
 import { exportPageAsJpg } from '../Canvas/fabricHelpers'
 import type { PageData } from '../Canvas/fabricHelpers'
+import { mapWithConcurrency } from '../../lib/concurrency'
 import { useLang } from '../../context/LanguageContext'
 import './PreviewModal.css'
 
@@ -88,6 +89,7 @@ export default function PreviewModal({
   const { t } = useLang()
   const [scale,      setScale]      = useState(0.5)
   const [loading,    setLoading]    = useState(true)
+  const [renderProgress, setRenderProgress] = useState({ done: 0, total: 0 })
   const [pageImages, setPageImages] = useState<string[]>([])
   const initialPage = initialSpread === 0 ? 1 : initialSpread * 2
   const [currentPage, setCurrentPage] = useState(initialPage)
@@ -203,46 +205,62 @@ export default function PreviewModal({
   }, [scale])
 
   // ── Pre-render pages ───────────────────────────────────────────────────────
+  // Every page is exported to its own offscreen Fabric canvas (exportPageAsJpg),
+  // so pages are independent of each other and safe to render concurrently —
+  // this used to run one page at a time, which is why a ~20-spread book could
+  // take a minute-plus to open. A small concurrency cap keeps it fast without
+  // spinning up dozens of offscreen canvases at once on weaker devices.
   useEffect(() => {
     let cancelled = false
     setLoading(true)
+    setRenderProgress({ done: 0, total: 0 })
 
     // On mobile, render at half resolution to avoid crashing Safari
     const renderScale = window.innerWidth < 900 ? 0.5 : 1
+    const RENDER_CONCURRENCY = 4
 
     async function renderAll() {
-      const images: string[] = []
-
       const s0 = spreadsData[0]
+      type Task = () => Promise<string>
+      const tasks: Task[] = []
 
-      const pushJpg = async (page: PageData, adj?: { data: PageData; fromSide: 'left' | 'right' }) => {
-        if (cancelled) return
-        images.push(await exportPageAsJpg(page, pageW, pageH, renderScale, adj))
-      }
-      const pushStatic = (label: string) => {
-        images.push(renderNoEditPage(label, pageW, pageH))
-      }
+      const jpgTask = (page: PageData, adj?: { data: PageData; fromSide: 'left' | 'right' }): Task =>
+        () => exportPageAsJpg(page, pageW, pageH, renderScale, adj)
+      const staticTask = (label: string): Task =>
+        () => Promise.resolve(renderNoEditPage(label, pageW, pageH))
 
-      await pushJpg(s0?.right ?? EMPTY_PAGE, s0?.left  ? { data: s0.left,  fromSide: 'left'  } : undefined)
+      tasks.push(jpgTask(s0?.right ?? EMPTY_PAGE, s0?.left ? { data: s0.left, fromSide: 'left' } : undefined))
 
       for (let s = 1; s < totalSpreads; s++) {
-        if (cancelled) return
         const data      = spreadsData[s]
         const left      = data?.left  ?? EMPTY_PAGE
         const right     = data?.right ?? EMPTY_PAGE
         const isInside  = s === 1
         const isOutside = s === totalSpreads - 1
 
-        if (isInside) pushStatic(t.noEditable)
-        else await pushJpg(left,  { data: right, fromSide: 'right' })
-
-        if (isOutside) pushStatic(t.noEditable)
-        else await pushJpg(right, { data: left,  fromSide: 'left'  })
+        tasks.push(isInside  ? staticTask(t.noEditable) : jpgTask(left,  { data: right, fromSide: 'right' }))
+        tasks.push(isOutside ? staticTask(t.noEditable) : jpgTask(right, { data: left,  fromSide: 'left'  }))
       }
 
-      await pushJpg(s0?.left ?? EMPTY_PAGE, s0?.right ? { data: s0.right, fromSide: 'right' } : undefined)
+      tasks.push(jpgTask(s0?.left ?? EMPTY_PAGE, s0?.right ? { data: s0.right, fromSide: 'right' } : undefined))
 
-      if (!cancelled) { setPageImages(images); setLoading(false) }
+      if (cancelled) return
+      setRenderProgress({ done: 0, total: tasks.length })
+      let done = 0
+
+      const results = await mapWithConcurrency(tasks, RENDER_CONCURRENCY, async (task) => {
+        const result = await task()
+        done += 1
+        if (!cancelled) setRenderProgress({ done, total: tasks.length })
+        return result
+      })
+      if (cancelled) return
+
+      // A single page failing to render (bad photo URL, etc.) shouldn't block
+      // the whole preview — fall back to the same placeholder used elsewhere.
+      const images = results.map(r => r.status === 'fulfilled' ? r.value : renderNoEditPage(t.noEditable, pageW, pageH))
+      setPageImages(images)
+      setLoading(false)
     }
 
     renderAll()
@@ -637,7 +655,10 @@ export default function PreviewModal({
       {/* ── Stage ── */}
       <div className="preview-stage">
         {loading ? (
-          <div className="preview-render-loading">{t.preparingPreview}</div>
+          <div className="preview-render-loading">
+            {t.preparingPreview}
+            {renderProgress.total > 0 && ` (${renderProgress.done}/${renderProgress.total})`}
+          </div>
         ) : (
           <div
             className="preview-book-shell"
