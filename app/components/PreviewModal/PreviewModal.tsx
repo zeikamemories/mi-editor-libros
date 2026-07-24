@@ -216,8 +216,14 @@ export default function PreviewModal({
     setRenderProgress({ done: 0, total: 0 })
 
     // On mobile, render at half resolution to avoid crashing Safari
-    const renderScale = window.innerWidth < 900 ? 0.5 : 1
-    const RENDER_CONCURRENCY = 4
+    const isMobile = window.innerWidth < 900
+    const renderScale = isMobile ? 0.5 : 1
+    // Each concurrent render decodes full-size photos into memory on its own
+    // offscreen canvas. Mobile Safari's WebContent process has a much tighter
+    // memory ceiling than desktop — running several of these at once was
+    // crashing the tab ("Ocurrió un problema varias veces"). Keep mobile
+    // effectively sequential; desktop can afford real parallelism.
+    const RENDER_CONCURRENCY = isMobile ? 1 : 4
 
     async function renderAll() {
       const s0 = spreadsData[0]
